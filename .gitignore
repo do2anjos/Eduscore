@@ -78,12 +78,16 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+backend/.env
 
 # SQLite database files
 *.sqlite
 *.sqlite3
 *.db
 database.sqlite
+
+# Uploads directory
+uploads/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
