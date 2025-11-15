@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="home-container">
+    <aside class="sidebar">
+      <div class="profile">
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <span>
+          Coordenador<br>
+          <small>coordenacao@uea.edu.br</small>
+        </span>
+      </div>
+      <nav class="nav-links" role="navigation" aria-label="Menu principal">
+        <a href="home.html" class="active" aria-current="page">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
+        </a>
+        <a href="RelatorioGeral.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
+        </a>
+        <a href="Cadastrar.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar
+        </a>
+        <a href="CadastrarGabarito.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
+        </a>
+        <a href="AgendarSessao.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão
+        </a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Breadcrumb (Heurística 4: Consistência) -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="home.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>Dashboard</span>
+      </nav>
+
+      <div class="dashboard-header">
+        <div>
+          <h2>Bem-vindo de volta, João!</h2>
+          <p class="dashboard-subtitle">Aqui está um resumo do seu desempenho</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" class="search-box" placeholder="Pesquisar..." aria-label="Pesquisar" />
+          <span class="keyboard-shortcut" title="Atalho de teclado">
+           </span>
+        </div>
+      </div>
+
+      <!-- Cards de Métricas Principais -->
+      <div class="metrics-grid">
+        <div class="metric-card-modern">
+          <div class="metric-card-header">
+            <h3>Alunos Ativos</h3>
+            <span class="metric-icon">👤</span>
+          </div>
+          <div class="metric-card-content gauge-layout">
+            <div style="flex: 1; display: flex; justify-content: center;">
+              <canvas id="gaugeAlunos" style="max-width: 180px; max-height: 180px;"></canvas>
+            </div>
+            <div class="metric-value">
+              <span class="value-number">350</span>
+              <span class="value-label">de 400 alunos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card-modern">
+          <div class="metric-card-header">
+            <h3>Progresso Mensal</h3>
+            <span class="metric-icon">📈</span>
+          </div>
+          <div class="metric-card-content" style="min-height: 200px;">
+            <canvas id="progressChart" style="max-width: 100%; height: 180px !important;"></canvas>
+          </div>
+        </div>
+
+        <div class="metric-card-modern">
+          <div class="metric-card-header">
+            <h3>Simulados Ativos</h3>
+            <span class="metric-icon">📝</span>
+          </div>
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 200px;">
+            <div class="metric-value">
+              <span class="value-number">3</span>
+              <span class="value-label">simulados em atividade</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card-modern full-width">
+          <div class="metric-card-header">
+            <h3>Retenção por Disciplina</h3>
+          </div>
+          <div class="metric-card-content" style="min-height: 350px;">
+            <canvas id="retencaoChart" style="max-width: 100%; height: 320px !important;"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    new Chart(document.getElementById('gaugeAlunos'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Ativos', 'Inativos'],
+        datasets: [{
+          data: [350, 50],
+          backgroundColor: ['#008cc4', '#e0e0e0'],
+          cutout: '75%',
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        rotation: -90,
+        circumference: 180,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false },
+        },
+        maintainAspectRatio: false,
+      },
+      plugins: [{
+        id: 'customCenterText',
+        beforeDraw(chart) {
+          const { width, height, ctx } = chart;
+          ctx.restore();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = 'bold 24px "Atkinson Hyperlegible", sans-serif';
+          ctx.fillStyle = '#003b54';
+          ctx.fillText('87.5%', width / 2, height / 2 + 5);
+          ctx.font = '14px "Atkinson Hyperlegible", sans-serif';
+          ctx.fillStyle = '#666';
+          ctx.fillText('Taxa de ativos', width / 2, height / 2 + 25);
+          ctx.save();
+        }
+      }]
+    });
+
+    new Chart(document.getElementById('progressChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+        datasets: [{
+          label: 'Progresso',
+          data: [80, 95, 60, 100, 75, 50],
+          backgroundColor: '#008cc4',
+          borderRadius: 8,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#003b54',
+            padding: 12,
+            titleFont: { size: 14, weight: '600' },
+            bodyFont: { size: 13 },
+            cornerRadius: 8,
+          }
+        },
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { 
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              font: { size: 12 },
+              color: '#666'
+            },
+            grid: {
+              color: '#f0f0f0'
+            }
+          },
+          x: {
+            ticks: {
+              font: { size: 12 },
+              color: '#666'
+            },
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('retencaoChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Matemática', 'Física', 'Química', 'Biologia', 'Português', 'Redação', 'Geografia', 'História'],
+        datasets: [{
+          label: 'Retenção (%)',
+          data: [90, 85, 80, 75, 70, 68, 65, 60],
+          backgroundColor: (context) => {
+            const value = context.parsed.x;
+            if (value >= 80) return '#28a745';
+            if (value >= 70) return '#008cc4';
+            return '#ffc107';
+          },
+          borderRadius: 8,
+          barThickness: 28,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#003b54',
+            padding: 12,
+            titleFont: { size: 14, weight: '600' },
+            bodyFont: { size: 13 },
+            cornerRadius: 8,
+            callbacks: {
+              label: context => `Retenção: ${context.raw}%`
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: value => `${value}%`,
+              font: { size: 12 },
+              color: '#666'
+            },
+            grid: {
+              color: '#f0f0f0'
+            }
+          },
+          y: {
+            ticks: {
+              font: {
+                size: 13,
+                weight: '500'
+              },
+              color: '#333'
+            },
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

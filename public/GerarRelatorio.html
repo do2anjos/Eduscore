@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório Individual</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="home-container">
+    <aside class="sidebar">
+      <div class="profile">
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <span>
+          Coordenador<br>
+          <small>coordenacao@uea.edu.br</small>
+        </span>
+      </div>
+      <nav class="nav-links">
+        <a href="home.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" /> Home
+        </a>
+        <div class="dropdown">
+          <a href="RelatorioGeral.html" class="active">
+            <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" /> Gerar Relatório
+          </a>
+          <div class="dropdown-options">
+            <a href="RelatorioGeral.html" class="sub">Relatório Geral</a>
+            <a href="GerarRelatorio.html" class="sub active">Relatório Individual</a>
+          </div>
+        </div>
+        <a href="Cadastrar.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" /> Cadastrar
+        </a>
+        <a href="CadastrarGabarito.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" /> Simulado
+        </a>
+        <a href="AgendarSessao.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" /> Agendar Sessão
+        </a>
+      </nav>
+    </aside>
+
+    <div class="content">
+      <!-- Breadcrumb (Heurística 4: Consistência) -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="home.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <a href="RelatorioGeral.html">Relatórios</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>Relatório Individual</span>
+      </nav>
+
+      <div class="dashboard-header">
+        <div class="user-box">
+          <img src="https://img.icons8.com/ios-filled/24/user-group-man-man.png" alt="Usuário" />
+          <span>Anna Souza - 32</span>
+          <img src="https://img.icons8.com/material-outlined/24/barcode.png" alt="Código de Barras" />
+        </div>
+      </div>
+
+      <h2>Relatório Individual</h2>
+
+      <div class="dashboard-metrics">
+        <div class="metric-card">
+          <strong>300</strong>
+          <div class="metric-label">Questões Aplicadas</div>
+        </div>
+        <div class="metric-card">
+          <strong>228</strong>
+          <div class="metric-label">Acertos</div>
+        </div>
+        <div class="metric-card">
+          <strong>76%</strong>
+          <div class="metric-label">Taxa de Acertos</div>
+        </div>
+        <div class="metric-card filter">
+          <div class="title">Matemática</div>
+          <div class="subtitle">Mais Acertos</div>
+        </div>
+        <div class="metric-card filter">
+          <div class="title">História</div>
+          <div class="subtitle">Mais Erros</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <h3>Desempenho ao Longo do Tempo</h3>
+          <a href="Disciplinas.html" class="disciplinas-btn">Disciplinas</a>
+        </div>
+        <canvas id="graficoDesempenho" width="500" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('graficoDesempenho').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Simulado 1', 'Simulado 2', 'Simulado 3', 'Simulado 4', 'Simulado 5'],
+        datasets: [{
+          label: '% de Acertos',
+          data: [35, 58, 55, 72, 85],
+          borderColor: '#007baa',
+          backgroundColor: 'rgba(0,123,170,0.2)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#000000',
+              font: {
+                weight: 'bold',
+                size: 14
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              color: '#000000',
+              font: {
+                weight: 'bold'
+              }
+            },
+            title: {
+              display: true,
+              color: '#000000',
+              font: {
+                weight: 'bold'
+              }
+            }
+          },
+          x: {
+            ticks: {
+              color: '#000000',
+              font: {
+                weight: 'bold'
+              }
+            },
+            title: {
+              display: true,
+              color: '#000000',
+              font: {
+                weight: 'bold'
+              }
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

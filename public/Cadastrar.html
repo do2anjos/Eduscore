@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastrar Aluno</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="home-container">
+    <aside class="sidebar">
+      <div class="profile">
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <span>
+          Coordenador<br>
+          <small>coordenacao@uea.edu.br</small>
+        </span>
+      </div>
+      <nav class="nav-links" role="navigation" aria-label="Menu principal">
+        <a href="home.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
+        </a>
+        <a href="RelatorioGeral.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
+        </a>
+        <a href="Cadastrar.html" class="active" aria-current="page">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar
+        </a>
+        <a href="CadastrarGabarito.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
+        </a>
+        <a href="AgendarSessao.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão
+        </a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Breadcrumb (Heurística 4: Consistência) -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="home.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>Cadastrar Aluno</span>
+      </nav>
+
+      <h2>Cadastrar Novo Aluno</h2>
+      
+      <form id="cadastroAlunoForm" onsubmit="handleCadastroAluno(event)">
+        <div class="input-group">
+          <label for="nome">Nome Completo <span class="required-field"></span></label>
+          <input type="text" id="nome" name="nome" placeholder="Digite o nome completo do aluno" required autocomplete="name" />
+          <span class="input-hint">Nome completo conforme documento de identidade</span>
+        </div>
+
+        <div class="input-group">
+          <label for="email">E-mail <span class="required-field"></span></label>
+          <input type="email" id="email" name="email" placeholder="exemplo@email.com" required autocomplete="email" />
+          <span class="input-hint">Email para contato e comunicação</span>
+        </div>
+
+        <div class="input-group">
+          <label for="telefone">Telefone do Responsável <span class="required-field"></span></label>
+          <input type="tel" id="telefone" name="telefone" placeholder="(99) 99999-9999" required autocomplete="tel" />
+          <span class="input-hint">Formato: (XX) XXXXX-XXXX</span>
+        </div>
+
+        <div class="input-group">
+          <label for="nascimento">Data de Nascimento <span class="required-field"></span></label>
+          <input type="date" id="nascimento" name="nascimento" required max="2010-12-31" />
+          <span class="input-hint">Data de nascimento do aluno</span>
+        </div>
+
+        <div class="input-group">
+          <label for="etapa">Etapa <span class="required-field"></span></label>
+          <select id="etapa" name="etapa" required>
+            <option value="">Selecione a etapa</option>
+            <option value="SIS 1">SIS 1</option>
+            <option value="SIS 2">SIS 2</option>
+            <option value="SIS 3">SIS 3</option>
+          </select>
+          <span class="input-hint">Etapa educacional do aluno</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn-secondary" onclick="window.location.href='home.html'">Cancelar</button>
+          <button type="submit" class="email-btn" style="flex: 1;">
+            <span id="submitBtnText">Cadastrar Aluno</span>
+            <span id="submitSpinner" class="loading-spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script>
+    async function handleCadastroAluno(event) {
+      event.preventDefault();
+      
+      // Validação (Heurística 5: Prevenção de erros)
+      if (!validateForm(event.target)) {
+        return;
+      }
+
+      const formData = {
+        nome_completo: document.getElementById('nome').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        telefone_responsavel: document.getElementById('telefone').value,
+        data_nascimento: document.getElementById('nascimento').value,
+        etapa: document.getElementById('etapa').value
+      };
+
+      // Feedback visual (Heurística 1)
+      const btnText = document.getElementById('submitBtnText');
+      const spinner = document.getElementById('submitSpinner');
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      
+      btnText.style.display = 'none';
+      spinner.style.display = 'inline-block';
+      submitBtn.disabled = true;
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/alunos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.sucesso) {
+          showToast('Aluno cadastrado com sucesso!', 'success');
+          event.target.reset();
+          setTimeout(() => {
+            window.location.href = 'home.html';
+          }, 1500);
+        } else {
+          showToast(data.erro || 'Erro ao cadastrar aluno', 'error', 5000);
+          btnText.style.display = 'inline';
+          spinner.style.display = 'none';
+          submitBtn.disabled = false;
+        }
+      } catch (error) {
+        showToast('Erro de conexão. Tente novamente.', 'error', 5000);
+        btnText.style.display = 'inline';
+        spinner.style.display = 'none';
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Formatação de telefone (Heurística 5: Prevenção de erros)
+    document.getElementById('telefone')?.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length > 11) value = value.substring(0, 11);
+      if (value.length > 2) value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+      if (value.length > 10) value = `${value.substring(0, 10)}-${value.substring(10)}`;
+      e.target.value = value;
+    });
+  </script>
+</body>
+</html>

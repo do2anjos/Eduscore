@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corrigir Gabarito</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="home-container">
+    <aside class="sidebar">
+      <div class="profile">
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil">
+        <span>Coordenador<br><small>coordenacao@uea.edu.br</small></span>
+      </div>
+      <nav class="nav-links">
+        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png"> Home</a>
+        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png"> Gerar Relatório</a>
+        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png"> Cadastrar</a>
+        
+        <div class="dropdown">
+          <a href="#" class="active"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png"> Simulado</a>
+          <div class="dropdown-options">
+            <a href="CadastrarGabarito.html" class="active">Cadastrar Gabarito</a>
+            <a href="CorrigirSimulado.html">Corrigir Gabarito</a>
+          </div>
+        </div>
+
+        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png"> Agendar Sessão</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Breadcrumb (Heurística 4: Consistência) -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="home.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>Corrigir Simulado</span>
+      </nav>
+
+      <button id="voltarBtn" onclick="previousStep()" class="voltar-btn" aria-label="Voltar passo anterior">←</button>
+
+      <div class="dashboard-header">
+        <div class="user-box">
+          <img src="https://img.icons8.com/ios-filled/24/user-group-man-man.png" alt="Usuário" />
+          <span id="alunoInfo">Ler código!</span>
+          <img src="https://img.icons8.com/material-outlined/24/barcode.png" alt="Código de Barras" />
+        </div>
+      </div>
+
+      <div class="step active" id="step1">
+        <img src="https://img.icons8.com/material-outlined/96/000000/barcode-scanner.png" alt="Código de Barras" />
+        <h3>IDENTIFICAR ALUNO</h3>
+        <p>Digite ou escaneie o código de barras/matrícula do aluno</p>
+        <div style="margin: 20px 0;">
+          <input type="text" id="codigoAlunoInput" placeholder="Digite o código ou matrícula"
+            oninput="verificarCodigo()" 
+            style="padding: 12px; width: 80%; border-radius: 20px; border: 1px solid #ccc; text-align: center; font-size: 16px;" />
+        </div>
+        <button id="btnProximoAluno" onclick="nextStep()" style="display:none">Próximo</button>
+      </div>
+
+      <div class="step" id="step2">
+        <img src="https://img.icons8.com/material-outlined/96/000000/camera.png" alt="Câmera" />
+        <h3>ABRIR CÂMERA</h3>
+        <button onclick="nextStep()">Tirar foto</button>
+        <p>ou</p>
+        <button onclick="nextStep()">Anexar foto</button>
+      </div>
+
+      <div class="step" id="step3">
+        <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Documentos" />
+        <h3>Gabaritos Carregados</h3>
+        <div class="list-box" id="listaAlunos">
+          <div onclick="selecionarAluno('MATHEUS DOS ANJOS PINHEIRO', 27)">MATHEUS DOS ANJOS PINHEIRO - 01</div>
+          <div onclick="selecionarAluno('MAXWELL ALBUQUERQUE', 25)">MAXWELL ALBUQUERQUE - 02</div>
+          <div onclick="selecionarAluno('LUCAS BARROS VIANA', 30)">LUCAS BARROS VIANA - 03</div>
+          <div onclick="selecionarAluno('LETÍCIA MACEDO DE ALMEIDA', 22)">LETÍCIA MACEDO DE ALMEIDA - 04</div>
+        </div>
+        <button onclick="nextStep()">Próximo</button>
+      </div>
+
+      <div class="step" id="step3_5">
+        <img src="https://img.icons8.com/material-outlined/96/000000/view-file.png" alt="Visualizar Respostas" />
+        <h3>Respostas Capturadas</h3>
+        <p id="alunoSelecionado">Confira as alternativas marcadas para o aluno:</p>
+        <div class="list-box" style="max-height: 300px; overflow-y: auto; text-align: left;" id="respostasCapturadas"></div>
+        <button onclick="nextStep()">Próximo</button>
+      </div>
+
+      <div class="step" id="step4">
+        <img src="https://img.icons8.com/material-outlined/96/000000/test-passed.png" alt="Gabarito" />
+        <h3>Selecionar Gabarito Cadastrado</h3>
+        <div class="list-box" id="gabaritoList">
+          <div onclick="selectItem(this)">SIMULADO01_SIS_1</div>
+          <div onclick="selectItem(this)">SIMULADO01_SIS_2</div>
+          <div onclick="selectItem(this)">SIMULADO01_SIS_3</div>
+        </div>
+        <button onclick="finalizar()">Corrigir</button>
+      </div>
+
+      <div class="step" id="step5">
+        <img src="https://img.icons8.com/ios-filled/100/007aa3/checked--v1.png" alt="Sucesso" />
+        <h3>Simulado corrigido<br>com sucesso</h3>
+        <a href="CorrigirSimulado.html" class="step-button">Voltar ao Início</a>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const baseAlunos = {
+      "20231001": { nome: "MATHEUS DOS ANJOS PINHEIRO", idade: 27 },
+      "20231002": { nome: "MAXWELL ALBUQUERQUE", idade: 25 },
+      "20231003": { nome: "LUCAS BARROS VIANA", idade: 30 },
+      "20231004": { nome: "LETÍCIA MACEDO DE ALMEIDA", idade: 22 }
+    };
+
+    let codigoAluno = "";
+    let currentStep = 1;
+
+    const respostasSimuladas = Array.from({ length: 60 }, () => {
+      const letras = ["A", "B", "C", "D", "E"];
+      return letras[Math.floor(Math.random() * letras.length)];
+    });
+
+    function nextStep() {
+      document.getElementById(`step${currentStep}`).classList.remove('active');
+      if (currentStep === '3_5') {
+        currentStep = 4;
+      } else {
+        currentStep++;
+      }
+      document.getElementById(`step${currentStep}`).classList.add('active');
+      atualizarBotaoVoltar();
+    }
+
+    function previousStep() {
+      document.getElementById(`step${currentStep}`).classList.remove('active');
+      if (currentStep === 4) {
+        currentStep = '3_5';
+      } else if (currentStep === '3_5') {
+        currentStep = 3;
+      } else {
+        currentStep--;
+      }
+      document.getElementById(`step${currentStep}`).classList.add('active');
+      atualizarBotaoVoltar();
+    }
+
+    function atualizarBotaoVoltar() {
+      const btn = document.getElementById("voltarBtn");
+      if (currentStep === 1 || currentStep === 5) {
+        btn.style.display = "none";
+      } else {
+        btn.style.display = "block";
+      }
+    }
+
+    function selecionarAluno(nome, idade) {
+      document.getElementById('step3').classList.remove('active');
+      document.getElementById('step3_5').classList.add('active');
+      document.getElementById('alunoSelecionado').innerText = `Confira as alternativas marcadas para o aluno: ${nome}`;
+      document.getElementById('alunoInfo').innerText = `${nome} - ${idade}`;
+      preencherRespostasCapturadas();
+      currentStep = '3_5';
+      atualizarBotaoVoltar();
+    }
+
+    function preencherRespostasCapturadas() {
+      const container = document.getElementById('respostasCapturadas');
+      container.innerHTML = "";
+      respostasSimuladas.forEach((resposta, index) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<strong>Questão ${String(index + 1).padStart(2, '0')}:</strong> ${resposta}`;
+        container.appendChild(div);
+      });
+    }
+
+    function selectItem(el) {
+      document.querySelectorAll('#gabaritoList div').forEach(div => div.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function verificarCodigo() {
+      const input = document.getElementById("codigoAlunoInput").value.trim();
+      const dadosAluno = baseAlunos[input];
+      const infoSpan = document.getElementById("alunoInfo");
+      const btn = document.getElementById("btnProximoAluno");
+
+      if (dadosAluno) {
+        infoSpan.innerText = `${dadosAluno.nome} - ${dadosAluno.idade}`;
+        btn.style.display = "inline-block";
+        codigoAluno = input;
+      } else {
+        infoSpan.innerText = "Ler código!";
+        btn.style.display = "none";
+      }
+    }
+
+    function finalizar() {
+      const selected = document.querySelector('#gabaritoList .selected');
+      if (selected) {
+        document.getElementById('step4').classList.remove('active');
+        document.getElementById('step5').classList.add('active');
+        document.getElementById('alunoInfo').innerText = "Ler código!";
+        atualizarBotaoVoltar();
+      } else {
+        showToast('Selecione um gabarito primeiro', 'warning');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <img src="/eduscore.png" alt="Ícone elegante" class="login-icon" />
+      <h2>Faça seu login</h2>
+      <p>É necessário seu <strong>email institucional</strong></p>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="input-group">
+          <label for="email">Email institucional</label>
+          <input type="email" id="email" name="email" placeholder="exemplo@instituicao.edu.br" required autocomplete="email" />
+          <span class="input-hint">Use seu email institucional cadastrado</span>
+        </div>
+
+        <div class="input-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required autocomplete="current-password" />
+        </div>
+
+        <button type="submit" class="email-btn">
+          <span id="loginBtnText">Continuar com email</span>
+          <span id="loginSpinner" class="loading-spinner" style="display: none;"></span>
+        </button>
+      </form>
+
+      <div style="margin-top: 20px; text-align: center;">
+        <a href="perfil.html">Cadastre-se</a>
+        <span style="margin: 0 10px; color: #ccc;">|</span>
+        <a href="redefinir.html">Esqueceu a senha?</a>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="quote">
+        <div class="quote-text">
+          Educar não é ensinar respostas, é ensinar a pensar.
+        </div>
+        <div class="quote-author">
+          Jean Piaget<br />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function handleLogin(event) {
+      event.preventDefault();
+      
+      const email = document.querySelector('#email').value.trim();
+      const senha = document.querySelector('#senha').value;
+
+      // Validação (Heurística 5: Prevenção de erros)
+      if (!email || !senha) {
+        showToast('Por favor, preencha todos os campos', 'warning');
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        showToast('Email inválido. Use um email institucional válido', 'error');
+        return;
+      }
+
+      // Feedback visual (Heurística 1: Visibilidade do status)
+      const btnText = document.getElementById('loginBtnText');
+      const spinner = document.getElementById('loginSpinner');
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      
+      btnText.style.display = 'none';
+      spinner.style.display = 'inline-block';
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('/api/usuarios/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, senha })
+        });
+
+        const data = await response.json();
+
+        if (data.sucesso) {
+          showToast('Login realizado com sucesso! Redirecionando...', 'success');
+          localStorage.setItem('token', data.token);
+          
+          setTimeout(() => {
+            window.location.href = '/home.html';
+          }, 1000);
+        } else {
+          showToast('Erro: ' + data.erro, 'error', 5000);
+          btnText.style.display = 'inline';
+          spinner.style.display = 'none';
+          submitBtn.disabled = false;
+        }
+      } catch (error) {
+        showToast('Erro de conexão. Verifique sua internet.', 'error', 5000);
+        btnText.style.display = 'inline';
+        spinner.style.display = 'none';
+        submitBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

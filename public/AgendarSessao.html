@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agendar Sessão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="home-container">
+    <aside class="sidebar">
+      <div class="profile">
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil" />
+        <span>
+          Coordenador<br>
+          <small>coordenacao@uea.edu.br</small>
+        </span>
+      </div>
+      <nav class="nav-links">
+        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" /> Home</a>
+        <a href="GerarRelatorio.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" /> Gerar Relatório</a>
+        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" /> Cadastrar</a>
+        <a href="CadastrarGabarito.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" /> Simulado</a>
+        <a href="AgendarSessao.html" class="active"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" /> Agendar Sessão</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Breadcrumb (Heurística 4: Consistência) -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="home.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>Agendar Sessão</span>
+      </nav>
+
+      <h2>Agendar Sessão</h2>
+
+      <button class="add-button" onclick="abrirFormulario('')">+ Adicionar Sessão</button>
+
+      <div class="form-modal" id="modalAgendar">
+        <div class="form-group">
+          <label for="alunoNome">Nome do Aluno</label>
+          <input type="text" id="alunoNome" placeholder="Digite o nome do aluno" />
+        </div>
+
+        <div class="form-group">
+          <label for="etapa">Etapa</label>
+          <select id="etapa">
+            <option value="">Selecione</option>
+            <option value="SIS1">SIS1</option>
+            <option value="SIS2">SIS2</option>
+            <option value="SIS3">SIS3</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="materia">Matéria</label>
+          <select id="materia">
+            <option value="">Selecione</option>
+            <option value="Matemática">Matemática</option>
+            <option value="Biologia">Biologia</option>
+            <option value="Química">Química</option>
+            <option value="Geografia">Geografia</option>
+            <option value="Português">Português</option>
+            <option value="Física">Física</option>
+            <option value="Língua Estr.">Língua Estr.</option>
+            <option value="História">História</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="dataSessao">Data</label>
+          <input type="date" id="dataSessao" />
+        </div>
+
+        <div class="form-group">
+          <label for="horaSessao">Horário</label>
+          <input type="time" id="horaSessao" />
+        </div>
+
+        <div class="form-actions">
+          <button class="cancel" onclick="fecharFormulario()">Cancelar</button>
+          <button class="save" onclick="confirmarAgendamento()">Agendar</button>
+        </div>
+      </div>
+
+      <div class="session-list">
+        <!-- Sessões adicionadas aparecerão aqui -->
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let sessaoEditando = null;
+
+    function abrirFormulario(nome = '', etapa = '', data = '', hora = '', materia = '', elemento = null) {
+      document.getElementById('alunoNome').value = nome;
+      document.getElementById('etapa').value = etapa;
+      document.getElementById('materia').value = materia;
+      document.getElementById('dataSessao').value = data;
+      document.getElementById('horaSessao').value = hora;
+      document.getElementById('modalAgendar').classList.add('active');
+      sessaoEditando = elemento;
+    }
+
+    function fecharFormulario() {
+      document.getElementById('modalAgendar').classList.remove('active');
+      sessaoEditando = null;
+    }
+
+    function confirmarAgendamento() {
+      const nome = document.getElementById('alunoNome').value || 'Aluno não informado';
+      const etapa = document.getElementById('etapa').value;
+      const materia = document.getElementById('materia').value;
+      const data = document.getElementById('dataSessao').value;
+      const hora = document.getElementById('horaSessao').value;
+
+      // Heurística 5: Prevenção de erros
+      if (!etapa || !materia || !data || !hora) {
+        showToast('Preencha todos os campos obrigatórios', 'warning');
+        return;
+      }
+
+      const dataFormatada = data.split("-").reverse().slice(0, 2).join("/");
+
+      const conteudoHTML = `
+        <span><strong>${nome}</strong> | ${etapa} | ${dataFormatada} | ${hora} | ${materia}</span>
+        <div class="actions">
+          <button onclick="abrirFormulario('${nome}', '${etapa}', '${data}', '${hora}', '${materia}', this.closest('.session-item'))">Editar</button>
+          <button onclick="excluirSessao(this)">Excluir</button>
+        </div>
+      `;
+
+      if (sessaoEditando) {
+        sessaoEditando.innerHTML = conteudoHTML;
+      } else {
+        const novaSessao = document.createElement('div');
+        novaSessao.classList.add('session-item');
+        novaSessao.innerHTML = conteudoHTML;
+        document.querySelector('.session-list').appendChild(novaSessao);
+      }
+
+      showToast('Sessão agendada com sucesso!', 'success');
+      fecharFormulario();
+    }
+
+    function excluirSessao(botao) {
+      // Heurística 3: Controle e liberdade - Confirmação antes de excluir
+      showConfirmDialog(
+        'Deseja realmente excluir esta sessão?',
+        () => {
+          const item = botao.closest('.session-item');
+          item.remove();
+          showToast('Sessão excluída com sucesso', 'success');
+        }
+      );
+    }
+  </script>
+</body>
+</html>

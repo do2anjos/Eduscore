@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastrar Gabarito</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="home-container">
+    <aside class="sidebar">
+      <div class="profile">
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil">
+        <span>Coordenador<br><small>coordenacao@uea.edu.br</small></span>
+      </div>
+      <nav class="nav-links">
+        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png"> Home</a>
+        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png"> Gerar Relatório</a>
+        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png"> Cadastrar</a>
+        
+        <div class="dropdown">
+          <a href="#" class="active"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png"> Simulado</a>
+          <div class="dropdown-options">
+            <a href="CadastrarGabarito.html" class="active">Cadastrar Gabarito</a>
+            <a href="CorrigirSimulado.html">Corrigir Gabarito</a>
+          </div>
+        </div>
+
+        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png"> Agendar Sessão</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Breadcrumb (Heurística 4: Consistência) -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="home.html">Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span>Cadastrar Gabarito</span>
+      </nav>
+
+      <div class="upload-area">
+        <label for="file-upload">
+          <img src="https://img.icons8.com/ios-filled/100/xls.png" class="upload-icon" alt="Anexar Arquivo">
+          <p>Anexe<br>arquivo Excel ou CSV</p>
+        </label>
+        <input type="file" id="file-upload" class="hidden-input" accept=".csv,.xls,.xlsx" onchange="handleFile(this)">
+      </div>
+
+      <div class="form-section">
+        <h3>Nomear Gabarito</h3>
+        <div class="input-wrapper">
+          <input type="text" id="gabaritoNome" placeholder="Ex: GABARITO_01_SIS">
+          <img src="https://img.icons8.com/ios-filled/24/003b54/file.png" alt="Arquivo">
+        </div>
+
+        <button class="submit-btn" onclick="cadastrar()">Adicionar Gabarito</button>
+
+        <h3 style="margin-top: 32px;">Gabaritos Cadastrados</h3>
+        <div class="gabarito-list" id="listaGabaritos">
+          <div class="gabarito-item">GABARITOSIMULADO01_SIS_1
+            <img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir(this)">
+          </div>
+          <div class="gabarito-item">GABARITOSIMULADO01_SIS_2
+            <img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir(this)">
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function handleFile(input) {
+      if (!input.files.length) return;
+      const file = input.files[0];
+      document.getElementById('gabaritoNome').value = file.name.replace(/\.\w+$/, '').toUpperCase();
+    }
+
+    function cadastrar() {
+      const nome = document.getElementById('gabaritoNome').value.trim();
+      
+      // Heurística 5: Prevenção de erros
+      if (!nome) {
+        showToast('Informe um nome válido para o gabarito', 'warning');
+        document.getElementById('gabaritoNome').focus();
+        return;
+      }
+
+      // Heurística 1: Feedback visual
+      const div = document.createElement('div');
+      div.className = 'gabarito-item';
+      div.innerHTML = `${nome}<img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir(this)">`;
+      document.getElementById('listaGabaritos').appendChild(div);
+      
+      showToast(`Gabarito "${nome}" cadastrado com sucesso!`, 'success');
+      document.getElementById('gabaritoNome').value = '';
+    }
+
+    function excluir(el) {
+      // Heurística 3: Controle e liberdade do usuário - Confirmação antes de excluir
+      showConfirmDialog(
+        'Deseja realmente excluir este gabarito? Esta ação não pode ser desfeita.',
+        () => {
+          el.parentElement.remove();
+          showToast('Gabarito excluído com sucesso', 'success');
+        }
+      );
+    }
+  </script>
+</body>
+</html>

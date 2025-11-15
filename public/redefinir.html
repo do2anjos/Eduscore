@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Redefinir</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <img src="/eduscore.png" alt="Ícone elegante" class="login-icon" />
+      <h2>Redefina sua senha</h2>
+      <p>É necessário seu <strong>email institucional</strong></p>
+
+      <div class="input-group">
+        <label for="email"></label>
+        <input type="email" id="email" placeholder="Email institucional" required />
+      </div>
+
+      <div class="input-group">
+        <label for="senha"></label>
+        <input type="password" id="senha" placeholder="Nova senha" required />
+      </div>
+
+      <div class="input-group">
+        <label for="confirmarSenha"></label>
+        <input type="password" id="confirmarSenha" placeholder="Confirmar nova senha" required />
+      </div>
+
+      <button class="email-btn">Redefinir</button>
+    </div>
+
+    <div class="right">
+      <div class="quote">
+        <div class="quote-text">
+          Educar não é ensinar respostas, é ensinar a pensar.
+        </div>
+        <div class="quote-author">
+          Jean Piaget<br />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelector('.email-btn').addEventListener('click', async function(event) {
+      event.preventDefault();
+
+      const email = document.querySelector('#email').value.trim();
+      const senha = document.querySelector('#senha').value;
+      const confirmarSenha = document.querySelector('#confirmarSenha').value;
+
+      // Heurística 5: Prevenção de erros
+      if (!email || !senha || !confirmarSenha) {
+        showToast('Por favor, preencha todos os campos', 'warning');
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        showToast('Email inválido', 'error');
+        return;
+      }
+
+      if (senha !== confirmarSenha) {
+        showToast('As senhas não coincidem', 'error');
+        return;
+      }
+
+      if (senha.length < 8) {
+        showToast('A senha deve ter no mínimo 8 caracteres', 'warning');
+        return;
+      }
+
+      // Heurística 1: Feedback visual
+      showLoading('Redefinindo senha...');
+      
+      try {
+        // Aqui você pode adicionar a lógica de redefinição de senha
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        showToast('Funcionalidade de redefinição de senha em desenvolvimento', 'info');
+      } finally {
+        hideLoading();
+      }
+    });
+  </script>
+</body>
+</html>
