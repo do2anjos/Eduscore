@@ -1,14 +1,27 @@
 {
-  "name": "classy",
+  "name": "eduscore",
   "version": "1.0.0",
-  "description": "Sistema de gestão educacional",
+  "description": "Plataforma integrada de analytics educacional: da digitalização de folhas de resposta à predição de desempenho usando machine learning",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
     "migrate": "node backend/migrations/create_schema.js"
   },
-  "keywords": [],
+  "keywords": [
+    "education",
+    "analytics",
+    "machine-learning",
+    "educational-platform",
+    "exam-management",
+    "performance-prediction",
+    "student-tracking",
+    "vestibular",
+    "amazonas",
+    "sqlite",
+    "express",
+    "jwt"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",

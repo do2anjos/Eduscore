@@ -1,18 +1,63 @@
-# Classy - Sistema de Gestão Educacional
+# EduScore - Plataforma Integrada de Analytics Educacional
 
-> Sistema moderno de gestão educacional com foco em usabilidade e experiência do usuário, implementando as 10 Heurísticas de Nielsen.
+> **EduScore: From digitizing answer sheets to predicting performance using machine learning, an integrated educational analytics platform for the context of university entrance exams in Amazonas**
 
-Sistema completo para gestão de alunos, disciplinas, gabaritos, questões e relatórios educacionais.
+Plataforma educacional integrada que combina digitalização de folhas de resposta, análise de desempenho e predição de resultados utilizando machine learning, desenvolvida especificamente para o contexto de exames vestibulares no Amazonas.
+
+**Última atualização**: 2025-11-16 17:41:12
+
+## 🎯 Sobre o Projeto
+
+O **EduScore** é uma plataforma completa de analytics educacional que oferece:
+
+- 📝 **Digitalização de Folhas de Resposta**: Processamento automatizado de simulados e provas
+- 📊 **Análise de Desempenho**: Relatórios detalhados e métricas em tempo real
+- 🔮 **Predição de Desempenho**: Modelo de machine learning para previsão de resultados (em desenvolvimento)
+- 📈 **Visualização de Dados**: Gráficos interativos e dashboards personalizados
+- 🎓 **Gestão Educacional**: Controle completo de alunos, disciplinas, simulados e sessões
+
+Desenvolvido para coordenadores e professores acompanharem o progresso dos alunos em simulados e exames vestibulares, com foco no contexto universitário do Amazonas.
 
 ## 📋 Índice
 
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Funcionalidades](#funcionalidades)
 - [Requisitos](#requisitos)
 - [Instalação](#instalação)
 - [Configuração](#configuração)
 - [Executando o Projeto](#executando-o-projeto)
 - [Estrutura do Projeto](#estrutura-do-projeto)
+- [Módulos da Plataforma](#módulos-da-plataforma)
 - [Autenticação](#autenticação)
 - [API](#api)
+- [Documentação](#documentação)
+
+## ✨ Funcionalidades Principais
+
+### 📊 Dashboard e Relatórios
+- **Dashboard Geral**: Visão consolidada com métricas de alunos ativos, progresso mensal e retenção por disciplina
+- **Relatório Geral**: Estatísticas agregadas com filtro por etapa/turma
+- **Relatório Individual**: Análise detalhada por aluno incluindo:
+  - Desempenho ao longo do tempo
+  - Relatório por simulado específico
+  - Desempenho por disciplina (geral ou filtrado por simulado)
+  - Previsão de desempenho (em desenvolvimento)
+
+### 📝 Gestão de Simulados
+- Upload e processamento de gabaritos via CSV
+- Criação e gerenciamento de questões
+- Correção automática de respostas
+- Agendamento de sessões de avaliação
+
+### 🎓 Gestão Acadêmica
+- Cadastro e gerenciamento de alunos
+- Gestão de disciplinas
+- Controle de usuários (professores, coordenadores, administradores)
+
+### 🔮 Predição de Desempenho
+- Modelo de machine learning para previsão de acertos (em desenvolvimento)
+- Baseado em histórico de desempenho do aluno
+- Auxilia no planejamento de estudos
 
 ## 🔧 Requisitos
 
@@ -79,15 +124,60 @@ O servidor estará disponível em `http://localhost:3000`
 classy-main/
 ├── backend/
 │   ├── middleware/       # Middlewares (auth, errorHandler, validation)
+│   │   ├── auth.js      # Autenticação JWT
+│   │   ├── errorHandler.js  # Tratamento de erros
+│   │   └── validation.js    # Validação de dados
 │   ├── routes/          # Rotas da API
+│   │   ├── alunos.js    # Gestão de alunos
+│   │   ├── disciplinas.js   # Gestão de disciplinas
+│   │   ├── gabaritos.js     # Gestão de gabaritos/simulados
+│   │   ├── questoes.js      # Gestão de questões
+│   │   ├── respostas.js     # Gestão de respostas
+│   │   ├── relatorios.js    # Relatórios e estatísticas
+│   │   ├── sessoes.js       # Gestão de sessões
+│   │   └── usuarios.js      # Gestão de usuários
+│   ├── migrations/      # Migrações do banco de dados
 │   ├── utils/           # Utilitários (transactions)
-│   ├── db.js            # Configuração do banco de dados
+│   ├── db.js            # Configuração do banco SQLite
 │   └── .env             # Variáveis de ambiente (não versionado)
-├── public/              # Arquivos estáticos (HTML, CSS, JS)
-├── uploads/             # Diretório de uploads (criado automaticamente)
-├── server.js            # Arquivo principal do servidor
+├── public/              # Frontend - Arquivos estáticos
+│   ├── *.html          # Páginas da aplicação
+│   ├── style.css       # Estilos globais
+│   ├── utils.js        # Utilitários frontend (heurísticas Nielsen)
+│   └── script.js       # Scripts adicionais
+├── doc/                 # Documentação do projeto
+│   ├── API.md          # Documentação completa da API
+│   ├── CHANGELOG.md    # Histórico de alterações
+│   ├── CALCULO_METRICAS.md  # Como métricas são calculadas
+│   └── ...
+├── uploads/             # Arquivos enviados (criado automaticamente)
+├── database.sqlite      # Banco de dados SQLite
+├── server.js            # Servidor Express.js principal
 └── package.json         # Dependências do projeto
 ```
+
+## 🏗️ Módulos da Plataforma
+
+| Módulo | Descrição | Tecnologias |
+|--------|-----------|-------------|
+| **Autenticação e Usuários** | Sistema JWT, gestão de professores/coordenadores | Node.js, Express.js, JWT, bcrypt |
+| **Gestão de Alunos** | CRUD completo de alunos | Node.js, Express.js, SQLite |
+| **Gestão de Disciplinas** | Gerenciamento de disciplinas e cursos | Node.js, Express.js, SQLite |
+| **Digitalização e Gabaritos** | Upload CSV, processamento de questões, correção automática | Node.js, Express.js, Multer, csv-parser |
+| **Gestão de Sessões** | Agendamento e controle de simulados | Node.js, Express.js, SQLite |
+| **Respostas e Correção** | Processamento e correção automática | Node.js, Express.js, SQLite |
+| **Analytics e Relatórios** | Métricas, gráficos, estatísticas | Node.js, Express.js, Chart.js |
+| **Predição de Desempenho** | Modelo ML para previsão (em desenvolvimento) | - |
+| **Interface Web** | Frontend responsivo e acessível | HTML5, CSS3, JavaScript (Vanilla) |
+| **Segurança** | Middlewares de autenticação, rate limiting, validação | Express.js, JWT, express-rate-limit |
+
+**Stack Tecnológica:**
+- **Backend**: Node.js + Express.js
+- **Banco de Dados**: SQLite (better-sqlite3)
+- **Autenticação**: JWT (jsonwebtoken) + bcrypt
+- **Frontend**: HTML5, CSS3, JavaScript (Vanilla) + Chart.js
+- **Upload**: Multer (processamento de arquivos CSV)
+- **Segurança**: express-rate-limit, CORS, validação de dados
 
 ## 🔐 Autenticação
 
@@ -135,20 +225,23 @@ Consulte o arquivo [API.md](./doc/API.md) para documentação completa da API.
 
 ## 📚 Documentação
 
-- [API Documentation](doc/API.md) - Documentação completa da API REST
-- [Diagnóstico do Projeto](doc/DIAGNOSTICO_PROJETO.md) - Análise inicial do projeto
-- [Migração SQLite](doc/MIGRACAO_SQLITE.md) - Detalhes da migração de PostgreSQL para SQLite
-- [Heurísticas de Nielsen](doc/HEURISTICAS_NIELSEN.md) - Implementação das 10 heurísticas de usabilidade
-- [Changelog](doc/CHANGELOG.md) - Histórico completo de alterações
+**Última atualização**: 2025-11-16 17:41:12
 
-## 🎨 Design System
+- **[API Documentation](doc/API.md)** - Documentação completa da API REST com exemplos
+- **[Cálculo de Métricas](doc/CALCULO_METRICAS.md)** - Como métricas e gráficos são calculados
+- **[Changelog](doc/CHANGELOG.md)** - Histórico completo de alterações com datas
+- **[Diagnóstico do Projeto](doc/DIAGNOSTICO_PROJETO.md)** - Análise inicial do projeto
+- **[Migração SQLite](doc/MIGRACAO_SQLITE.md)** - Detalhes da migração de PostgreSQL para SQLite
+- **[Heurísticas de Nielsen](doc/HEURISTICAS_NIELSEN.md)** - Implementação das 10 heurísticas de usabilidade
 
-O projeto implementa as **10 Heurísticas de Usabilidade de Nielsen**:
+## 🎨 Design System e Usabilidade
+
+O projeto implementa as **10 Heurísticas de Usabilidade de Nielsen** para garantir uma experiência excepcional:
 
 1. ✅ **Visibilidade do Status do Sistema** - Toast notifications, loading states, progress bars
-2. ✅ **Correspondência com o Mundo Real** - Ícones familiares, linguagem natural
+2. ✅ **Correspondência com o Mundo Real** - Ícones familiares, linguagem natural em português
 3. ✅ **Controle e Liberdade** - Botões cancelar, confirmações, breadcrumbs
-4. ✅ **Consistência e Padrões** - Navegação consistente, cores padronizadas
+4. ✅ **Consistência e Padrões** - Navegação consistente, cores padronizadas (#008cc4, #003b54)
 5. ✅ **Prevenção de Erros** - Validação em tempo real, hints contextuais
 6. ✅ **Reconhecimento ao Invés de Recordação** - Labels claros, placeholders informativos
 7. ✅ **Flexibilidade e Eficiência** - Atalhos de teclado, ações rápidas
@@ -156,13 +249,14 @@ O projeto implementa as **10 Heurísticas de Usabilidade de Nielsen**:
 9. ✅ **Ajudar Usuários a Recuperar de Erros** - Mensagens claras, sugestões de correção
 10. ✅ **Ajuda e Documentação** - Botão de ajuda, tooltips, atalhos visíveis
 
-### 🎯 Melhorias Implementadas
+### 🎯 Melhorias de UX Implementadas
 
 - **Sidebar Modernizada**: Tipografia melhorada (15px), melhor legibilidade, largura aumentada (240px)
-- **Dashboard Moderno**: Cards reorganizados com grid responsivo, gráficos atualizados
+- **Dashboard Moderno**: Cards reorganizados com grid responsivo, gráficos interativos com Chart.js
 - **Feedback Visual**: Sistema completo de notificações toast e estados de loading
-- **Acessibilidade**: ARIA labels, focus visible, semantic HTML
+- **Acessibilidade**: ARIA labels, focus visible, semantic HTML, suporte a leitores de tela
 - **Validação**: Formulários com validação em tempo real e mensagens claras
+- **Responsividade**: Layout adaptável para diferentes tamanhos de tela
 
 ### Rotas Públicas
 
@@ -184,12 +278,21 @@ Todas as outras rotas requerem autenticação via JWT.
 - ✅ Proteção contra SQL injection (parâmetros preparados)
 - ✅ Hash de senhas com bcrypt
 
-## 📝 Notas
+## 🚧 Funcionalidades em Desenvolvimento
+
+- **Modelo de Predição**: Machine learning para prever número de acertos esperado no dia da prova
+- **Análise de Padrões**: Identificação de áreas de dificuldade recorrentes
+- **Recomendações Personalizadas**: Sugestões de estudos baseadas em desempenho
+
+## 📝 Notas Importantes
 
 - O diretório `uploads/` é criado automaticamente na primeira execução
 - Em produção, configure `NODE_ENV=production`
 - Use uma chave JWT_SECRET forte e única em produção
 - O rate limiting protege contra abuso da API
+- Os dados são persistidos em SQLite (banco de dados embutido)
+- Suporte completo para importação de gabaritos via CSV
+- Sistema preparado para escalar com múltiplos simulados e alunos
 
 ## 🐛 Troubleshooting
 

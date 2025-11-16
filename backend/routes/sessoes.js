@@ -53,8 +53,8 @@ router.get('/', async (req, res) => {
       SELECT 
         s.id, 
         s.etapa, 
-        TO_CHAR(s.data, 'YYYY-MM-DD') AS data,
-        TO_CHAR(s.hora, 'HH24:MI') AS hora,
+        s.data,
+        s.hora,
         s.aluno_id, 
         a.nome_completo AS aluno_nome,
         s.disciplina_id, 
@@ -62,9 +62,9 @@ router.get('/', async (req, res) => {
         s.usuario_id, 
         u.nome AS coordenador_nome
       FROM sessoes s
-      JOIN alunos a ON s.aluno_id = a.id
-      JOIN disciplinas d ON s.disciplina_id = d.id
-      JOIN usuarios u ON s.usuario_id = u.id
+      LEFT JOIN alunos a ON s.aluno_id = a.id
+      LEFT JOIN disciplinas d ON s.disciplina_id = d.id
+      LEFT JOIN usuarios u ON s.usuario_id = u.id
     `;
 
     const filters = [];
@@ -142,6 +142,51 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/sessoes/:id - Get a specific session by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { rows } = await db.query(
+      `SELECT 
+        s.id, s.etapa, 
+        s.data,
+        s.hora,
+        s.aluno_id, 
+        a.nome_completo AS aluno_nome,
+        s.disciplina_id, 
+        d.nome AS disciplina_nome,
+        s.usuario_id, 
+        u.nome AS coordenador_nome
+       FROM sessoes s
+       LEFT JOIN alunos a ON s.aluno_id = a.id
+       LEFT JOIN disciplinas d ON s.disciplina_id = d.id
+       LEFT JOIN usuarios u ON s.usuario_id = u.id
+       WHERE s.id = $1`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Sessão não encontrada'
+      });
+    }
+
+    return res.json({
+      sucesso: true,
+      sessao: formatSession(rows[0])
+    });
+
+  } catch (err) {
+    console.error('Erro ao buscar sessão:', err);
+    return res.status(500).json({
+      sucesso: false,
+      erro: 'Erro interno ao buscar sessão'
+    });
+  }
+});
+
 // POST /api/sessoes - Criar nova sessão (requer autenticação)
 router.post('/', authenticateToken, async (req, res) => {
   const { aluno_id, etapa, disciplina_id, data, hora, usuario_id } = req.body;
@@ -212,8 +257,8 @@ router.post('/', authenticateToken, async (req, res) => {
     const sessaoCompleta = await db.query(
       `SELECT 
          s.id, s.etapa, 
-         TO_CHAR(s.data, 'YYYY-MM-DD') AS data,
-         TO_CHAR(s.hora, 'HH24:MI') AS hora,
+         s.data,
+         s.hora,
          s.aluno_id, 
          a.nome_completo AS aluno_nome,
          s.disciplina_id, 
@@ -221,9 +266,9 @@ router.post('/', authenticateToken, async (req, res) => {
          s.usuario_id, 
          u.nome AS coordenador_nome
        FROM sessoes s
-       JOIN alunos a ON s.aluno_id = a.id
-       JOIN disciplinas d ON s.disciplina_id = d.id
-       JOIN usuarios u ON s.usuario_id = u.id
+       LEFT JOIN alunos a ON s.aluno_id = a.id
+       LEFT JOIN disciplinas d ON s.disciplina_id = d.id
+       LEFT JOIN usuarios u ON s.usuario_id = u.id
        WHERE s.id = $1`,
       [rows[0].id]
     );
@@ -239,6 +284,125 @@ router.post('/', authenticateToken, async (req, res) => {
       sucesso: false,
       erro: 'Erro interno ao criar sessão',
       detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
+// PUT /api/sessoes/:id - Update session (requer autenticação)
+router.put('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { aluno_id, etapa, disciplina_id, data, hora } = req.body;
+
+    // Verificar se a sessão existe
+    const sessaoCheck = await db.query(
+      'SELECT usuario_id FROM sessoes WHERE id = $1',
+      [id]
+    );
+
+    if (sessaoCheck.rows.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Sessão não encontrada'
+      });
+    }
+
+    // Verificar permissões
+    const usuarioAutorizado = await db.query(
+      'SELECT id FROM usuarios WHERE id = $1 AND (tipo_usuario = $2 OR tipo_usuario = $3)',
+      [req.user.userId, 'coordenador', 'admin']
+    );
+
+    if (usuarioAutorizado.rows.length === 0) {
+      return res.status(403).json({
+        sucesso: false,
+        erro: 'Apenas coordenadores ou administradores podem editar sessões'
+      });
+    }
+
+    // Construir query de atualização dinamicamente
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (aluno_id !== undefined) {
+      updates.push(`aluno_id = $${paramIndex++}`);
+      values.push(aluno_id);
+    }
+    if (etapa !== undefined) {
+      updates.push(`etapa = $${paramIndex++}`);
+      values.push(etapa);
+    }
+    if (disciplina_id !== undefined) {
+      updates.push(`disciplina_id = $${paramIndex++}`);
+      values.push(disciplina_id);
+    }
+    if (data !== undefined) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+        return res.status(400).json({
+          sucesso: false,
+          erro: 'Formato de data inválido. Use YYYY-MM-DD'
+        });
+      }
+      updates.push(`data = $${paramIndex++}`);
+      values.push(data);
+    }
+    if (hora !== undefined) {
+      if (!/^\d{2}:\d{2}$/.test(hora)) {
+        return res.status(400).json({
+          sucesso: false,
+          erro: 'Formato de hora inválido. Use HH:MM'
+        });
+      }
+      updates.push(`hora = $${paramIndex++}`);
+      values.push(hora);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Nenhum campo para atualizar'
+      });
+    }
+
+    values.push(id);
+
+    await db.query(
+      `UPDATE sessoes SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+      values
+    );
+
+    // Buscar sessão atualizada
+    const sessaoAtualizada = await db.query(
+      `SELECT 
+        s.id, s.etapa, 
+        s.data,
+        s.hora,
+        s.aluno_id, 
+        a.nome_completo AS aluno_nome,
+        s.disciplina_id, 
+        d.nome AS disciplina_nome,
+        s.usuario_id, 
+        u.nome AS coordenador_nome
+       FROM sessoes s
+       LEFT JOIN alunos a ON s.aluno_id = a.id
+       LEFT JOIN disciplinas d ON s.disciplina_id = d.id
+       LEFT JOIN usuarios u ON s.usuario_id = u.id
+       WHERE s.id = $1`,
+      [id]
+    );
+
+    return res.json({
+      sucesso: true,
+      mensagem: 'Sessão atualizada com sucesso',
+      sessao: formatSession(sessaoAtualizada.rows[0])
+    });
+
+  } catch (err) {
+    console.error('Erro ao atualizar sessão:', err);
+    return res.status(500).json({
+      sucesso: false,
+      erro: 'Erro interno ao atualizar sessão'
     });
   }
 });

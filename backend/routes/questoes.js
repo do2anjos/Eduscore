@@ -9,7 +9,18 @@ router.use(authenticateToken);
 // GET /api/questoes - listar todas as questões
 router.get('/', async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT id, gabarito_id, numero, resposta_correta FROM questoes ORDER BY gabarito_id, numero');
+    const { gabarito_id } = req.query;
+    let query = 'SELECT id, gabarito_id, numero, resposta_correta, disciplina_id FROM questoes';
+    const params = [];
+    
+    if (gabarito_id) {
+      query += ' WHERE gabarito_id = $1';
+      params.push(gabarito_id);
+    }
+    
+    query += ' ORDER BY gabarito_id, numero';
+    
+    const { rows } = await db.query(query, params);
     res.json({ sucesso: true, total: rows.length, questoes: rows });
   } catch (err) {
     console.error('Erro ao buscar questões:', err);
@@ -17,12 +28,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/questoes/:gabarito_id - listar questões de um gabarito
-router.get('/:gabarito_id', async (req, res) => {
+// GET /api/questoes/gabarito/:gabarito_id - listar questões de um gabarito (rota específica)
+router.get('/gabarito/:gabarito_id', async (req, res) => {
   const { gabarito_id } = req.params;
   try {
     const { rows } = await db.query(
-      'SELECT id, numero, resposta_correta FROM questoes WHERE gabarito_id = $1 ORDER BY numero',
+      'SELECT id, numero, resposta_correta, disciplina_id FROM questoes WHERE gabarito_id = $1 ORDER BY numero',
       [gabarito_id]
     );
     res.json({ sucesso: true, total: rows.length, questoes: rows });

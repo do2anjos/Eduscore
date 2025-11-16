@@ -195,6 +195,20 @@
           </div>
           </div>
         </div>
+
+          <div class="metric-card-modern">
+            <div class="metric-card-header">
+              <h3>Previsão</h3>
+              <span class="metric-icon">🔮</span>
+            </div>
+            <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+              <div class="metric-value">
+                <span class="value-number" id="previsaoAcertos">N/A</span>
+                <span class="value-label">N° acertos esperado no dia da prova</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
         <!-- Gráfico de Desempenho ao Longo do Tempo -->
@@ -207,10 +221,51 @@
           </div>
         </div>
 
+        <!-- Relatório Individual por Simulado -->
+        <div id="containerRelatorioSimulados" class="metric-card-modern full-width" style="margin-top: 24px; display: none;">
+          <div class="metric-card-header">
+            <h3>Relatório Individual por Simulado</h3>
+            <span class="metric-icon">📋</span>
+          </div>
+          <div class="metric-card-content" style="padding: 20px;">
+            <div id="tabelaSimulados" style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                  <tr style="background: linear-gradient(135deg, #008cc4 0%, #006a9a 100%); color: white; border-radius: 8px;">
+                    <th style="padding: 12px 16px; text-align: left; font-weight: 600; border-radius: 8px 0 0 0;">Simulado</th>
+                    <th style="padding: 12px 16px; text-align: center; font-weight: 600;">Etapa</th>
+                    <th style="padding: 12px 16px; text-align: center; font-weight: 600;">Questões</th>
+                    <th style="padding: 12px 16px; text-align: center; font-weight: 600;">Acertos</th>
+                    <th style="padding: 12px 16px; text-align: center; font-weight: 600;">Média (%)</th>
+                    <th style="padding: 12px 16px; text-align: center; font-weight: 600; border-radius: 0 8px 0 0;">Data</th>
+                  </tr>
+                </thead>
+                <tbody id="corpoTabelaSimulados">
+                  <!-- Dados serão inseridos aqui dinamicamente -->
+                </tbody>
+              </table>
+              <div id="mensagemSemSimulados" style="text-align: center; padding: 48px; color: #666; display: none;">
+                <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+                <p>Nenhum simulado encontrado para este aluno.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Desempenho por Disciplina -->
         <div class="metric-card-modern full-width" style="margin-top: 24px;">
-          <div class="metric-card-header">
+          <div class="metric-card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Desempenho por Disciplina</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="filtroSimulado" style="font-size: 14px; color: #003b54; font-weight: 600;">Filtrar por:</label>
+              <select 
+                id="filtroSimulado" 
+                onchange="filtrarDisciplinasPorSimulado(event)"
+                style="padding: 8px 12px; border: 1px solid #d2d2d2; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; background: white; color: #003b54; min-width: 200px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);"
+              >
+                <option value="geral">Geral</option>
+              </select>
+            </div>
           </div>
           <div class="metric-card-content" style="min-height: 400px; padding: 20px;">
             <canvas id="graficoDisciplinas"></canvas>
@@ -233,6 +288,8 @@
     let alunoSelecionado = null;
     let listaAlunos = [];
     let timeoutBusca = null;
+    let dadosDisciplinasGerais = [];
+    let dadosDisciplinasPorSimulado = {}; // Cache dos dados por simulado
 
     // Carregar dados ao inicializar
     document.addEventListener('DOMContentLoaded', async () => {
@@ -355,7 +412,13 @@
         if (data.sucesso && data.estatisticas) {
           atualizarMetricas(data.estatisticas);
           atualizarGrafico(data.estatisticas.desempenho_por_gabarito || data.estatisticas.desempenho_tempo);
-          atualizarGraficoDisciplinas(data.estatisticas.media_por_disciplina || []);
+          
+          // Armazenar dados gerais e popular dropdown de simulados
+          dadosDisciplinasGerais = data.estatisticas.media_por_disciplina || [];
+          atualizarGraficoDisciplinas(dadosDisciplinasGerais);
+          popularDropdownSimulados(data.estatisticas.desempenho_por_gabarito || []);
+          
+          atualizarTabelaSimulados(data.estatisticas.desempenho_por_gabarito || []);
 
           // Exibir container dinâmico com info do aluno somente após buscar
           const infoDiv = document.getElementById('infoAlunoSelecionado');
@@ -381,6 +444,14 @@
 
           document.getElementById('mensagemInicial').style.display = 'none';
           document.getElementById('containerMetricas').style.display = 'block';
+          document.getElementById('containerRelatorioSimulados').style.display = 'block';
+          
+          // Resetar dropdown para "Geral" ao carregar novo relatório
+          const selectFiltro = document.getElementById('filtroSimulado');
+          if (selectFiltro) {
+            selectFiltro.value = 'geral';
+          }
+          
           showToast('Relatório carregado com sucesso!', 'success');
         } else {
           showToast('Erro ao carregar dados do relatório', 'error');
@@ -535,6 +606,249 @@
           }
         }
       });
+    }
+
+    function popularDropdownSimulados(simulados) {
+      const select = document.getElementById('filtroSimulado');
+      if (!select) return;
+      
+      // Limpar opções existentes (exceto "Geral")
+      select.innerHTML = '<option value="geral">Geral</option>';
+      
+      // Limpar cache de dados por simulado
+      dadosDisciplinasPorSimulado = {};
+      
+      if (!simulados || simulados.length === 0) {
+        select.disabled = true;
+        select.style.opacity = '0.6';
+        select.style.cursor = 'not-allowed';
+        return;
+      }
+      
+      select.disabled = false;
+      select.style.opacity = '1';
+      select.style.cursor = 'pointer';
+      
+      // Ordenar por data (mais recente primeiro)
+      const simuladosOrdenados = [...simulados].sort((a, b) => {
+        const dataA = a.data ? new Date(a.data) : new Date(0);
+        const dataB = b.data ? new Date(b.data) : new Date(0);
+        return dataB - dataA;
+      });
+      
+      // Adicionar opções de simulados
+      simuladosOrdenados.forEach((simulado) => {
+        const option = document.createElement('option');
+        option.value = simulado.id;
+        option.textContent = `${simulado.nome || 'Simulado'} ${simulado.etapa ? `(${simulado.etapa})` : ''}`;
+        select.appendChild(option);
+      });
+      
+      // Resetar para "Geral"
+      select.value = 'geral';
+    }
+
+    async function filtrarDisciplinasPorSimulado(event) {
+      const gabaritoId = event.target.value;
+      
+      if (!alunoSelecionado) {
+        showToast('Selecione um aluno primeiro', 'warning');
+        event.target.value = 'geral'; // Resetar dropdown
+        return;
+      }
+      
+      // Se for "geral", usar dados gerais já carregados
+      if (gabaritoId === 'geral') {
+        atualizarGraficoDisciplinas(dadosDisciplinasGerais);
+        return;
+      }
+      
+      // Verificar se já temos os dados em cache
+      if (dadosDisciplinasPorSimulado[gabaritoId]) {
+        atualizarGraficoDisciplinas(dadosDisciplinasPorSimulado[gabaritoId]);
+        return;
+      }
+      
+      // Buscar dados do servidor
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+      
+      try {
+        showLoading('Carregando desempenho por disciplina...');
+        
+        const response = await fetch(`/api/relatorios/estatisticas-individual/${alunoSelecionado.id}/disciplinas/${gabaritoId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+            return;
+          }
+          
+          // Se for 404, pode não haver dados para esse simulado específico
+          if (response.status === 404) {
+            const errorData = await response.json().catch(() => ({}));
+            showToast(errorData.erro || 'Nenhum dado encontrado para este simulado', 'warning');
+            event.target.value = 'geral'; // Resetar para geral
+            atualizarGraficoDisciplinas(dadosDisciplinasGerais);
+            return;
+          }
+          
+          // Se for 500, pode ser um erro no servidor
+          if (response.status === 500) {
+            const errorData = await response.json().catch(() => ({}));
+            const mensagem = errorData.detalhes 
+              ? `Erro no servidor: ${errorData.detalhes}` 
+              : 'Erro interno do servidor. Tente novamente ou verifique os logs.';
+            showToast(mensagem, 'error');
+            event.target.value = 'geral';
+            atualizarGraficoDisciplinas(dadosDisciplinasGerais);
+            return;
+          }
+          
+          // Para outros erros, tentar obter detalhes
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.erro || `Erro HTTP ${response.status}: Erro ao buscar desempenho por disciplina`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.sucesso) {
+          const disciplinas = data.media_por_disciplina || [];
+          
+          // Armazenar em cache (mesmo se for array vazio)
+          dadosDisciplinasPorSimulado[gabaritoId] = disciplinas;
+          
+          if (disciplinas.length === 0) {
+            showToast('Nenhuma disciplina encontrada para este simulado', 'info');
+            // Mostrar gráfico vazio ao invés de erro
+            atualizarGraficoDisciplinas([]);
+          } else {
+            atualizarGraficoDisciplinas(disciplinas);
+          }
+        } else {
+          showToast(data.erro || 'Erro ao carregar dados do desempenho por disciplina', 'error');
+          event.target.value = 'geral'; // Resetar para geral
+          atualizarGraficoDisciplinas(dadosDisciplinasGerais);
+        }
+      } catch (error) {
+        console.error('Erro ao filtrar disciplinas:', error);
+        
+        // Verificar tipo de erro
+        let mensagemErro = 'Erro ao filtrar disciplinas. Tente novamente.';
+        
+        if (error.name === 'TypeError' && (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED') || error.message.includes('ERR_CONNECTION_RESET'))) {
+          mensagemErro = 'Erro de conexão com o servidor. Verifique se o servidor está rodando na porta 3000.';
+        } else if (error.message) {
+          mensagemErro = error.message;
+        }
+        
+        showToast(mensagemErro, 'error');
+        
+        // Resetar para geral em caso de erro
+        try {
+          event.target.value = 'geral';
+          atualizarGraficoDisciplinas(dadosDisciplinasGerais);
+        } catch (resetError) {
+          console.error('Erro ao resetar para geral:', resetError);
+        }
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function atualizarTabelaSimulados(simulados) {
+      const corpoTabela = document.getElementById('corpoTabelaSimulados');
+      const mensagemSemSimulados = document.getElementById('mensagemSemSimulados');
+      const container = document.getElementById('containerRelatorioSimulados');
+      
+      let dados = Array.isArray(simulados) ? simulados : [];
+      
+      if (dados.length === 0) {
+        corpoTabela.innerHTML = '';
+        mensagemSemSimulados.style.display = 'block';
+        if (container) container.style.display = 'none';
+        return;
+      }
+      
+      mensagemSemSimulados.style.display = 'none';
+      if (container) container.style.display = 'block';
+      
+      // Ordenar por data (mais recente primeiro)
+      dados = [...dados].sort((a, b) => {
+        const dataA = a.data ? new Date(a.data) : new Date(0);
+        const dataB = b.data ? new Date(b.data) : new Date(0);
+        return dataB - dataA;
+      });
+      
+      corpoTabela.innerHTML = dados.map((simulado, index) => {
+        const nome = simulado.nome || 'Simulado sem nome';
+        const etapa = simulado.etapa || 'N/A';
+        const totalQuestoes = Number(simulado.total_questoes || 0);
+        const acertos = Number(simulado.acertos || 0);
+        const media = Number(simulado.media || 0);
+        const dataFormatada = simulado.data 
+          ? new Date(simulado.data).toLocaleDateString('pt-BR', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric' 
+            })
+          : 'N/A';
+        
+        // Cor da linha baseada na média
+        let corFundo = 'transparent';
+        let corTexto = '#003b54';
+        if (media >= 70) {
+          corFundo = 'rgba(46, 204, 113, 0.1)';
+        } else if (media >= 50) {
+          corFundo = 'rgba(241, 196, 15, 0.1)';
+        } else {
+          corFundo = 'rgba(231, 76, 60, 0.1)';
+        }
+        
+        // Cor da média
+        let corMedia = '#003b54';
+        if (media >= 70) {
+          corMedia = '#2ecc71';
+        } else if (media >= 50) {
+          corMedia = '#f1c40f';
+        } else {
+          corMedia = '#e74c3c';
+        }
+        
+        return `
+          <tr style="background: ${corFundo}; transition: background 0.2s;" 
+              onmouseover="this.style.background='rgba(0, 140, 196, 0.1)'" 
+              onmouseout="this.style.background='${corFundo}'">
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: ${corTexto};">
+              ${nome}
+            </td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center; color: #666;">
+              ${etapa}
+            </td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center; color: #666;">
+              ${totalQuestoes.toLocaleString('pt-BR')}
+            </td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center; color: #666; font-weight: 600;">
+              ${acertos.toLocaleString('pt-BR')}
+            </td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center; font-weight: 700; color: ${corMedia}; font-size: 15px;">
+              ${media.toFixed(1)}%
+            </td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center; color: #666;">
+              ${dataFormatada}
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function atualizarGraficoDisciplinas(disciplinas) {

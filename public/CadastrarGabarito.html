@@ -33,12 +33,35 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb (Heurística 4: Consistência) -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="home.html">Home</a>
-        <span class="breadcrumb-separator">/</span>
-        <span>Cadastrar Gabarito</span>
-      </nav>
+      <!-- Breadcrumb e User Profile na mesma linha -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
+          <a href="home.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Cadastrar Gabarito</span>
+        </nav>
+        <div class="user-profile-menu">
+          <button class="user-avatar-button" id="user-menu-button" aria-label="Abrir menu do usuário">CO</button>
+          <div class="dropdown-menu hidden" id="user-dropdown">
+            <div class="dropdown-header">
+              <p class="user-name">Coordenador</p>
+              <p class="user-email">coordenacao@uea.edu.br</p>
+              <p class="user-score"><strong>Coordenador</strong></p>
+            </div>
+            <ul>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-header">
+        <div>
+          <h2>Cadastrar Gabarito</h2>
+        </div>
+      </div>
 
       <div class="upload-area">
         <label for="file-upload">
@@ -55,55 +78,195 @@
           <img src="https://img.icons8.com/ios-filled/24/003b54/file.png" alt="Arquivo">
         </div>
 
+        <div class="input-wrapper" style="margin-top: 16px;">
+          <label for="etapa" style="display: block; margin-bottom: 8px; font-weight: 500;">Etapa</label>
+          <select id="etapa" style="width: 100%; padding: 12px; border: 1px solid #d2d2d2; border-radius: 8px;">
+            <option value="SIS1">SIS1</option>
+            <option value="SIS2">SIS2</option>
+            <option value="SIS3">SIS3</option>
+          </select>
+        </div>
+
         <button class="submit-btn" onclick="cadastrar()">Adicionar Gabarito</button>
 
         <h3 style="margin-top: 32px;">Gabaritos Cadastrados</h3>
         <div class="gabarito-list" id="listaGabaritos">
-          <div class="gabarito-item">GABARITOSIMULADO01_SIS_1
-            <img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir(this)">
-          </div>
-          <div class="gabarito-item">GABARITOSIMULADO01_SIS_2
-            <img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir(this)">
-          </div>
+          <!-- Gabaritos serão carregados dinamicamente -->
         </div>
       </div>
     </main>
   </div>
 
   <script>
+    let arquivoSelecionado = null;
+
+    // Carregar gabaritos ao inicializar
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadUserData();
+      await carregarGabaritos();
+    });
+
+    async function loadUserData() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+    }
+
+    async function carregarGabaritos() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('/api/gabaritos', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.sucesso || Array.isArray(data)) {
+          renderizarGabaritos(data.gabaritos || data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar gabaritos:', error);
+      }
+    }
+
+    function renderizarGabaritos(gabaritos) {
+      const container = document.getElementById('listaGabaritos');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      if (!gabaritos || gabaritos.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum gabarito cadastrado</p>';
+        return;
+      }
+
+      gabaritos.forEach(gabarito => {
+        const div = document.createElement('div');
+        div.className = 'gabarito-item';
+        div.dataset.gabaritoId = gabarito.id;
+        div.innerHTML = `${gabarito.nome} (${gabarito.etapa})<img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir('${gabarito.id}')">`;
+        container.appendChild(div);
+      });
+    }
+
     function handleFile(input) {
       if (!input.files.length) return;
       const file = input.files[0];
+      arquivoSelecionado = file;
+      
+      // Validar tipo de arquivo
+      if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+        showToast('Apenas arquivos CSV são permitidos', 'error');
+        input.value = '';
+        arquivoSelecionado = null;
+        return;
+      }
+
       document.getElementById('gabaritoNome').value = file.name.replace(/\.\w+$/, '').toUpperCase();
     }
 
-    function cadastrar() {
+    async function cadastrar() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
       const nome = document.getElementById('gabaritoNome').value.trim();
+      const etapa = document.getElementById('etapa')?.value || 'SIS1';
       
-      // Heurística 5: Prevenção de erros
       if (!nome) {
         showToast('Informe um nome válido para o gabarito', 'warning');
         document.getElementById('gabaritoNome').focus();
         return;
       }
 
-      // Heurística 1: Feedback visual
-      const div = document.createElement('div');
-      div.className = 'gabarito-item';
-      div.innerHTML = `${nome}<img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir(this)">`;
-      document.getElementById('listaGabaritos').appendChild(div);
-      
-      showToast(`Gabarito "${nome}" cadastrado com sucesso!`, 'success');
-      document.getElementById('gabaritoNome').value = '';
+      try {
+        showLoading('Cadastrando gabarito...');
+
+        // Primeiro criar o gabarito
+        const response = await fetch('/api/gabaritos', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ nome, etapa })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.erro || 'Erro ao cadastrar gabarito');
+        }
+
+        const gabaritoId = data.gabarito?.id || data.id;
+
+        // Se houver arquivo CSV, fazer upload
+        if (arquivoSelecionado && gabaritoId) {
+          const formData = new FormData();
+          formData.append('file', arquivoSelecionado);
+          formData.append('gabarito_id', gabaritoId);
+
+          const uploadResponse = await fetch('/api/gabaritos/upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          const uploadData = await uploadResponse.json();
+
+          if (!uploadResponse.ok) {
+            throw new Error(uploadData.erro || 'Erro ao fazer upload do arquivo');
+          }
+        }
+
+        showToast(`Gabarito "${nome}" cadastrado com sucesso!`, 'success');
+        document.getElementById('gabaritoNome').value = '';
+        document.getElementById('file-upload').value = '';
+        arquivoSelecionado = null;
+        await carregarGabaritos();
+
+      } catch (error) {
+        console.error('Erro ao cadastrar gabarito:', error);
+        showToast(`Erro ao cadastrar gabarito: ${error.message}`, 'error');
+      } finally {
+        hideLoading();
+      }
     }
 
-    function excluir(el) {
-      // Heurística 3: Controle e liberdade do usuário - Confirmação antes de excluir
+    async function excluir(gabaritoId) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
       showConfirmDialog(
         'Deseja realmente excluir este gabarito? Esta ação não pode ser desfeita.',
-        () => {
-          el.parentElement.remove();
-          showToast('Gabarito excluído com sucesso', 'success');
+        async () => {
+          try {
+            showLoading('Excluindo gabarito...');
+            const response = await fetch(`/api/gabaritos/${gabaritoId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.erro || 'Erro ao excluir gabarito');
+            }
+
+            showToast('Gabarito excluído com sucesso', 'success');
+            await carregarGabaritos();
+
+          } catch (error) {
+            console.error('Erro ao excluir gabarito:', error);
+            showToast(`Erro ao excluir gabarito: ${error.message}`, 'error');
+          } finally {
+            hideLoading();
+          }
         }
       );
     }

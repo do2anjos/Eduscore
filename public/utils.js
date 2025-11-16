@@ -257,6 +257,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupKeyboardShortcuts();
   setupHelpButton();
   addInputHints();
+  setupUserProfileMenu();
+  
+  // Carregar dados do usuário se houver sidebar ou user-profile-menu
+  if (document.querySelector('.sidebar') || document.querySelector('.user-profile-menu')) {
+    loadUserData();
+  }
   
   // Adicionar animação slideOut para toasts
   if (!document.getElementById('toast-styles')) {
@@ -278,6 +284,266 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// User Profile Menu
+function setupUserProfileMenu() {
+  const userMenuButton = document.getElementById('user-menu-button');
+  const userDropdown = document.getElementById('user-dropdown');
+
+  if (userMenuButton && userDropdown) {
+    userMenuButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      userDropdown.classList.toggle('hidden');
+    });
+
+    // Fechar ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
+        userDropdown.classList.add('hidden');
+      }
+    });
+
+    // Fechar ao pressionar Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !userDropdown.classList.contains('hidden')) {
+        userDropdown.classList.add('hidden');
+      }
+    });
+  }
+}
+
+function logout() {
+  showConfirmDialog(
+    'Deseja realmente sair?',
+    () => {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+  );
+}
+
+// Função para buscar e atualizar dados do usuário
+async function loadUserData() {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    // Se não houver token, redireciona para login
+    if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html')) {
+      window.location.href = '/login.html';
+    }
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/usuarios/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('token');
+        window.location.href = '/login.html';
+        return;
+      }
+      throw new Error('Erro ao buscar dados do usuário');
+    }
+
+    const data = await response.json();
+    
+    if (data.sucesso && data.usuario) {
+      updateUserProfile(data.usuario);
+    }
+  } catch (error) {
+    console.error('Erro ao carregar dados do usuário:', error);
+    // Não redireciona em caso de erro de rede, apenas loga o erro
+  }
+}
+
+// Função para atualizar elementos do perfil do usuário
+function updateUserProfile(usuario) {
+  // Função auxiliar para gerar iniciais do nome
+  function getInitials(nome) {
+    if (!nome) return 'U';
+    const parts = nome.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return nome.substring(0, 2).toUpperCase();
+  }
+
+  // Função auxiliar para capitalizar primeira letra
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  }
+
+  const initials = getInitials(usuario.nome);
+  const perfilCapitalized = capitalize(usuario.perfil);
+
+  // Atualizar sidebar profile
+  const sidebarProfile = document.querySelector('.sidebar .profile');
+  if (sidebarProfile) {
+    const profileSpan = sidebarProfile.querySelector('span');
+    if (profileSpan) {
+      profileSpan.innerHTML = `
+        ${perfilCapitalized}<br>
+        <small>${usuario.email}</small>
+      `;
+    }
+    
+    // Atualizar foto de perfil
+    const profileImg = sidebarProfile.querySelector('img');
+    if (profileImg) {
+      // SEMPRE definir imagem padrão primeiro para evitar tentar carregar base64 diretamente
+      profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+      profileImg.alt = 'Perfil';
+      profileImg.onerror = null;
+      
+      if (usuario.foto_perfil && usuario.id) {
+        // Normalizar a URL da foto
+        let fotoUrl = usuario.foto_perfil.trim();
+        
+        // Verificar se é base64 (com ou sem prefixo data:)
+        const isBase64 = fotoUrl.startsWith('data:image/') || 
+                        (fotoUrl.length > 1000 && 
+                         !fotoUrl.includes('/') && 
+                         !fotoUrl.includes('http') && 
+                         !fotoUrl.startsWith('/'));
+        
+        if (isBase64) {
+          // SEMPRE usar endpoint da API para fotos base64 via fetch com autenticação
+          // Isso evita completamente o erro 431 ao usar base64 diretamente como URL
+          const userId = usuario.id;
+          const token = localStorage.getItem('token');
+          
+          if (token) {
+            // Limpar blob URL anterior se existir
+            if (profileImg.src && profileImg.src.startsWith('blob:')) {
+              URL.revokeObjectURL(profileImg.src);
+            }
+            
+            fetch(`/api/usuarios/${userId}/foto?t=${Date.now()}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            })
+            .then(response => {
+              if (response.ok) {
+                return response.blob();
+              }
+              // Se retornar 404, a foto pode não estar salva ainda ou foi deletada
+              if (response.status === 404) {
+                console.warn('[DEBUG] Foto não encontrada no servidor (404)');
+                return null;
+              }
+              throw new Error(`Erro ao carregar foto: ${response.status}`);
+            })
+            .then(blob => {
+              if (blob) {
+                // Criar blob URL para exibir a imagem
+                const blobUrl = URL.createObjectURL(blob);
+                profileImg.src = blobUrl;
+                profileImg.alt = usuario.nome || 'Perfil';
+                
+                // Limpar blob URL quando a imagem for removida
+                profileImg.onload = function() {
+                  // Manter o blob URL enquanto a imagem estiver visível
+                };
+                
+                profileImg.onerror = function() {
+                  URL.revokeObjectURL(blobUrl);
+                  this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+                  this.alt = 'Perfil';
+                  this.onerror = null;
+                };
+              } else {
+                // Se blob for null (404), manter imagem padrão
+                profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+                profileImg.alt = 'Perfil';
+              }
+            })
+            .catch(error => {
+              console.warn('[DEBUG] Erro ao carregar foto via API:', error);
+              profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+              profileImg.alt = 'Perfil';
+              profileImg.onerror = null;
+            });
+          } else {
+            console.warn('[DEBUG] Token não disponível, usando imagem padrão');
+          }
+        } 
+        // Se não é base64, tratar como URL de arquivo
+        else {
+          // Se é uma URL completa (http:// ou https://), usar diretamente
+          if (fotoUrl.startsWith('http://') || fotoUrl.startsWith('https://')) {
+            profileImg.src = fotoUrl;
+          } 
+          // Se começa com /uploads, usar como está
+          else if (fotoUrl.startsWith('/uploads/')) {
+            profileImg.src = fotoUrl;
+          }
+          // Se começa com uploads/ (sem barra), adicionar /
+          else if (fotoUrl.startsWith('uploads/')) {
+            profileImg.src = '/' + fotoUrl;
+          }
+          // Se começa com /, usar como está
+          else if (fotoUrl.startsWith('/')) {
+            profileImg.src = fotoUrl;
+          }
+          // Caso contrário, assumir que está em /uploads/
+          else {
+            profileImg.src = '/uploads/' + fotoUrl;
+          }
+        }
+        
+        profileImg.alt = usuario.nome;
+        
+        // Tratamento de erro: se a imagem falhar ao carregar, usar a imagem padrão
+        profileImg.onerror = function() {
+          console.warn('Erro ao carregar foto de perfil. Usando imagem padrão.');
+          this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+          this.alt = 'Perfil';
+          this.onerror = null; // Evitar loop infinito
+        };
+      } else {
+        // Se não houver foto, manter a imagem padrão
+        profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+        profileImg.alt = 'Perfil';
+        profileImg.onerror = null;
+      }
+    }
+  }
+
+  // Atualizar user-profile-menu
+  const userMenuButton = document.getElementById('user-menu-button');
+  if (userMenuButton) {
+    userMenuButton.textContent = initials;
+    userMenuButton.setAttribute('aria-label', `Menu de ${usuario.nome}`);
+  }
+
+  const userDropdown = document.getElementById('user-dropdown');
+  if (userDropdown) {
+    const userName = userDropdown.querySelector('.user-name');
+    if (userName) userName.textContent = usuario.nome;
+
+    const userEmail = userDropdown.querySelector('.user-email');
+    if (userEmail) userEmail.textContent = usuario.email;
+
+    const userScore = userDropdown.querySelector('.user-score strong');
+    if (userScore) userScore.textContent = perfilCapitalized;
+  }
+
+  // Atualizar título de boas-vindas se existir
+  const welcomeTitle = document.querySelector('.dashboard-header h2');
+  if (welcomeTitle) {
+    const firstName = usuario.nome.split(' ')[0];
+    welcomeTitle.textContent = `Bem-vindo de volta, ${firstName}!`;
+  }
+}
+
 // Exportar funções para uso global
 window.showToast = showToast;
 window.showLoading = showLoading;
@@ -285,4 +551,7 @@ window.hideLoading = hideLoading;
 window.showConfirmDialog = showConfirmDialog;
 window.validateForm = validateForm;
 window.isValidEmail = isValidEmail;
+window.setupUserProfileMenu = setupUserProfileMenu;
+window.logout = logout;
+window.loadUserData = loadUserData;
 

@@ -74,13 +74,43 @@
         return;
       }
 
+      // Validar força da senha
+      const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d#@$!%*?&]{8,}$/;
+      if (!PASSWORD_REGEX.test(senha)) {
+        showToast('A senha deve conter: 8+ caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo (#@$!%*?&)', 'error');
+        hideLoading();
+        return;
+      }
+
       // Heurística 1: Feedback visual
       showLoading('Redefinindo senha...');
       
       try {
-        // Aqui você pode adicionar a lógica de redefinição de senha
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        showToast('Funcionalidade de redefinição de senha em desenvolvimento', 'info');
+        const response = await fetch('/api/usuarios/redefinir-senha', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email,
+            nova_senha: senha
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.erro || 'Erro ao redefinir senha');
+        }
+
+        showToast('Senha redefinida com sucesso! Redirecionando para login...', 'success');
+        setTimeout(() => {
+          window.location.href = '/login.html';
+        }, 2000);
+
+      } catch (error) {
+        console.error('Erro ao redefinir senha:', error);
+        showToast(`Erro ao redefinir senha: ${error.message}`, 'error');
       } finally {
         hideLoading();
       }

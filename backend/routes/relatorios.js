@@ -333,6 +333,99 @@ router.get('/estatisticas-individual/:aluno_id', authenticateToken, async (req, 
   }
 });
 
+// GET /api/relatorios/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id - Desempenho por disciplina filtrado por gabarito
+router.get('/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id', authenticateToken, async (req, res) => {
+  let aluno_id, gabarito_id;
+  try {
+    aluno_id = req.params.aluno_id;
+    gabarito_id = req.params.gabarito_id;
+    
+    // Validar parâmetros
+    if (!aluno_id || !gabarito_id) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Parâmetros aluno_id e gabarito_id são obrigatórios'
+      });
+    }
+
+    // Verificar se o aluno existe
+    const alunoCheck = await db.query(
+      'SELECT id, nome_completo, matricula FROM alunos WHERE id = $1',
+      [aluno_id]
+    );
+
+    if (alunoCheck.rows.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Aluno não encontrado'
+      });
+    }
+
+    // Verificar se o gabarito existe
+    const gabaritoCheck = await db.query(
+      'SELECT id, nome, etapa FROM gabaritos WHERE id = $1',
+      [gabarito_id]
+    );
+
+    if (gabaritoCheck.rows.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Gabarito não encontrado'
+      });
+    }
+
+    // Média por disciplina filtrado por gabarito e aluno
+    // Buscar apenas disciplinas que têm questões neste gabarito e respostas do aluno
+    // Usar WHERE para filtrar por gabarito e aluno, evitando uso duplicado do mesmo parâmetro
+    const mediaPorDisciplina = await db.query(`
+      SELECT 
+        d.id,
+        d.nome,
+        COUNT(r.id) as total_respostas,
+        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100.0 ELSE 0.0 END), 2) as media
+      FROM disciplinas d
+      INNER JOIN questoes q ON d.id = q.disciplina_id
+      INNER JOIN respostas r ON q.id = r.questao_id
+      WHERE q.gabarito_id = $2
+        AND r.aluno_id = $1
+        AND r.gabarito_id = $2
+      GROUP BY d.id, d.nome
+      ORDER BY media DESC
+    `, [aluno_id, gabarito_id]);
+
+    res.json({
+      sucesso: true,
+      gabarito: {
+        id: gabaritoCheck.rows[0].id,
+        nome: gabaritoCheck.rows[0].nome,
+        etapa: gabaritoCheck.rows[0].etapa
+      },
+      media_por_disciplina: (mediaPorDisciplina.rows || []).map(row => ({
+        id: row.id,
+        nome: row.nome,
+        media: Number(row.media) || 0,
+        total_respostas: Number(row.total_respostas) || 0,
+        acertos: Number(row.acertos) || 0
+      }))
+    });
+
+  } catch (err) {
+    console.error('Erro ao buscar desempenho por disciplina:', err);
+    console.error('Detalhes do erro:', {
+      aluno_id,
+      gabarito_id,
+      message: err.message,
+      stack: err.stack
+    });
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro interno ao buscar desempenho por disciplina',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
 // GET /api/relatorios/estatisticas-mensal - Evolução mensal (média de acertos somando todas as etapas)
 router.get('/estatisticas-mensal', authenticateToken, async (req, res) => {
   try {

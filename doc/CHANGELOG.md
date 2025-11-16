@@ -2,6 +2,92 @@
 
 Este documento registra todas as alterações significativas realizadas no projeto.
 
+**Última atualização**: 2025-11-16 17:41:12
+
+---
+
+## [2025-11-16 17:41:12] - Relatório Individual: Filtros e Previsão
+
+### 📊 Relatório Individual por Simulado
+
+#### Nova Seção: Tabela de Simulados
+- **Arquivo**: `public/GerarRelatorio.html`
+- **Data**: 2025-11-16 17:41:12
+- **Implementações**:
+  - Nova tabela mostrando desempenho do aluno por simulado
+  - Colunas: Simulado, Etapa, Questões, Acertos, Média (%), Data
+  - Cores condicionais por desempenho:
+    - Verde (≥70%): `rgba(46, 204, 113, 0.1)`
+    - Amarelo (50-69%): `rgba(241, 196, 15, 0.1)`
+    - Vermelho (<50%): `rgba(231, 76, 60, 0.1)`
+  - Ordenação por data (mais recente primeiro)
+  - Efeito hover nas linhas
+  - Mensagem informativa quando não há simulados
+- **Função JavaScript**: `atualizarTabelaSimulados()`
+- **Posicionamento**: Após o gráfico "Desempenho ao Longo do Tempo"
+
+#### Filtro por Simulado no Gráfico de Disciplinas
+- **Arquivo**: `public/GerarRelatorio.html`
+- **Data**: 2025-11-16 17:41:12
+- **Implementações**:
+  - Dropdown no header do gráfico "Desempenho por Disciplina"
+  - Opção "Geral" (mostra todas as disciplinas)
+  - Opções dinâmicas com simulados já feitos pelo aluno
+  - Cache inteligente para evitar requisições repetidas
+  - Tratamento de erros aprimorado (404, 500, conexão)
+  - Reset automático para "Geral" ao carregar novo relatório
+- **Função JavaScript**: `filtrarDisciplinasPorSimulado()`, `popularDropdownSimulados()`
+- **Rota API**: `GET /api/relatorios/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id`
+
+#### Novo Card: Previsão
+- **Arquivo**: `public/GerarRelatorio.html`
+- **Data**: 2025-11-16 17:41:12
+- **Implementações**:
+  - Card "Previsão" no grid de métricas
+  - Valor: "N/A" (aguardando implementação do modelo de predição)
+  - Legenda: "N° acertos esperado no dia da prova"
+  - Ícone: 🔮
+  - ID do elemento: `previsaoAcertos`
+
+#### Melhorias no Backend
+
+##### Nova Rota: Desempenho por Disciplina Filtrado por Gabarito
+- **Arquivo**: `backend/routes/relatorios.js`
+- **Data**: 2025-11-16 17:41:12
+- **Rota**: `GET /api/relatorios/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id`
+- **Implementações**:
+  - Retorna desempenho por disciplina para um aluno específico filtrado por simulado
+  - Validação de parâmetros (aluno_id e gabarito_id)
+  - Verificação de existência de aluno e gabarito
+  - Tratamento de erros melhorado com detalhes em desenvolvimento
+  - Query SQL otimizada com INNER JOIN e filtros WHERE
+
+##### Correção no Mapeamento de Parâmetros SQL
+- **Arquivo**: `backend/db.js`
+- **Data**: 2025-11-16 17:41:12
+- **Problema**: Erro "Too few parameter values were provided" ao usar o mesmo parâmetro múltiplas vezes
+- **Solução**:
+  - Ajuste na função `convertPostgresToSQLite()` para mapear corretamente parâmetros duplicados
+  - Quando `$2` aparece múltiplas vezes, o valor é incluído múltiplas vezes no array de parâmetros
+  - Extração da ordem dos parâmetros da query original para garantir correspondência correta
+
+#### Melhorias no Tratamento de Erros
+- **Arquivo**: `public/GerarRelatorio.html`
+- **Data**: 2025-11-16 17:41:12
+- **Implementações**:
+  - Mensagens de erro específicas por tipo (404, 500, conexão)
+  - Detecção de erros de conexão (`ERR_CONNECTION_REFUSED`, `ERR_CONNECTION_RESET`)
+  - Reset automático para "Geral" em caso de erro
+  - Exibição de detalhes de erro do servidor em modo desenvolvimento
+  - Tratamento gracioso quando não há dados
+
+**Arquivos Afetados**:
+- `public/GerarRelatorio.html` (+150 linhas)
+- `backend/routes/relatorios.js` (+80 linhas)
+- `backend/db.js` (+30 linhas de lógica)
+
+---
+
 ## [2024] - Melhorias de UX e Design System
 
 ### 🎨 Aplicação das 10 Heurísticas de Nielsen
@@ -304,6 +390,6 @@ Este documento registra todas as alterações significativas realizadas no proje
 
 ---
 
-**Data da última atualização**: 2024
+**Data da última atualização**: 2025-11-16 17:41:12
 **Versão**: 1.0.0
 

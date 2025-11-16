@@ -1,5 +1,7 @@
 # Documentação da API
 
+**Última atualização**: 2025-11-16 17:41:12
+
 ## Base URL
 
 ```
@@ -371,6 +373,151 @@ DELETE /sessoes/:id
 ---
 
 ### Relatórios
+
+**Última atualização**: 2025-11-16 17:41:12
+
+#### Estatísticas Gerais
+```http
+GET /relatorios/estatisticas-gerais?etapa=3º ano
+```
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Query Parameters:**
+- `etapa` (opcional): Filtrar por etapa específica ou omitir para "Geral"
+
+**Resposta:**
+```json
+{
+  "sucesso": true,
+  "estatisticas": {
+    "total_questoes": 180,
+    "total_acertos": 135,
+    "media_geral": 75.0,
+    "maior_media_disciplina": "Matemática",
+    "menor_media_disciplina": "História",
+    "media_por_disciplina": [
+      {
+        "id": "...",
+        "nome": "Matemática",
+        "media": 85.5,
+        "total_questoes": 30,
+        "total_respostas": 120,
+        "acertos": 102
+      }
+    ],
+    "por_etapa": [
+      {
+        "etapa": "3º ano",
+        "total_questoes": 60,
+        "total_respostas": 40,
+        "acertos": 30,
+        "media": 75.0
+      }
+    ]
+  }
+}
+```
+
+#### Estatísticas Individuais de um Aluno
+```http
+GET /relatorios/estatisticas-individual/:aluno_id
+```
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Resposta:**
+```json
+{
+  "sucesso": true,
+  "aluno": {
+    "id": "...",
+    "nome": "João Silva",
+    "matricula": "12345"
+  },
+  "estatisticas": {
+    "total_questoes": 150,
+    "total_acertos": 105,
+    "taxa_acertos": 70.0,
+    "maior_media_disciplina": "Matemática",
+    "menor_media_disciplina": "História",
+    "media_por_disciplina": [
+      {
+        "id": "...",
+        "nome": "Matemática",
+        "media": 80.0,
+        "total_respostas": 30,
+        "acertos": 24
+      }
+    ],
+    "desempenho_tempo": [
+      {
+        "data": "2024-11-15",
+        "total_questoes": 30,
+        "acertos": 21,
+        "media": 70.0
+      }
+    ],
+    "desempenho_por_gabarito": [
+      {
+        "id": "...",
+        "nome": "Simulado ENEM 2024",
+        "etapa": "3º ano",
+        "total_questoes": 60,
+        "acertos": 42,
+        "media": 70.0,
+        "data": "2024-11-16T10:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+#### Desempenho por Disciplina Filtrado por Simulado (NOVO)
+```http
+GET /relatorios/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id
+```
+
+**Adicionado em**: 2025-11-16 17:41:12
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Path Parameters:**
+- `aluno_id`: ID do aluno
+- `gabarito_id`: ID do gabarito (simulado)
+
+**Resposta:**
+```json
+{
+  "sucesso": true,
+  "gabarito": {
+    "id": "...",
+    "nome": "Simulado ENEM 2024",
+    "etapa": "3º ano"
+  },
+  "media_por_disciplina": [
+    {
+      "id": "...",
+      "nome": "Matemática",
+      "media": 75.5,
+      "total_respostas": 20,
+      "acertos": 15
+    },
+    {
+      "id": "...",
+      "nome": "Português",
+      "media": 80.0,
+      "total_respostas": 15,
+      "acertos": 12
+    }
+  ]
+}
+```
+
+**Erros:**
+- `400`: Parâmetros aluno_id e gabarito_id são obrigatórios
+- `404`: Aluno ou gabarito não encontrado
+- `500`: Erro interno ao buscar desempenho por disciplina
 
 #### Listar Relatórios
 ```http

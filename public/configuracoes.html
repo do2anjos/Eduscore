@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configurações</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="home-container">
+    <aside class="sidebar">
+      <div class="profile">
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <span>
+          Coordenador<br>
+          <small>coordenacao@uea.edu.br</small>
+        </span>
+      </div>
+      <nav class="nav-links" role="navigation" aria-label="Menu principal">
+        <a href="home.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
+        </a>
+        <a href="RelatorioGeral.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
+        </a>
+        <a href="Cadastrar.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar
+        </a>
+        <a href="CadastrarGabarito.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
+        </a>
+        <a href="AgendarSessao.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão
+        </a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Breadcrumb e User Profile na mesma linha -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
+          <a href="home.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Configurações</span>
+        </nav>
+        <div class="user-profile-menu">
+          <button class="user-avatar-button" id="user-menu-button" aria-label="Abrir menu do usuário">JO</button>
+          <div class="dropdown-menu hidden" id="user-dropdown">
+            <div class="dropdown-header">
+              <p class="user-name">João Silva</p>
+              <p class="user-email">coordenacao@uea.edu.br</p>
+              <p class="user-score"><strong>Coordenador</strong></p>
+            </div>
+            <ul>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-header">
+        <div>
+          <h2>Configurações</h2>
+          <p class="dashboard-subtitle">Gerencie as configurações da sua conta e preferências</p>
+        </div>
+      </div>
+
+      <!-- Notificações -->
+      <div class="metric-card-modern" style="margin-top: 24px;">
+        <h3 style="margin-bottom: 24px; color: #003b54; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          Notificações
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 12px; border-radius: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+            <span style="font-weight: 500;">Notificações por Email</span>
+            <input type="checkbox" id="notificacoesEmail" style="width: 20px; height: 20px; cursor: pointer;" />
+          </label>
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 12px; border-radius: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+            <span style="font-weight: 500;">Notificações de Relatórios</span>
+            <input type="checkbox" id="notificacoesRelatorios" checked style="width: 20px; height: 20px; cursor: pointer;" />
+          </label>
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 12px; border-radius: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+            <span style="font-weight: 500;">Notificações de Sessões</span>
+            <input type="checkbox" id="notificacoesSessoes" checked style="width: 20px; height: 20px; cursor: pointer;" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Preferências de Exibição -->
+      <div class="metric-card-modern" style="margin-top: 24px;">
+        <h3 style="margin-bottom: 24px; color: #003b54; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+          </svg>
+          Preferências de Exibição
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="input-group">
+            <label for="tema">Tema</label>
+            <select id="tema" name="tema" style="width: 100%;">
+              <option value="claro" selected>Claro</option>
+              <option value="escuro">Escuro</option>
+              <option value="auto">Automático</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="idioma">Idioma</label>
+            <select id="idioma" name="idioma" style="width: 100%;">
+              <option value="pt-BR" selected>Português (Brasil)</option>
+              <option value="en-US">English (US)</option>
+              <option value="es-ES">Español</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="itensPorPagina">Itens por Página</label>
+            <select id="itensPorPagina" name="itensPorPagina" style="width: 100%;">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacidade e Segurança -->
+      <div class="metric-card-modern" style="margin-top: 24px;">
+        <h3 style="margin-bottom: 24px; color: #003b54; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          Privacidade e Segurança
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 12px; border-radius: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+            <span style="font-weight: 500;">Autenticação de Dois Fatores (2FA)</span>
+            <input type="checkbox" id="doisFatores" style="width: 20px; height: 20px; cursor: pointer;" />
+          </label>
+          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 12px; border-radius: 8px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='transparent'">
+            <span style="font-weight: 500;">Sessões Ativas</span>
+            <button class="btn-secondary" style="padding: 6px 12px; font-size: 14px;" onclick="verSessoesAtivas()">Ver Sessões</button>
+          </label>
+        </div>
+      </div>
+
+      <!-- Ações -->
+      <div class="metric-card-modern" style="margin-top: 24px;">
+        <h3 style="margin-bottom: 24px; color: #003b54; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Ações
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button class="btn-secondary" onclick="exportarDados()" style="width: 100%; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" x2="12" y1="15" y2="3"></line>
+            </svg>
+            Exportar Dados
+          </button>
+          <button class="btn-secondary" onclick="limparCache()" style="width: 100%; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Limpar Cache
+          </button>
+        </div>
+      </div>
+
+      <!-- Botão Salvar -->
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+        <button class="email-btn" onclick="salvarConfiguracoes()" id="salvarBtn">
+          <span id="salvarBtnText">Salvar Configurações</span>
+          <span id="salvarBtnSpinner" class="loading-spinner" style="display: none;"></span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Carregar configurações salvas
+    document.addEventListener('DOMContentLoaded', () => {
+      carregarConfiguracoes();
+    });
+
+    async function carregarConfiguracoes() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/usuarios/me/configuracoes', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+            return;
+          }
+          throw new Error('Erro ao carregar configurações');
+        }
+
+        const data = await response.json();
+        
+        if (data.sucesso && data.configuracoes) {
+          const config = data.configuracoes;
+          document.getElementById('notificacoesEmail').checked = config.notificacoesEmail || false;
+          document.getElementById('notificacoesRelatorios').checked = config.notificacoesRelatorios !== false;
+          document.getElementById('notificacoesSessoes').checked = config.notificacoesSessoes !== false;
+          document.getElementById('tema').value = config.tema || 'claro';
+          document.getElementById('idioma').value = config.idioma || 'pt-BR';
+          document.getElementById('itensPorPagina').value = config.itensPorPagina || '25';
+          document.getElementById('doisFatores').checked = config.doisFatores || false;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+        // Fallback para valores padrão
+        document.getElementById('notificacoesEmail').checked = false;
+        document.getElementById('notificacoesRelatorios').checked = true;
+        document.getElementById('notificacoesSessoes').checked = true;
+        document.getElementById('tema').value = 'claro';
+        document.getElementById('idioma').value = 'pt-BR';
+        document.getElementById('itensPorPagina').value = '25';
+        document.getElementById('doisFatores').checked = false;
+      }
+    }
+
+    async function salvarConfiguracoes() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        document.getElementById('salvarBtnText').textContent = 'Salvando...';
+        document.getElementById('salvarBtnSpinner').style.display = 'inline-block';
+        document.getElementById('salvarBtn').disabled = true;
+
+        const configuracoes = {
+          notificacoesEmail: document.getElementById('notificacoesEmail').checked,
+          notificacoesRelatorios: document.getElementById('notificacoesRelatorios').checked,
+          notificacoesSessoes: document.getElementById('notificacoesSessoes').checked,
+          tema: document.getElementById('tema').value,
+          idioma: document.getElementById('idioma').value,
+          itensPorPagina: document.getElementById('itensPorPagina').value,
+          doisFatores: document.getElementById('doisFatores').checked
+        };
+
+        const response = await fetch('/api/usuarios/me/configuracoes', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(configuracoes)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.erro || 'Erro ao salvar configurações');
+        }
+
+        showToast('Configurações salvas com sucesso!', 'success');
+
+      } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
+        showToast(`Erro ao salvar configurações: ${error.message}`, 'error');
+      } finally {
+        document.getElementById('salvarBtnText').textContent = 'Salvar Configurações';
+        document.getElementById('salvarBtnSpinner').style.display = 'none';
+        document.getElementById('salvarBtn').disabled = false;
+      }
+    }
+
+    function verSessoesAtivas() {
+      showToast('Funcionalidade em desenvolvimento', 'info');
+    }
+
+    function exportarDados() {
+      showToast('Funcionalidade em desenvolvimento', 'info');
+    }
+
+    function limparCache() {
+      showConfirmDialog(
+        'Deseja realmente limpar o cache? Isso pode afetar o desempenho da aplicação.',
+        () => {
+          localStorage.removeItem('cache');
+          showToast('Cache limpo com sucesso!', 'success');
+        }
+      );
+    }
+  </script>
+</body>
+</html>
+

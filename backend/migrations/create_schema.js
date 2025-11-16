@@ -25,6 +25,7 @@ function createSchema() {
         foto_perfil TEXT,
         perfil TEXT NOT NULL CHECK(perfil IN ('professor', 'coordenador', 'admin')),
         tipo_usuario TEXT NOT NULL CHECK(tipo_usuario IN ('professor', 'coordenador', 'admin', 'usuario')),
+        configuracoes TEXT,
         criado_em TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
@@ -148,9 +149,24 @@ function createSchema() {
       CREATE INDEX IF NOT EXISTS idx_sessoes_data ON sessoes(data);
       CREATE INDEX IF NOT EXISTS idx_relatorios_sessao ON relatorios(sessao_id);
     `);
-    console.log('   ✅ Índices criados\n');
+           console.log('   ✅ Índices criados\n');
 
-    console.log('✅ Schema criado com sucesso!\n');
+           // Adicionar coluna configuracoes se não existir
+           console.log('10. Verificando coluna configuracoes...');
+           try {
+             db.exec(`
+               ALTER TABLE usuarios ADD COLUMN configuracoes TEXT;
+             `);
+             console.log('   ✅ Coluna configuracoes adicionada\n');
+           } catch (error) {
+             if (error.message.includes('duplicate column')) {
+               console.log('   ℹ️  Coluna configuracoes já existe\n');
+             } else {
+               console.log('   ⚠️  Aviso ao adicionar coluna configuracoes:', error.message, '\n');
+             }
+           }
+
+           console.log('✅ Schema criado com sucesso!\n');
     console.log('📊 Tabelas criadas:');
     console.log('   - usuarios');
     console.log('   - alunos');

@@ -77,6 +77,8 @@ app.use('/api/gabaritos/upload', uploadLimiter);
 // MIDDLEWARES ADICIONAIS
 // =============================================
 app.use(express.static(path.join(__dirname, 'public')));
+// Servir arquivos de upload (fotos de perfil, etc.)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use((req, res, next) => {
   // Log de requisições para debug
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);

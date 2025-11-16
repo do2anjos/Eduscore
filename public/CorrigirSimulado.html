@@ -33,20 +33,35 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb (Heurística 4: Consistência) -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="home.html">Home</a>
-        <span class="breadcrumb-separator">/</span>
-        <span>Corrigir Simulado</span>
-      </nav>
+      <!-- Breadcrumb e User Profile na mesma linha -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
+          <a href="home.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Corrigir Simulado</span>
+        </nav>
+        <div class="user-profile-menu">
+          <button class="user-avatar-button" id="user-menu-button" aria-label="Abrir menu do usuário">PR</button>
+          <div class="dropdown-menu hidden" id="user-dropdown">
+            <div class="dropdown-header">
+              <p class="user-name">Professor</p>
+              <p class="user-email">professor@uea.edu.br</p>
+              <p class="user-score"><strong>Professor</strong></p>
+            </div>
+            <ul>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
       <button id="voltarBtn" onclick="previousStep()" class="voltar-btn" aria-label="Voltar passo anterior">←</button>
 
       <div class="dashboard-header">
-        <div class="user-box">
-          <img src="https://img.icons8.com/ios-filled/24/user-group-man-man.png" alt="Usuário" />
-          <span id="alunoInfo">Ler código!</span>
-          <img src="https://img.icons8.com/material-outlined/24/barcode.png" alt="Código de Barras" />
+        <div>
+          <span id="alunoInfo" style="font-size: 18px; font-weight: 600; color: #003b54;">Ler código!</span>
         </div>
       </div>
 
@@ -72,12 +87,9 @@
 
       <div class="step" id="step3">
         <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Documentos" />
-        <h3>Gabaritos Carregados</h3>
+        <h3>Alunos Cadastrados</h3>
         <div class="list-box" id="listaAlunos">
-          <div onclick="selecionarAluno('MATHEUS DOS ANJOS PINHEIRO', 27)">MATHEUS DOS ANJOS PINHEIRO - 01</div>
-          <div onclick="selecionarAluno('MAXWELL ALBUQUERQUE', 25)">MAXWELL ALBUQUERQUE - 02</div>
-          <div onclick="selecionarAluno('LUCAS BARROS VIANA', 30)">LUCAS BARROS VIANA - 03</div>
-          <div onclick="selecionarAluno('LETÍCIA MACEDO DE ALMEIDA', 22)">LETÍCIA MACEDO DE ALMEIDA - 04</div>
+          <!-- Alunos serão carregados dinamicamente -->
         </div>
         <button onclick="nextStep()">Próximo</button>
       </div>
@@ -110,22 +122,84 @@
   </div>
 
   <script>
-    const baseAlunos = {
-      "20231001": { nome: "MATHEUS DOS ANJOS PINHEIRO", idade: 27 },
-      "20231002": { nome: "MAXWELL ALBUQUERQUE", idade: 25 },
-      "20231003": { nome: "LUCAS BARROS VIANA", idade: 30 },
-      "20231004": { nome: "LETÍCIA MACEDO DE ALMEIDA", idade: 22 }
-    };
-
-    let codigoAluno = "";
+    let alunos = [];
+    let gabaritos = [];
+    let alunoSelecionado = null;
+    let gabaritoSelecionado = null;
+    let questoesGabarito = [];
+    let respostasAluno = {}; // { questao_id: resposta }
     let currentStep = 1;
 
-    const respostasSimuladas = Array.from({ length: 60 }, () => {
-      const letras = ["A", "B", "C", "D", "E"];
-      return letras[Math.floor(Math.random() * letras.length)];
+    // Carregar dados ao inicializar
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadUserData();
+      await carregarAlunos();
+      await carregarGabaritos();
     });
 
-    function nextStep() {
+    async function loadUserData() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+    }
+
+    async function carregarAlunos() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('/api/alunos', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.sucesso || Array.isArray(data)) {
+          alunos = data.alunos || data;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar alunos:', error);
+      }
+    }
+
+    async function carregarGabaritos() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('/api/gabaritos', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.sucesso || Array.isArray(data)) {
+          gabaritos = data.gabaritos || data;
+          renderizarGabaritos();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar gabaritos:', error);
+      }
+    }
+
+    function renderizarGabaritos() {
+      const container = document.getElementById('gabaritoList');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      gabaritos.forEach(gabarito => {
+        const div = document.createElement('div');
+        div.onclick = () => selectItem(div, gabarito.id);
+        div.textContent = `${gabarito.nome} (${gabarito.etapa})`;
+        div.dataset.gabaritoId = gabarito.id;
+        container.appendChild(div);
+      });
+    }
+
+    async function nextStep() {
+      // Carregar lista de alunos quando avançar para step 3
+      if (currentStep === 2) {
+        await carregarListaAlunos();
+      }
+
       document.getElementById(`step${currentStep}`).classList.remove('active');
       if (currentStep === '3_5') {
         currentStep = 4;
@@ -158,58 +232,227 @@
       }
     }
 
-    function selecionarAluno(nome, idade) {
+    async function carregarListaAlunos() {
+      const container = document.getElementById('listaAlunos');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      if (alunos.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum aluno cadastrado</p>';
+        return;
+      }
+
+      alunos.forEach(aluno => {
+        const div = document.createElement('div');
+        div.onclick = () => selecionarAluno(aluno);
+        div.textContent = `${aluno.nome_completo} - ${aluno.matricula}`;
+        container.appendChild(div);
+      });
+    }
+
+    async function selecionarAluno(aluno) {
+      alunoSelecionado = aluno;
       document.getElementById('step3').classList.remove('active');
       document.getElementById('step3_5').classList.add('active');
-      document.getElementById('alunoSelecionado').innerText = `Confira as alternativas marcadas para o aluno: ${nome}`;
-      document.getElementById('alunoInfo').innerText = `${nome} - ${idade}`;
+      document.getElementById('alunoSelecionado').innerText = `Confira as alternativas marcadas para o aluno: ${aluno.nome_completo}`;
+      document.getElementById('alunoInfo').innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
+      
+      // Carregar respostas existentes do aluno se houver
+      await carregarRespostasAluno(aluno.id);
       preencherRespostasCapturadas();
       currentStep = '3_5';
       atualizarBotaoVoltar();
     }
 
+    async function carregarRespostasAluno(alunoId) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('/api/respostas', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        const respostasArray = data.respostas || (Array.isArray(data) ? data : []);
+        // Filtrar respostas do aluno
+        const respostasDoAluno = respostasArray.filter(r => r.aluno_id === alunoId);
+        respostasAluno = {};
+        respostasDoAluno.forEach(r => {
+          respostasAluno[r.questao_id] = r.resposta_aluno;
+        });
+      } catch (error) {
+        console.error('Erro ao carregar respostas:', error);
+      }
+    }
+
     function preencherRespostasCapturadas() {
       const container = document.getElementById('respostasCapturadas');
       container.innerHTML = "";
-      respostasSimuladas.forEach((resposta, index) => {
+      
+      if (Object.keys(respostasAluno).length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
+        return;
+      }
+
+      // Ordenar por número da questão (assumindo que temos as questões do gabarito)
+      const questoesOrdenadas = questoesGabarito.length > 0 
+        ? questoesGabarito.map(q => ({ id: q.id, numero: q.numero, resposta: respostasAluno[q.id] || 'N/A' }))
+        : Object.entries(respostasAluno).map(([id, resposta]) => ({ id, numero: id, resposta }));
+
+      questoesOrdenadas.sort((a, b) => a.numero - b.numero);
+
+      questoesOrdenadas.forEach((item, index) => {
         const div = document.createElement('div');
-        div.innerHTML = `<strong>Questão ${String(index + 1).padStart(2, '0')}:</strong> ${resposta}`;
+        div.innerHTML = `<strong>Questão ${String(item.numero).padStart(2, '0')}:</strong> ${item.resposta}`;
         container.appendChild(div);
       });
     }
 
-    function selectItem(el) {
+    function selectItem(el, gabaritoId) {
       document.querySelectorAll('#gabaritoList div').forEach(div => div.classList.remove('selected'));
       el.classList.add('selected');
+      gabaritoSelecionado = gabaritoId;
+      carregarQuestoesGabarito(gabaritoId);
     }
 
-    function verificarCodigo() {
-      const input = document.getElementById("codigoAlunoInput").value.trim();
-      const dadosAluno = baseAlunos[input];
-      const infoSpan = document.getElementById("alunoInfo");
-      const btn = document.getElementById("btnProximoAluno");
+    async function carregarQuestoesGabarito(gabaritoId) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
 
-      if (dadosAluno) {
-        infoSpan.innerText = `${dadosAluno.nome} - ${dadosAluno.idade}`;
-        btn.style.display = "inline-block";
-        codigoAluno = input;
-      } else {
-        infoSpan.innerText = "Ler código!";
-        btn.style.display = "none";
+      try {
+        const response = await fetch(`/api/questoes/gabarito/${gabaritoId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.sucesso) {
+          questoesGabarito = data.questoes || [];
+        }
+      } catch (error) {
+        console.error('Erro ao carregar questões:', error);
       }
     }
 
-    function finalizar() {
-      const selected = document.querySelector('#gabaritoList .selected');
-      if (selected) {
+    async function verificarCodigo() {
+      const input = document.getElementById("codigoAlunoInput").value.trim();
+      const infoSpan = document.getElementById("alunoInfo");
+      const btn = document.getElementById("btnProximoAluno");
+
+      if (!input) {
+        infoSpan.innerText = "Ler código!";
+        btn.style.display = "none";
+        alunoSelecionado = null;
+        return;
+      }
+
+      // Buscar aluno por matrícula ou ID
+      const aluno = alunos.find(a => a.matricula === input || a.id === input);
+      
+      if (aluno) {
+        infoSpan.innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
+        btn.style.display = "inline-block";
+        alunoSelecionado = aluno;
+      } else {
+        infoSpan.innerText = "Aluno não encontrado!";
+        btn.style.display = "none";
+        alunoSelecionado = null;
+        showToast('Aluno não encontrado. Verifique a matrícula.', 'warning');
+      }
+    }
+
+    async function finalizar() {
+      if (!alunoSelecionado) {
+        showToast('Selecione um aluno primeiro', 'warning');
+        return;
+      }
+
+      if (!gabaritoSelecionado) {
+        showToast('Selecione um gabarito primeiro', 'warning');
+        return;
+      }
+
+      if (questoesGabarito.length === 0) {
+        showToast('Carregue as questões do gabarito primeiro', 'warning');
+        return;
+      }
+
+      if (Object.keys(respostasAluno).length === 0) {
+        showToast('Nenhuma resposta capturada. Use a câmera ou anexe foto para capturar as respostas.', 'warning');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        showLoading('Corrigindo simulado e salvando respostas...');
+
+        // Comparar respostas do aluno com o gabarito e salvar
+        let respostasSalvas = 0;
+        let erros = 0;
+
+        for (const questao of questoesGabarito) {
+          const respostaAluno = respostasAluno[questao.id];
+          
+          if (!respostaAluno) continue; // Pular se não houver resposta
+
+          const acertou = respostaAluno.toUpperCase() === questao.resposta_correta.toUpperCase();
+
+          try {
+            const response = await fetch('/api/respostas', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                aluno_id: alunoSelecionado.id,
+                questao_id: questao.id,
+                gabarito_id: gabaritoSelecionado,
+                resposta_aluno: respostaAluno,
+                acertou: acertou
+              })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.sucesso) {
+              respostasSalvas++;
+              if (!acertou) erros++;
+            }
+          } catch (error) {
+            console.error(`Erro ao salvar resposta da questão ${questao.numero}:`, error);
+          }
+        }
+
+        if (respostasSalvas > 0) {
+          showToast(`Simulado corrigido! ${respostasSalvas} respostas salvas.`, 'success');
         document.getElementById('step4').classList.remove('active');
         document.getElementById('step5').classList.add('active');
         document.getElementById('alunoInfo').innerText = "Ler código!";
         atualizarBotaoVoltar();
+          
+          // Limpar dados
+          alunoSelecionado = null;
+          gabaritoSelecionado = null;
+          respostasAluno = {};
+          questoesGabarito = [];
+          document.getElementById('codigoAlunoInput').value = '';
       } else {
-        showToast('Selecione um gabarito primeiro', 'warning');
+          showToast('Erro ao salvar respostas', 'error');
+        }
+
+      } catch (error) {
+        console.error('Erro ao finalizar correção:', error);
+        showToast(`Erro ao finalizar correção: ${error.message}`, 'error');
+      } finally {
+        hideLoading();
       }
     }
+
   </script>
 </body>
 </html>

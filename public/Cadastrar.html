@@ -38,14 +38,35 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb (Heurística 4: Consistência) -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="home.html">Home</a>
-        <span class="breadcrumb-separator">/</span>
-        <span>Cadastrar Aluno</span>
-      </nav>
+      <!-- Breadcrumb e User Profile na mesma linha -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
+          <a href="home.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Cadastrar Aluno</span>
+        </nav>
+        <div class="user-profile-menu">
+          <button class="user-avatar-button" id="user-menu-button" aria-label="Abrir menu do usuário">CO</button>
+          <div class="dropdown-menu hidden" id="user-dropdown">
+            <div class="dropdown-header">
+              <p class="user-name">Coordenador</p>
+              <p class="user-email">coordenacao@uea.edu.br</p>
+              <p class="user-score"><strong>Coordenador</strong></p>
+            </div>
+            <ul>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
-      <h2>Cadastrar Novo Aluno</h2>
+      <div class="dashboard-header">
+        <div>
+          <h2>Cadastrar Novo Aluno</h2>
+        </div>
+      </div>
       
       <form id="cadastroAlunoForm" onsubmit="handleCadastroAluno(event)">
         <div class="input-group">

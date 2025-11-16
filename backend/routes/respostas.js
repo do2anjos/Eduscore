@@ -16,15 +16,40 @@ router.use(authenticateToken);
 // Rota GET /api/respostas - Lista todas as respostas
 router.get('/', async (req, res) => {
   try {
-    const { rows } = await db.query(`
+    const { aluno_id, gabarito_id, questao_id } = req.query;
+    let query = `
       SELECT id, aluno_id, questao_id, gabarito_id, resposta_aluno, acertou, data_resposta
       FROM respostas
-      ORDER BY data_resposta DESC
-    `);
-    res.status(200).json(rows);
+      WHERE 1=1
+    `;
+    const params = [];
+    let paramIndex = 1;
+
+    if (aluno_id) {
+      query += ` AND aluno_id = $${paramIndex++}`;
+      params.push(aluno_id);
+    }
+    if (gabarito_id) {
+      query += ` AND gabarito_id = $${paramIndex++}`;
+      params.push(gabarito_id);
+    }
+    if (questao_id) {
+      query += ` AND questao_id = $${paramIndex++}`;
+      params.push(questao_id);
+    }
+
+    query += ` ORDER BY data_resposta DESC`;
+
+    const { rows } = await db.query(query, params);
+    res.status(200).json({
+      sucesso: true,
+      total: rows.length,
+      respostas: rows
+    });
   } catch (err) {
     console.error('Erro ao buscar respostas:', err);
     res.status(500).json({
+      sucesso: false,
       erro: 'Erro ao buscar respostas',
       detalhes: err.message
     });
@@ -38,6 +63,7 @@ router.post('/', async (req, res) => {
   // Validação dos campos obrigatórios
   if (!aluno_id || !questao_id || !gabarito_id || !resposta_aluno || typeof acertou !== 'boolean') {
     return res.status(400).json({ 
+      sucesso: false,
       erro: 'Dados incompletos',
       detalhes: 'Todos os campos são obrigatórios (aluno_id, questao_id, gabarito_id, resposta_aluno, acertou)'
     });
@@ -47,15 +73,19 @@ router.post('/', async (req, res) => {
     const { rows } = await db.query(
       `INSERT INTO respostas 
        (aluno_id, questao_id, gabarito_id, resposta_aluno, acertou, data_resposta)
-       VALUES ($1, $2, $3, $4, $5, NOW())
+       VALUES ($1, $2, $3, $4, $5, datetime('now'))
        RETURNING id, aluno_id, questao_id, gabarito_id, resposta_aluno, acertou, data_resposta`,
       [aluno_id, questao_id, gabarito_id, resposta_aluno, acertou]
     );
 
-    res.status(201).json(rows[0]);
+    res.status(201).json({
+      sucesso: true,
+      resposta: rows[0]
+    });
   } catch (err) {
     console.error('Erro ao criar resposta:', err);
     res.status(500).json({
+      sucesso: false,
       erro: 'Erro ao criar resposta',
       detalhes: err.message
     });
@@ -75,13 +105,20 @@ router.get('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ erro: 'Resposta não encontrada' });
+      return res.status(404).json({ 
+        sucesso: false,
+        erro: 'Resposta não encontrada' 
+      });
     }
 
-    res.status(200).json(rows[0]);
+    res.status(200).json({
+      sucesso: true,
+      resposta: rows[0]
+    });
   } catch (err) {
     console.error('Erro ao buscar resposta:', err);
     res.status(500).json({
+      sucesso: false,
       erro: 'Erro ao buscar resposta',
       detalhes: err.message
     });
@@ -95,6 +132,7 @@ router.put('/:id', async (req, res) => {
 
   if (!resposta_aluno || typeof acertou !== 'boolean') {
     return res.status(400).json({ 
+      sucesso: false,
       erro: 'Dados incompletos',
       detalhes: 'resposta_aluno e acertou são obrigatórios'
     });
@@ -103,20 +141,27 @@ router.put('/:id', async (req, res) => {
   try {
     const { rows } = await db.query(
       `UPDATE respostas
-       SET resposta_aluno = $1, acertou = $2, data_resposta = NOW()
+       SET resposta_aluno = $1, acertou = $2, data_resposta = datetime('now')
        WHERE id = $3
        RETURNING id, aluno_id, questao_id, gabarito_id, resposta_aluno, acertou, data_resposta`,
       [resposta_aluno, acertou, id]
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ erro: 'Resposta não encontrada' });
+      return res.status(404).json({ 
+        sucesso: false,
+        erro: 'Resposta não encontrada' 
+      });
     }
 
-    res.status(200).json(rows[0]);
+    res.status(200).json({
+      sucesso: true,
+      resposta: rows[0]
+    });
   } catch (err) {
     console.error('Erro ao atualizar resposta:', err);
     res.status(500).json({
+      sucesso: false,
       erro: 'Erro ao atualizar resposta',
       detalhes: err.message
     });
@@ -136,7 +181,10 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ erro: 'Resposta não encontrada' });
+      return res.status(404).json({ 
+        sucesso: false,
+        erro: 'Resposta não encontrada' 
+      });
     }
 
     res.status(200).json({ 
@@ -147,6 +195,7 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     console.error('Erro ao remover resposta:', err);
     res.status(500).json({
+      sucesso: false,
       erro: 'Erro ao remover resposta',
       detalhes: err.message
     });

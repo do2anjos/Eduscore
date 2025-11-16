@@ -63,11 +63,38 @@ const dbWrapper = {
         const { sql: sqliteSql, paramMap } = convertPostgresToSQLite(sql);
         
         // Reordenar parâmetros se necessário (PostgreSQL usa $1, $2, SQLite usa ? sequencial)
+        // Quando o mesmo parâmetro é usado múltiplas vezes, precisamos duplicar os valores
         let reorderedParams = params;
         if (Object.keys(paramMap).length > 0) {
-          reorderedParams = Object.keys(paramMap)
-            .sort((a, b) => parseInt(a) - parseInt(b))
-            .map(key => params[parseInt(key) - 1]);
+          // Contar quantas vezes cada parâmetro aparece na query convertida
+          const paramCounts = {};
+          const matches = sqliteSql.match(/\?/g);
+          const totalParams = matches ? matches.length : 0;
+          
+          // Criar array de parâmetros baseado na ordem de uso
+          const sortedKeys = Object.keys(paramMap)
+            .sort((a, b) => parseInt(a) - parseInt(b));
+          
+          // Mapear cada ? para o parâmetro correspondente na ordem que aparecem
+          reorderedParams = [];
+          const placeholderMatches = sqliteSql.match(/\$/g);
+          
+          // Para cada placeholder na query original, adicionar o parâmetro correspondente
+          if (totalParams > 0) {
+            // Extrair a ordem dos parâmetros da query original
+            const originalMatches = sql.match(/\$(\d+)/g);
+            if (originalMatches) {
+              reorderedParams = originalMatches.map(match => {
+                const paramNum = parseInt(match.replace('$', ''));
+                return params[paramNum - 1];
+              });
+            } else {
+              // Fallback: usar método original
+              reorderedParams = sortedKeys.map(key => params[parseInt(key) - 1]);
+            }
+          } else {
+            reorderedParams = sortedKeys.map(key => params[parseInt(key) - 1]);
+          }
         }
 
         // Determinar tipo de query
@@ -151,8 +178,58 @@ const dbWrapper = {
             resolve({ rows: [], rowCount: info.changes });
           }
         } else {
-          const stmt = db.prepare(sqliteSql);
+          // UPDATE ou DELETE com possível RETURNING
+          let finalSql = sqliteSql;
+          let hasReturning = false;
+          let returningColumns = '*';
+          
+          // Verificar se tem RETURNING
+          const returningMatch = sql.match(/RETURNING\s+(.+)$/i);
+          if (returningMatch) {
+            hasReturning = true;
+            returningColumns = returningMatch[1].trim();
+            // Remover RETURNING do SQL para executar o UPDATE/DELETE
+            finalSql = sqliteSql.replace(/RETURNING.*$/i, '').trim();
+          }
+          
+          const stmt = db.prepare(finalSql);
           const info = stmt.run(reorderedParams);
+          
+          // Se tinha RETURNING, buscar o registro atualizado/deletado
+          if (hasReturning && info.changes > 0) {
+            // Para UPDATE, precisamos identificar qual registro foi atualizado
+            // Extrair a condição WHERE e o nome da tabela do SQL convertido
+            const tableMatch = sqliteSql.match(/UPDATE\s+(\w+)/i);
+            const whereMatch = finalSql.match(/WHERE\s+(.+)$/i);
+            
+            if (tableMatch && whereMatch) {
+              const tableName = tableMatch[1];
+              const whereClause = whereMatch[1].trim();
+              
+              // Contar quantos parâmetros SET existem (antes do WHERE)
+              // O padrão é: UPDATE table SET col1 = ?, col2 = ? WHERE col = ?
+              const setMatch = finalSql.match(/SET\s+(.+?)\s+WHERE/i);
+              if (setMatch) {
+                const setClause = setMatch[1];
+                const setParamCount = (setClause.match(/\?/g) || []).length;
+                
+                // Os parâmetros WHERE são os que vêm depois dos parâmetros SET
+                const whereParamCount = (whereClause.match(/\?/g) || []).length;
+                const whereParams = reorderedParams.slice(setParamCount, setParamCount + whereParamCount);
+                
+                // Buscar o registro usando a condição WHERE (já está convertida para ?)
+                const selectStmt = db.prepare(`SELECT ${returningColumns} FROM ${tableName} WHERE ${whereClause}`);
+                const rows = selectStmt.all(whereParams);
+                resolve({ 
+                  rows: rows.length > 0 ? rows : [], 
+                  rowCount: info.changes,
+                  lastInsertRowid: info.lastInsertRowid 
+                });
+                return;
+              }
+            }
+          }
+          
           resolve({ 
             rows: [], 
             rowCount: info.changes,

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Perfil</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="utils.js" defer></script>
+</head>
+<body>
+  <div class="home-container">
+    <aside class="sidebar">
+      <div class="profile">
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <span>
+          Coordenador<br>
+          <small>coordenacao@uea.edu.br</small>
+        </span>
+      </div>
+      <nav class="nav-links" role="navigation" aria-label="Menu principal">
+        <a href="home.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
+        </a>
+        <a href="RelatorioGeral.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
+        </a>
+        <a href="Cadastrar.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar
+        </a>
+        <a href="CadastrarGabarito.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
+        </a>
+        <a href="AgendarSessao.html">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão
+        </a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- Breadcrumb e User Profile na mesma linha -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
+          <a href="home.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Meu Perfil</span>
+        </nav>
+        <div class="user-profile-menu">
+          <button class="user-avatar-button" id="user-menu-button" aria-label="Abrir menu do usuário">JO</button>
+          <div class="dropdown-menu hidden" id="user-dropdown">
+            <div class="dropdown-header">
+              <p class="user-name">João Silva</p>
+              <p class="user-email">coordenacao@uea.edu.br</p>
+              <p class="user-score"><strong>Coordenador</strong></p>
+            </div>
+            <ul>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-header">
+        <div>
+          <h2>Meu Perfil</h2>
+          <p class="dashboard-subtitle">Gerencie suas informações pessoais</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-top: 24px;">
+        <!-- Foto de Perfil -->
+        <div class="metric-card-modern" style="display: flex; flex-direction: column; align-items: center; padding: 32px;">
+          <label for="uploadFoto" style="cursor: pointer; position: relative; margin-bottom: 16px;">
+            <img id="previewImagem" src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Foto de Perfil" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #008cc4;" />
+            <div style="position: absolute; bottom: 10px; right: 10px; background: #008cc4; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" x2="12" y1="3" y2="15"></line>
+              </svg>
+            </div>
+          </label>
+          <input type="file" id="uploadFoto" accept="image/*" style="display: none;" onchange="previewImagemPerfil(event)" />
+          <p style="color: #666; font-size: 14px; text-align: center; margin-top: 8px;">Clique na imagem para alterar</p>
+        </div>
+
+        <!-- Formulário de Edição -->
+        <div class="metric-card-modern">
+          <form id="formPerfil" onsubmit="atualizarPerfil(event)">
+            <div class="input-group">
+              <label for="nome">Nome Completo <span class="required-field">*</span></label>
+              <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required />
+            </div>
+
+            <div class="input-group">
+              <label for="email">Email Institucional <span class="required-field">*</span></label>
+              <input type="email" id="email" name="email" placeholder="exemplo@instituicao.edu.br" required readonly style="background-color: #f5f5f5; cursor: not-allowed;" />
+              <span class="input-hint">O email não pode ser alterado</span>
+            </div>
+
+            <div class="input-group">
+              <label for="matricula">Matrícula <span class="required-field">*</span></label>
+              <input type="text" id="matricula" name="matricula" placeholder="Digite sua matrícula" required readonly style="background-color: #f5f5f5; cursor: not-allowed;" />
+              <span class="input-hint">A matrícula não pode ser alterada</span>
+            </div>
+
+            <div class="input-group">
+              <label for="telefone">Telefone</label>
+              <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" oninput="formatarTelefone(this)" />
+            </div>
+
+            <div class="input-group">
+              <label for="perfil">Perfil</label>
+              <input type="text" id="perfil" name="perfil" readonly style="background-color: #f5f5f5; cursor: not-allowed; text-transform: capitalize;" />
+              <span class="input-hint">O perfil não pode ser alterado</span>
+            </div>
+
+            <div class="input-group" style="margin-top: 24px;">
+              <button type="submit" class="email-btn" id="submitBtn">
+                <span id="btnText">Salvar Alterações</span>
+                <span id="btnSpinner" class="loading-spinner" style="display: none;"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Seção de Alteração de Senha -->
+      <div class="metric-card-modern" style="margin-top: 24px;">
+        <h3 style="margin-bottom: 24px; color: #003b54;">Alterar Senha</h3>
+        <form id="formSenha" onsubmit="alterarSenha(event)">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div class="input-group">
+              <label for="senhaAtual">Senha Atual <span class="required-field">*</span></label>
+              <input type="password" id="senhaAtual" name="senhaAtual" placeholder="Digite sua senha atual" required />
+            </div>
+
+            <div class="input-group">
+              <label for="novaSenha">Nova Senha <span class="required-field">*</span></label>
+              <input type="password" id="novaSenha" name="novaSenha" placeholder="Digite a nova senha" required />
+            </div>
+
+            <div class="input-group">
+              <label for="confirmarNovaSenha">Confirmar Nova Senha <span class="required-field">*</span></label>
+              <input type="password" id="confirmarNovaSenha" name="confirmarNovaSenha" placeholder="Confirme a nova senha" required />
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-top: 16px;">
+            <button type="submit" class="btn-secondary" id="submitSenhaBtn">
+              <span id="btnSenhaText">Alterar Senha</span>
+              <span id="btnSenhaSpinner" class="loading-spinner" style="display: none;"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let usuarioAtual = null;
+
+    // Carregar dados do usuário ao carregar a página
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadUserData();
+      await carregarDadosPerfil();
+    });
+
+    async function carregarDadosPerfil() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/usuarios/me', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+            return;
+          }
+          throw new Error('Erro ao carregar dados do perfil');
+        }
+
+        const data = await response.json();
+        
+        if (data.sucesso && data.usuario) {
+          usuarioAtual = data.usuario;
+          preencherFormulario(data.usuario);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do perfil:', error);
+        showToast('Erro ao carregar dados do perfil', 'error');
+      }
+    }
+
+    function preencherFormulario(usuario) {
+      document.getElementById('nome').value = usuario.nome || '';
+      document.getElementById('email').value = usuario.email || '';
+      document.getElementById('matricula').value = usuario.matricula || '';
+      document.getElementById('telefone').value = usuario.telefone || '';
+      document.getElementById('perfil').value = usuario.perfil ? usuario.perfil.charAt(0).toUpperCase() + usuario.perfil.slice(1) : '';
+
+      // Atualizar foto de perfil
+      const previewImg = document.getElementById('previewImagem');
+      if (usuario.foto_perfil && usuario.id) {
+        // SEMPRE usar endpoint da API para fotos base64 para evitar erro 431
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Limpar blob URL anterior se existir
+          if (previewImg.src && previewImg.src.startsWith('blob:')) {
+            URL.revokeObjectURL(previewImg.src);
+          }
+          
+          fetch(`/api/usuarios/${usuario.id}/foto?t=${Date.now()}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          .then(response => {
+            if (response.ok) {
+              return response.blob();
+            }
+            throw new Error(`Erro ao carregar foto: ${response.status}`);
+          })
+          .then(blob => {
+            // Criar blob URL para exibir a imagem
+            const blobUrl = URL.createObjectURL(blob);
+            previewImg.src = blobUrl;
+            previewImg.alt = usuario.nome || 'Foto de Perfil';
+            
+            // Limpar blob URL anterior quando a nova imagem carregar
+            previewImg.onload = function() {
+              // Manter o blob URL enquanto a imagem estiver visível
+            };
+            
+            previewImg.onerror = function() {
+              URL.revokeObjectURL(blobUrl); // Limpar blob URL em caso de erro
+              this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+              this.alt = 'Foto de Perfil';
+              this.onerror = null;
+            };
+          })
+          .catch(error => {
+            console.warn('[DEBUG] Erro ao carregar foto via API:', error);
+            previewImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+            previewImg.alt = 'Foto de Perfil';
+            previewImg.onerror = null;
+          });
+        } else {
+          previewImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+          previewImg.alt = 'Foto de Perfil';
+          previewImg.onerror = null;
+        }
+      } else {
+        previewImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+        previewImg.alt = 'Foto de Perfil';
+        previewImg.onerror = null;
+      }
+    }
+
+    function previewImagemPerfil(event) {
+      const input = event.target;
+      const imagemPreview = document.getElementById('previewImagem');
+
+      if (input.files && input.files[0]) {
+        if (input.files[0].size > 5 * 1024 * 1024) {
+          showToast('A imagem é muito grande. Por favor, selecione uma imagem menor que 5MB.', 'error');
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagemPreview.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function formatarTelefone(input) {
+      let value = input.value.replace(/\D/g, '');
+      
+      if (value.length > 11) {
+        value = value.substring(0, 11);
+      }
+      
+      if (value.length > 2) {
+        value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+      }
+      
+      if (value.length > 10) {
+        value = `${value.substring(0, 10)}-${value.substring(10)}`;
+      }
+      
+      input.value = value;
+    }
+
+    async function atualizarPerfil(event) {
+      event.preventDefault();
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const formData = {
+        nome: document.getElementById('nome').value,
+        telefone: document.getElementById('telefone').value.replace(/\D/g, '')
+      };
+
+      // Adicionar foto se foi selecionada
+      const fileInput = document.getElementById('uploadFoto');
+      if (fileInput.files && fileInput.files[0]) {
+        // Validar tamanho antes de processar (máximo 1MB para evitar erro 431)
+        if (fileInput.files[0].size > 1024 * 1024) { // 1MB máximo
+          showToast('A imagem é muito grande. Por favor, selecione uma imagem menor que 1MB.', 'error');
+          return;
+        }
+
+        // Comprimir a imagem antes de enviar
+        await comprimirEEnviarImagem(fileInput.files[0], formData, token);
+      } else {
+        await enviarAtualizacao(formData, token);
+      }
+    }
+
+    async function comprimirEEnviarImagem(file, formData, token) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            // Criar canvas para redimensionar e comprimir
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 300;
+            const MAX_HEIGHT = 300;
+            let width = img.width;
+            let height = img.height;
+
+            // Redimensionar mantendo proporção
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            // Desenhar imagem redimensionada no canvas com suavização
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Tentar diferentes níveis de qualidade até atingir o tamanho desejado
+            let quality = 0.6; // Começar com 60% de qualidade
+            let base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+            const MAX_SIZE = 300 * 1024; // 300KB máximo (reduzido de 500KB)
+            
+            // Se ainda for muito grande, reduzir qualidade progressivamente
+            while (base64.length > MAX_SIZE && quality > 0.3) {
+              quality -= 0.1;
+              base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+            }
+            
+            // Se ainda for muito grande após reduzir qualidade, tentar redimensionar mais
+            if (base64.length > MAX_SIZE) {
+              // Redimensionar para 200x200
+              const smallerCanvas = document.createElement('canvas');
+              smallerCanvas.width = 200;
+              smallerCanvas.height = 200;
+              const smallerCtx = smallerCanvas.getContext('2d');
+              smallerCtx.imageSmoothingEnabled = true;
+              smallerCtx.imageSmoothingQuality = 'high';
+              smallerCtx.drawImage(img, 0, 0, 200, 200);
+              base64 = smallerCanvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+            }
+            
+            // Verificação final
+            if (base64.length > MAX_SIZE) {
+              showToast('A imagem ainda é muito grande após compressão. Por favor, selecione uma imagem menor.', 'error');
+              reject(new Error('Imagem muito grande'));
+              return;
+            }
+
+            console.log('[DEBUG] Imagem comprimida com sucesso:', {
+              tamanhoOriginal: file.size,
+              tamanhoComprimido: base64.length,
+              tamanhoKB: Math.round(base64.length / 1024),
+              qualidade: quality
+            });
+
+            formData.foto_perfil = base64;
+            console.log('[DEBUG] Foto adicionada ao formData. Tamanho:', formData.foto_perfil.length, 'caracteres');
+            enviarAtualizacao(formData, token).then(resolve).catch(reject);
+          };
+          img.onerror = function() {
+            showToast('Erro ao processar a imagem. Tente novamente.', 'error');
+            reject(new Error('Erro ao processar imagem'));
+          };
+          img.src = e.target.result;
+        };
+        reader.onerror = function() {
+          showToast('Erro ao ler a imagem. Tente novamente.', 'error');
+          reject(new Error('Erro ao ler arquivo'));
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function enviarAtualizacao(formData, token) {
+      try {
+        document.getElementById('btnText').textContent = 'Salvando...';
+        document.getElementById('btnSpinner').style.display = 'inline-block';
+        document.getElementById('submitBtn').disabled = true;
+
+        // Obter ID do usuário - tentar primeiro do usuarioAtual, depois do token
+        let userId = null;
+        
+        if (usuarioAtual && usuarioAtual.id) {
+          userId = usuarioAtual.id;
+          console.log('[DEBUG] userId do usuarioAtual:', userId);
+        } else {
+          // Se usuarioAtual não estiver disponível, tentar carregar novamente
+          try {
+            const response = await fetch('/api/usuarios/me', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.sucesso && data.usuario && data.usuario.id) {
+                usuarioAtual = data.usuario;
+                userId = data.usuario.id;
+                console.log('[DEBUG] userId carregado de /api/usuarios/me:', userId);
+              }
+            }
+          } catch (e) {
+            console.warn('[DEBUG] Erro ao carregar dados do usuário:', e);
+          }
+          
+          // Se ainda não tiver userId, tentar extrair do token
+          if (!userId) {
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              userId = payload.userId;
+              console.log('[DEBUG] userId extraído do token:', userId);
+            } catch (e) {
+              console.error('[DEBUG] Erro ao extrair userId do token:', e);
+              throw new Error('Não foi possível identificar o usuário. Faça login novamente.');
+            }
+          }
+        }
+        
+        if (!userId) {
+          throw new Error('Não foi possível identificar o usuário. Faça login novamente.');
+        }
+
+        // Se a foto for muito grande (mais de 300KB em base64), não enviar
+        if (formData.foto_perfil && formData.foto_perfil.length > 300 * 1024) {
+          delete formData.foto_perfil;
+          showToast('A imagem é muito grande. Por favor, selecione uma imagem menor.', 'warning');
+        }
+
+        console.log('[DEBUG] Enviando atualização para userId:', userId);
+        console.log('[DEBUG] Campos a atualizar:', Object.keys(formData));
+        if (formData.foto_perfil) {
+          console.log('[DEBUG] Foto_perfil no formData:', {
+            existe: true,
+            tamanho: formData.foto_perfil.length,
+            tamanhoKB: Math.round(formData.foto_perfil.length / 1024),
+            primeirosCaracteres: formData.foto_perfil.substring(0, 50) + '...'
+          });
+        } else {
+          console.log('[DEBUG] Foto_perfil NÃO está no formData');
+        }
+
+        const response = await fetch(`/api/usuarios/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+        console.log('[DEBUG] Resposta do servidor:', { status: response.status, data });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+            return;
+          }
+          if (response.status === 404) {
+            console.error('[DEBUG] Usuário não encontrado. userId usado:', userId);
+            throw new Error(data.erro || 'Usuário não encontrado. Faça login novamente.');
+          }
+          throw new Error(data.erro || 'Erro ao atualizar perfil');
+        }
+
+        showToast('Perfil atualizado com sucesso!', 'success');
+        
+        // Atualizar usuarioAtual com os dados retornados do servidor
+        if (data.sucesso && data.usuario) {
+          console.log('[DEBUG] Dados do usuário recebidos:', {
+            id: data.usuario.id,
+            nome: data.usuario.nome,
+            temFoto: !!data.usuario.foto_perfil,
+            tamanhoFoto: data.usuario.foto_perfil ? data.usuario.foto_perfil.length : 0
+          });
+          
+          usuarioAtual = data.usuario;
+          // Atualizar formulário e preview imediatamente
+          preencherFormulario(data.usuario);
+        } else {
+          console.warn('[DEBUG] Resposta não contém dados do usuário:', data);
+        }
+        
+        // Recarregar dados do usuário para atualizar sidebar
+        await loadUserData();
+
+      } catch (error) {
+        console.error('Erro ao atualizar perfil:', error);
+        showToast(`Erro ao atualizar perfil: ${error.message}`, 'error');
+      } finally {
+        document.getElementById('btnText').textContent = 'Salvar Alterações';
+        document.getElementById('btnSpinner').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+      }
+    }
+
+    async function alterarSenha(event) {
+      event.preventDefault();
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const senhaAtual = document.getElementById('senhaAtual').value;
+      const novaSenha = document.getElementById('novaSenha').value;
+      const confirmarNovaSenha = document.getElementById('confirmarNovaSenha').value;
+
+      if (novaSenha !== confirmarNovaSenha) {
+        showToast('As senhas não coincidem', 'error');
+        return;
+      }
+
+      // Validar força da senha
+      const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d#@$!%*?&]{8,}$/;
+      if (!PASSWORD_REGEX.test(novaSenha)) {
+        showToast('A senha deve conter: 8+ caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo (#@$!%*?&)', 'error');
+        return;
+      }
+
+      try {
+        document.getElementById('btnSenhaText').textContent = 'Alterando...';
+        document.getElementById('btnSenhaSpinner').style.display = 'inline-block';
+        document.getElementById('submitSenhaBtn').disabled = true;
+
+        // Obter ID do usuário do token se usuarioAtual não estiver disponível
+        let userId = usuarioAtual?.id;
+        if (!userId) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userId = payload.userId;
+          } catch (e) {
+            showToast('Não foi possível identificar o usuário. Faça login novamente.', 'error');
+            return;
+          }
+        }
+
+        const response = await fetch(`/api/usuarios/${userId}/senha`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            senha_atual: senhaAtual,
+            nova_senha: novaSenha
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.erro || 'Erro ao alterar senha');
+        }
+
+        showToast('Senha alterada com sucesso!', 'success');
+        document.getElementById('formSenha').reset();
+
+      } catch (error) {
+        console.error('Erro ao alterar senha:', error);
+        showToast(`Erro ao alterar senha: ${error.message}`, 'error');
+      } finally {
+        document.getElementById('btnSenhaText').textContent = 'Alterar Senha';
+        document.getElementById('btnSenhaSpinner').style.display = 'none';
+        document.getElementById('submitSenhaBtn').disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
+

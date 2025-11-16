@@ -28,63 +28,78 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb (Heurística 4: Consistência) -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="home.html">Home</a>
-        <span class="breadcrumb-separator">/</span>
-        <span>Agendar Sessão</span>
-      </nav>
-
-      <h2>Agendar Sessão</h2>
-
-      <button class="add-button" onclick="abrirFormulario('')">+ Adicionar Sessão</button>
-
-      <div class="form-modal" id="modalAgendar">
-        <div class="form-group">
-          <label for="alunoNome">Nome do Aluno</label>
-          <input type="text" id="alunoNome" placeholder="Digite o nome do aluno" />
-        </div>
-
-        <div class="form-group">
-          <label for="etapa">Etapa</label>
-          <select id="etapa">
-            <option value="">Selecione</option>
-            <option value="SIS1">SIS1</option>
-            <option value="SIS2">SIS2</option>
-            <option value="SIS3">SIS3</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="materia">Matéria</label>
-          <select id="materia">
-            <option value="">Selecione</option>
-            <option value="Matemática">Matemática</option>
-            <option value="Biologia">Biologia</option>
-            <option value="Química">Química</option>
-            <option value="Geografia">Geografia</option>
-            <option value="Português">Português</option>
-            <option value="Física">Física</option>
-            <option value="Língua Estr.">Língua Estr.</option>
-            <option value="História">História</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="dataSessao">Data</label>
-          <input type="date" id="dataSessao" />
-        </div>
-
-        <div class="form-group">
-          <label for="horaSessao">Horário</label>
-          <input type="time" id="horaSessao" />
-        </div>
-
-        <div class="form-actions">
-          <button class="cancel" onclick="fecharFormulario()">Cancelar</button>
-          <button class="save" onclick="confirmarAgendamento()">Agendar</button>
+      <!-- Breadcrumb e User Profile na mesma linha -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
+          <a href="home.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Agendar Sessão</span>
+        </nav>
+        <div class="user-profile-menu">
+          <button class="user-avatar-button" id="user-menu-button" aria-label="Abrir menu do usuário">CO</button>
+          <div class="dropdown-menu hidden" id="user-dropdown">
+            <div class="dropdown-header">
+              <p class="user-name">Coordenador</p>
+              <p class="user-email">coordenacao@uea.edu.br</p>
+              <p class="user-score"><strong>Coordenador</strong></p>
+            </div>
+            <ul>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+            </ul>
+          </div>
         </div>
       </div>
+
+      <div class="dashboard-header">
+        <div>
+      <h2>Agendar Sessão</h2>
+        </div>
+      </div>
+
+      <button class="add-button" onclick="abrirFormulario()">+ Adicionar Sessão</button>
+
+      <div class="form-modal" id="modalAgendar">
+  <div class="form-group">
+    <label for="alunoNome">Nome do Aluno</label>
+          <select id="alunoNome" required>
+            <option value="">Selecione o aluno</option>
+          </select>
+  </div>
+
+  <div class="form-group">
+    <label for="etapa">Etapa</label>
+          <select id="etapa" required>
+      <option value="">Selecione</option>
+      <option value="SIS1">SIS1</option>
+      <option value="SIS2">SIS2</option>
+      <option value="SIS3">SIS3</option>
+    </select>
+  </div>
+
+<div class="form-group">
+          <label for="materia">Disciplina</label>
+          <select id="materia" required>
+            <option value="">Selecione a disciplina</option>
+  </select>
+</div>
+
+  <div class="form-group">
+    <label for="dataSessao">Data</label>
+          <input type="date" id="dataSessao" required />
+  </div>
+
+  <div class="form-group">
+    <label for="horaSessao">Horário</label>
+          <input type="time" id="horaSessao" required />
+  </div>
+
+  <div class="form-actions">
+          <button type="button" class="cancel" onclick="fecharFormulario()">Cancelar</button>
+          <button type="button" class="save" onclick="confirmarAgendamento()">Agendar</button>
+  </div>
+</div>
 
       <div class="session-list">
         <!-- Sessões adicionadas aparecerão aqui -->
@@ -92,71 +107,277 @@
     </main>
   </div>
 
-  <script>
-    let sessaoEditando = null;
+<script>
+    let sessaoEditandoId = null;
+    let alunos = [];
+    let disciplinas = [];
+    let usuarioAtual = null;
 
-    function abrirFormulario(nome = '', etapa = '', data = '', hora = '', materia = '', elemento = null) {
-      document.getElementById('alunoNome').value = nome;
-      document.getElementById('etapa').value = etapa;
-      document.getElementById('materia').value = materia;
-      document.getElementById('dataSessao').value = data;
-      document.getElementById('horaSessao').value = hora;
-      document.getElementById('modalAgendar').classList.add('active');
-      sessaoEditando = elemento;
-    }
+    // Carregar dados ao inicializar
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadUserData();
+      await carregarAlunos();
+      await carregarDisciplinas();
+      await carregarSessoes();
+    });
 
-    function fecharFormulario() {
-      document.getElementById('modalAgendar').classList.remove('active');
-      sessaoEditando = null;
-    }
-
-    function confirmarAgendamento() {
-      const nome = document.getElementById('alunoNome').value || 'Aluno não informado';
-      const etapa = document.getElementById('etapa').value;
-      const materia = document.getElementById('materia').value;
-      const data = document.getElementById('dataSessao').value;
-      const hora = document.getElementById('horaSessao').value;
-
-      // Heurística 5: Prevenção de erros
-      if (!etapa || !materia || !data || !hora) {
-        showToast('Preencha todos os campos obrigatórios', 'warning');
+    async function loadUserData() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
         return;
       }
 
-      const dataFormatada = data.split("-").reverse().slice(0, 2).join("/");
+      try {
+        const response = await fetch('/api/usuarios/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.sucesso) {
+          usuarioAtual = data.usuario;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+      }
+    }
 
-      const conteudoHTML = `
-        <span><strong>${nome}</strong> | ${etapa} | ${dataFormatada} | ${hora} | ${materia}</span>
-        <div class="actions">
-          <button onclick="abrirFormulario('${nome}', '${etapa}', '${data}', '${hora}', '${materia}', this.closest('.session-item'))">Editar</button>
-          <button onclick="excluirSessao(this)">Excluir</button>
-        </div>
-      `;
+    async function carregarAlunos() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
 
-      if (sessaoEditando) {
-        sessaoEditando.innerHTML = conteudoHTML;
-      } else {
-        const novaSessao = document.createElement('div');
-        novaSessao.classList.add('session-item');
-        novaSessao.innerHTML = conteudoHTML;
-        document.querySelector('.session-list').appendChild(novaSessao);
+      try {
+        const response = await fetch('/api/alunos', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.sucesso || Array.isArray(data)) {
+          alunos = data.alunos || data;
+          atualizarSelectAlunos();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar alunos:', error);
+      }
+    }
+
+    async function carregarDisciplinas() {
+      try {
+        const response = await fetch('/api/disciplinas');
+        const data = await response.json();
+        if (data.sucesso || Array.isArray(data)) {
+          disciplinas = data.disciplinas || data;
+          atualizarSelectDisciplinas();
+        }
+      } catch (error) {
+        console.error('Erro ao carregar disciplinas:', error);
+      }
+    }
+
+    function atualizarSelectAlunos() {
+      const select = document.getElementById('alunoNome');
+      if (!select) return;
+      
+      select.innerHTML = '<option value="">Selecione o aluno</option>';
+      alunos.forEach(aluno => {
+        const option = document.createElement('option');
+        option.value = aluno.id;
+        option.textContent = aluno.nome_completo;
+        select.appendChild(option);
+      });
+    }
+
+    function atualizarSelectDisciplinas() {
+      const select = document.getElementById('materia');
+      if (!select) return;
+      
+      select.innerHTML = '<option value="">Selecione a disciplina</option>';
+      disciplinas.forEach(disciplina => {
+        const option = document.createElement('option');
+        option.value = disciplina.id;
+        option.textContent = disciplina.nome;
+        select.appendChild(option);
+      });
+    }
+
+    async function carregarSessoes() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('/api/sessoes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.sucesso || Array.isArray(data)) {
+          renderizarSessoes(data.sessoes || data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar sessões:', error);
+      }
+    }
+
+    function renderizarSessoes(sessoes) {
+      const container = document.querySelector('.session-list');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      if (!sessoes || sessoes.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhuma sessão agendada</p>';
+        return;
       }
 
-      showToast('Sessão agendada com sucesso!', 'success');
-      fecharFormulario();
+      sessoes.forEach(sessao => {
+        const div = document.createElement('div');
+        div.className = 'session-item';
+        div.dataset.sessaoId = sessao.id;
+        const dataFormatada = sessao.data ? sessao.data.split('-').reverse().slice(0, 2).join('/') : '';
+        div.innerHTML = `
+          <span><strong>${sessao.aluno_nome || 'Aluno'}</strong> | ${sessao.etapa} | ${dataFormatada} | ${sessao.hora} | ${sessao.disciplina_nome || 'Disciplina'}</span>
+          <div class="actions">
+            <button onclick="editarSessao('${sessao.id}')">Editar</button>
+            <button onclick="excluirSessao('${sessao.id}')">Excluir</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
     }
 
-    function excluirSessao(botao) {
-      // Heurística 3: Controle e liberdade - Confirmação antes de excluir
+    function abrirFormulario() {
+      document.getElementById('alunoNome').value = '';
+      document.getElementById('etapa').value = '';
+      document.getElementById('materia').value = '';
+      document.getElementById('dataSessao').value = '';
+      document.getElementById('horaSessao').value = '';
+    document.getElementById('modalAgendar').classList.add('active');
+      sessaoEditandoId = null;
+    }
+
+    async function editarSessao(sessaoId) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch(`/api/sessoes/${sessaoId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.sucesso && data.sessao) {
+          const s = data.sessao;
+          document.getElementById('alunoNome').value = s.aluno_id || '';
+          document.getElementById('etapa').value = s.etapa || '';
+          document.getElementById('materia').value = s.disciplina_id || '';
+          document.getElementById('dataSessao').value = s.data || '';
+          document.getElementById('horaSessao').value = s.hora || '';
+          document.getElementById('modalAgendar').classList.add('active');
+          sessaoEditandoId = sessaoId;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar sessão:', error);
+        showToast('Erro ao carregar sessão', 'error');
+      }
+  }
+
+  function fecharFormulario() {
+    document.getElementById('modalAgendar').classList.remove('active');
+      document.getElementById('alunoNome').value = '';
+      document.getElementById('etapa').value = '';
+      document.getElementById('materia').value = '';
+      document.getElementById('dataSessao').value = '';
+      document.getElementById('horaSessao').value = '';
+      sessaoEditandoId = null;
+    }
+
+    async function confirmarAgendamento() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      const alunoId = document.getElementById('alunoNome').value;
+    const etapa = document.getElementById('etapa').value;
+      const disciplinaId = document.getElementById('materia').value;
+    const data = document.getElementById('dataSessao').value;
+    const hora = document.getElementById('horaSessao').value;
+
+      if (!alunoId || !etapa || !disciplinaId || !data || !hora) {
+        showToast('Preencha todos os campos obrigatórios', 'warning');
+      return;
+    }
+
+      try {
+        showLoading('Salvando sessão...');
+        
+        const usuarioId = usuarioAtual?.id || JSON.parse(atob(token.split('.')[1])).userId;
+        
+        const url = sessaoEditandoId ? `/api/sessoes/${sessaoEditandoId}` : '/api/sessoes';
+        const method = sessaoEditandoId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            aluno_id: alunoId,
+            etapa,
+            disciplina_id: disciplinaId,
+            data,
+            hora,
+            usuario_id: usuarioId
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.erro || 'Erro ao salvar sessão');
+        }
+
+        showToast('Sessão agendada com sucesso!', 'success');
+    fecharFormulario();
+        await carregarSessoes();
+
+      } catch (error) {
+        console.error('Erro ao salvar sessão:', error);
+        showToast(`Erro ao salvar sessão: ${error.message}`, 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function excluirSessao(sessaoId) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
       showConfirmDialog(
         'Deseja realmente excluir esta sessão?',
-        () => {
-          const item = botao.closest('.session-item');
-          item.remove();
-          showToast('Sessão excluída com sucesso', 'success');
+        async () => {
+          try {
+            showLoading('Excluindo sessão...');
+            const response = await fetch(`/api/sessoes/${sessaoId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.erro || 'Erro ao excluir sessão');
+            }
+
+            showToast('Sessão excluída com sucesso', 'success');
+            await carregarSessoes();
+
+          } catch (error) {
+            console.error('Erro ao excluir sessão:', error);
+            showToast(`Erro ao excluir sessão: ${error.message}`, 'error');
+          } finally {
+            hideLoading();
+          }
         }
       );
-    }
-  </script>
+  }
+</script>
 </body>
 </html>

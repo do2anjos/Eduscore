@@ -19,15 +19,11 @@
 
 ### 4. RETURNING em INSERT
 - **PostgreSQL**: `INSERT ... RETURNING *`
-- **SQLite**: INSERT + SELECT separado usando `rowid` ou `id` gerado
+- **SQLite**: INSERT + SELECT separado usando `rowid`
 - **Status**: ✅ Implementado no wrapper
 
 ### 5. COUNT(*)
 - Normalização automática: `COUNT(*)` → `count` (minúsculo)
-- **Status**: ✅ Implementado no wrapper
-
-### 6. Geração Automática de IDs (UUID)
-- IDs são gerados automaticamente quando não fornecidos
 - **Status**: ✅ Implementado no wrapper
 
 ## 🔧 Correções Aplicadas
@@ -39,7 +35,6 @@
    - ✅ Suporte a transações
    - ✅ Normalização de COUNT(*)
    - ✅ Conversão de RETURNING
-   - ✅ Geração automática de UUIDs
 
 2. **backend/utils/transaction.js**
    - ✅ Adaptado para SQLite (transações automáticas)
@@ -47,21 +42,14 @@
 3. **backend/routes/gabaritos.js**
    - ✅ Corrigido `withTransaction` (client → db)
 
-4. **backend/migrations/create_schema.js** (NOVO)
-   - ✅ Script de criação de schema completo
-   - ✅ 8 tabelas criadas
-   - ✅ Índices para performance
-   - ✅ Foreign keys habilitadas
-
-5. **package.json**
+4. **package.json**
    - ✅ Removido: `pg`
    - ✅ Adicionado: `better-sqlite3`
-   - ✅ Adicionado script: `npm run migrate`
 
-6. **README.md**
+5. **README.md**
    - ✅ Atualizado com instruções SQLite
 
-7. **.gitignore**
+6. **.gitignore**
    - ✅ Adicionado: `*.sqlite`, `*.db`
 
 ## ⚠️ Pontos de Atenção
@@ -69,7 +57,7 @@
 ### 1. Tipos de Dados
 - **UUID**: SQLite não tem tipo UUID nativo, usar TEXT
 - **Timestamps**: SQLite usa TEXT, INTEGER ou REAL para datas
-- **Solução**: IDs são gerados automaticamente como TEXT (UUID v4)
+- **Solução**: O banco será criado automaticamente, mas as tabelas precisam ser criadas com tipos compatíveis
 
 ### 2. Queries com CASE WHEN
 - ✅ SQLite suporta CASE WHEN (compatível)
@@ -92,9 +80,7 @@
 - [x] Conversão de ILIKE
 - [x] Suporte a RETURNING
 - [x] Normalização de COUNT(*)
-- [x] Geração automática de UUIDs
 - [x] Transações corrigidas
-- [x] Script de migração criado
 - [x] README atualizado
 - [x] .gitignore atualizado
 
@@ -106,13 +92,8 @@
    ```
 
 2. **Criar schema do banco:**
-   ```bash
-   npm run migrate
-   ```
-   Ou:
-   ```bash
-   node backend/migrations/create_schema.js
-   ```
+   - O banco será criado automaticamente em `database.sqlite`
+   - Você precisará criar as tabelas (migração de schema)
 
 3. **Testar o servidor:**
    ```bash
@@ -125,34 +106,13 @@
 - Todas as queries PostgreSQL são convertidas automaticamente
 - Não é necessário alterar as rotas existentes
 - O banco SQLite será criado automaticamente na primeira execução
-- IDs são gerados automaticamente quando não fornecidos nas queries INSERT
-
-## 📊 Tabelas Criadas
-
-O script de migração cria as seguintes tabelas:
-
-1. **usuarios** - Usuários do sistema (professores, coordenadores, admins)
-2. **alunos** - Alunos cadastrados
-3. **disciplinas** - Disciplinas do sistema
-4. **gabaritos** - Gabaritos de provas
-5. **questoes** - Questões dos gabaritos
-6. **respostas** - Respostas dos alunos
-7. **sessoes** - Sessões de prova
-8. **relatorios** - Relatórios gerados
-
-Todas as tabelas incluem:
-- Foreign keys configuradas
-- Índices para performance
-- Constraints de integridade
 
 ## 🔍 Testes Recomendados
 
-Após instalar as dependências e criar o schema:
+Após instalar as dependências, execute:
+```bash
+node test-sqlite-migration.js
+```
 
-1. Testar login de usuário
-2. Testar criação de aluno
-3. Testar criação de gabarito
-4. Testar upload de CSV
-5. Testar listagem com filtros
-6. Testar queries com JOINs
-7. Testar agregações (COUNT, AVG)
+Isso testará todas as conversões automaticamente.
+
