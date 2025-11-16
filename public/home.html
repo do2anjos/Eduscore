@@ -39,22 +39,34 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb (Heurística 4: Consistência) -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="home.html">Home</a>
-        <span class="breadcrumb-separator">/</span>
-        <span>Dashboard</span>
-      </nav>
+      <!-- Breadcrumb e User Profile na mesma linha -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
+          <a href="home.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Dashboard</span>
+        </nav>
+        <div class="user-profile-menu">
+          <button class="user-avatar-button" id="user-menu-button" aria-label="Abrir menu do usuário">JO</button>
+          <div class="dropdown-menu hidden" id="user-dropdown">
+            <div class="dropdown-header">
+              <p class="user-name">João Silva</p>
+              <p class="user-email">coordenacao@uea.edu.br</p>
+              <p class="user-score"><strong>Coordenador</strong></p>
+            </div>
+            <ul>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
       <div class="dashboard-header">
         <div>
           <h2>Bem-vindo de volta, João!</h2>
           <p class="dashboard-subtitle">Aqui está um resumo do seu desempenho</p>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <input type="text" class="search-box" placeholder="Pesquisar..." aria-label="Pesquisar" />
-          <span class="keyboard-shortcut" title="Atalho de teclado">
-           </span>
         </div>
       </div>
 
@@ -65,13 +77,10 @@
             <h3>Alunos Ativos</h3>
             <span class="metric-icon">👤</span>
           </div>
-          <div class="metric-card-content gauge-layout">
-            <div style="flex: 1; display: flex; justify-content: center;">
-              <canvas id="gaugeAlunos" style="max-width: 180px; max-height: 180px;"></canvas>
-            </div>
-            <div class="metric-value">
-              <span class="value-number">350</span>
-              <span class="value-label">de 400 alunos</span>
+          <div class="metric-card-content" style="display: flex; align-items: center; justify-content: center; min-height: 180px;">
+            <div class="metric-value" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+              <span class="value-number" id="totalAlunosNumero">0</span>
+              <span class="value-label" id="totalAlunosLegenda">alunos cadastrados</span>
             </div>
           </div>
         </div>
@@ -112,155 +121,205 @@
   </div>
 
   <script>
-    new Chart(document.getElementById('gaugeAlunos'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Ativos', 'Inativos'],
-        datasets: [{
-          data: [350, 50],
-          backgroundColor: ['#008cc4', '#e0e0e0'],
-          cutout: '75%',
-          borderWidth: 0,
-        }]
-      },
-      options: {
-        rotation: -90,
-        circumference: 180,
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: false },
-        },
-        maintainAspectRatio: false,
-      },
-      plugins: [{
-        id: 'customCenterText',
-        beforeDraw(chart) {
-          const { width, height, ctx } = chart;
-          ctx.restore();
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.font = 'bold 24px "Atkinson Hyperlegible", sans-serif';
-          ctx.fillStyle = '#003b54';
-          ctx.fillText('87.5%', width / 2, height / 2 + 5);
-          ctx.font = '14px "Atkinson Hyperlegible", sans-serif';
-          ctx.fillStyle = '#666';
-          ctx.fillText('Taxa de ativos', width / 2, height / 2 + 25);
-          ctx.save();
-        }
-      }]
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadUserData();
+      await carregarDashboard();
     });
 
-    new Chart(document.getElementById('progressChart'), {
-      type: 'bar',
-      data: {
-        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-        datasets: [{
-          label: 'Progresso',
-          data: [80, 95, 60, 100, 75, 50],
-          backgroundColor: '#008cc4',
-          borderRadius: 8,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        plugins: { 
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#003b54',
-            padding: 12,
-            titleFont: { size: 14, weight: '600' },
-            bodyFont: { size: 13 },
-            cornerRadius: 8,
-          }
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { 
-          y: { 
-            beginAtZero: true,
-            ticks: {
-              font: { size: 12 },
-              color: '#666'
-            },
-            grid: {
-              color: '#f0f0f0'
-            }
-          },
-          x: {
-            ticks: {
-              font: { size: 12 },
-              color: '#666'
-            },
-            grid: {
-              display: false
-            }
-          }
-        }
+    async function carregarDashboard() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
       }
-    });
 
-    new Chart(document.getElementById('retencaoChart'), {
-      type: 'bar',
-      data: {
-        labels: ['Matemática', 'Física', 'Química', 'Biologia', 'Português', 'Redação', 'Geografia', 'História'],
-        datasets: [{
-          label: 'Retenção (%)',
-          data: [90, 85, 80, 75, 70, 68, 65, 60],
-          backgroundColor: (context) => {
-            const value = context.parsed.x;
-            if (value >= 80) return '#28a745';
-            if (value >= 70) return '#008cc4';
-            return '#ffc107';
-          },
-          borderRadius: 8,
-          barThickness: 28,
-        }]
-      },
-      options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#003b54',
-            padding: 12,
-            titleFont: { size: 14, weight: '600' },
-            bodyFont: { size: 13 },
-            cornerRadius: 8,
-            callbacks: {
-              label: context => `Retenção: ${context.raw}%`
-            }
+      try {
+        const resp = await fetch('/api/relatorios/estatisticas-gerais', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
-        },
-        scales: {
-          x: {
-            beginAtZero: true,
-            max: 100,
-            ticks: {
-              callback: value => `${value}%`,
-              font: { size: 12 },
-              color: '#666'
-            },
-            grid: {
-              color: '#f0f0f0'
-            }
+        });
+        if (!resp.ok) {
+          if (resp.status === 401 || resp.status === 403) {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+            return;
+          }
+          throw new Error('Falha ao carregar estatísticas');
+        }
+        const data = await resp.json();
+        if (!data.sucesso || !data.estatisticas) throw new Error('Resposta inválida');
+
+        const stats = data.estatisticas;
+        await carregarTotalAlunos();
+        atualizarCards(stats);
+        renderizarProgresso(stats);
+        renderizarRetencao(stats);
+      } catch (e) {
+        console.error('Erro no dashboard:', e);
+      }
+    }
+
+    async function carregarTotalAlunos() {
+      const token = localStorage.getItem('token');
+      try {
+        const resp = await fetch('/api/alunos', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const total = Array.isArray(data.alunos) ? data.alunos.length : 0;
+        const numEl = document.getElementById('totalAlunosNumero');
+        const labelEl = document.getElementById('totalAlunosLegenda');
+        if (numEl) numEl.textContent = total.toString();
+        if (labelEl) labelEl.textContent = 'alunos cadastrados';
+      } catch (e) {
+        console.warn('Falha ao carregar total de alunos', e);
+      }
+    }
+
+    function atualizarCards(stats) {
+      // Simulados Ativos: número de etapas disponíveis
+      const simuladosAtivos = Array.isArray(stats.por_etapa) ? stats.por_etapa.length : 0;
+      const simuladosEl = document.querySelector('.metric-card-modern:nth-of-type(3) .value-number');
+      if (simuladosEl) simuladosEl.textContent = simuladosAtivos.toString();
+    }
+
+    function renderizarProgresso(stats) {
+      const token = localStorage.getItem('token');
+      fetch('/api/relatorios/estatisticas-mensal', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(data => {
+        const series = Array.isArray(data.series) ? data.series : [];
+        const labels = series.map(s => {
+          // Formatar YYYY-MM para MMM/YY
+          const [y, m] = (s.mes || '').split('-');
+          if (!y || !m) return s.mes || 'N/A';
+          const date = new Date(Number(y), Number(m) - 1, 1);
+          return date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+        });
+        const valores = series.map(s => Number(s.media || 0));
+
+        new Chart(document.getElementById('progressChart'), {
+          type: 'bar',
+          data: {
+            labels: labels.length ? labels : ['Sem dados'],
+            datasets: [{
+              label: 'Média mensal (%)',
+              data: valores.length ? valores : [0],
+              backgroundColor: '#008cc4',
+              borderRadius: 8,
+              borderSkipped: false,
+            }]
           },
-          y: {
-            ticks: {
-              font: {
-                size: 13,
-                weight: '500'
+          options: {
+            plugins: { 
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#003b54',
+                padding: 12,
+                titleFont: { size: 14, weight: '600' },
+                bodyFont: { size: 13 },
+                cornerRadius: 8,
+                callbacks: { label: ctx => `${ctx.parsed.y.toFixed(1)}%` }
+              }
+            },
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { 
+              y: { 
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                  font: { size: 12 },
+                  color: '#666',
+                  callback: v => `${v}%`
+                },
+                grid: { color: '#f0f0f0' }
               },
-              color: '#333'
+              x: {
+                ticks: { font: { size: 12 }, color: '#666' },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      })
+      .catch(() => {
+        new Chart(document.getElementById('progressChart'), {
+          type: 'bar',
+          data: { labels: ['Sem dados'], datasets: [{ label: 'Média mensal (%)', data: [0], backgroundColor: '#008cc4', borderRadius: 8 }]},
+          options: { plugins: { legend: { display: false }}, responsive: true, maintainAspectRatio: false }
+        });
+      });
+    }
+
+    function renderizarRetencao(stats) {
+      const disciplinas = Array.isArray(stats.media_por_disciplina) ? stats.media_por_disciplina : [];
+      const labels = disciplinas.map(d => d.nome);
+      const valores = disciplinas.map(d => Number(d.media || 0));
+
+      new Chart(document.getElementById('retencaoChart'), {
+        type: 'bar',
+        data: {
+          labels: labels.length ? labels : ['Sem dados'],
+          datasets: [{
+            label: 'Retenção (%)',
+            data: valores.length ? valores : [0],
+            backgroundColor: '#008cc4',
+            borderRadius: 8,
+            barThickness: 28,
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#003b54',
+              padding: 12,
+              titleFont: { size: 14, weight: '600' },
+              bodyFont: { size: 13 },
+              cornerRadius: 8,
+              callbacks: {
+                label: context => `Retenção: ${context.raw.toFixed(1)}%`
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                callback: value => `${value}%`,
+                font: { size: 12 },
+                color: '#666'
+              },
+              grid: { color: '#f0f0f0' }
             },
-            grid: {
-              display: false
+            y: {
+              ticks: {
+                font: { size: 13, weight: '500' },
+                color: '#333'
+              },
+              grid: { display: false }
             }
           }
         }
-      }
-    });
+      });
+    }
   </script>
+
 </body>
 </html>
