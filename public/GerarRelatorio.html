@@ -12,12 +12,9 @@
 <body>
 <div class="home-container">
   <aside class="sidebar">
-    <div class="profile">
+    <div class="profile" id="sidebar-profile">
       <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
-       <span>
-          Coordenador<br>
-          <small>coordenacao@uea.edu.br</small>
-        </span>
+      <span style="opacity: 0;"><!-- Carregando... --></span>
     </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal">
         <a href="home.html">
@@ -139,7 +136,7 @@
             <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
               <div class="metric-value">
                 <span class="value-number" id="qtdQuestoes">0</span>
-                <span class="value-label">questões respondidas</span>
+                <span class="value-label">questões respondidas<br><small>(total de questões respondidas pelo aluno)</small></span>
               </div>
             </div>
           </div>
@@ -152,7 +149,7 @@
             <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
               <div class="metric-value">
                 <span class="value-number" id="acertosTotais">0</span>
-                <span class="value-label">respostas corretas</span>
+                <span class="value-label">respostas corretas<br><small>(total de acertos do aluno)</small></span>
               </div>
         </div>
       </div>
@@ -165,7 +162,7 @@
             <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
               <div class="metric-value">
                 <span class="value-number" id="taxaAcertos">0%</span>
-                <span class="value-label">percentual de acertos</span>
+                <span class="value-label">percentual de acertos<br><small>(média de acertos do aluno)</small></span>
               </div>
             </div>
           </div>

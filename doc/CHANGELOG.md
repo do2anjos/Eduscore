@@ -2,7 +2,131 @@
 
 Este documento registra todas as alterações significativas realizadas no projeto.
 
-**Última atualização**: 2025-11-16 17:41:12
+**Última atualização**: 2025-11-16 18:30:00
+
+---
+
+## [2025-11-16 18:30:00] - Correções de UI e Campo de Matrícula
+
+### 🔧 Correção: Flash de Conteúdo na Sidebar
+
+#### Problema
+- Conteúdo hardcoded "Coordenador" aparecia brevemente antes dos dados reais carregarem
+- Flash of Unstyled Content (FOUC) visível ao atualizar páginas
+
+#### Solução
+- **Arquivos modificados**: Todos os arquivos HTML com sidebar (9 arquivos)
+  - `public/home.html`
+  - `public/CadastrarGabarito.html`
+  - `public/Cadastrar.html`
+  - `public/AgendarSessao.html`
+  - `public/CorrigirSimulado.html`
+  - `public/GerarRelatorio.html`
+  - `public/RelatorioGeral.html`
+  - `public/configuracoes.html`
+  - `public/meuperfil.html`
+
+- **Mudanças**:
+  - Removido conteúdo hardcoded "Coordenador" da sidebar
+  - `<span>` inicia com `opacity: 0` até os dados carregarem
+  - CSS adicionado para ocultar até atributo `data-loaded="true"`
+
+- **Melhorias em `public/utils.js`**:
+  - `updateUserProfile()` agora marca o perfil como carregado
+  - Animação suave ao exibir dados após carregamento
+  - Atributo `data-loaded="true"` adicionado após atualização
+
+- **Melhorias em `public/style.css`**:
+  - Regra CSS `.sidebar .profile:not([data-loaded]) span` para ocultar até carregar
+  - Transição suave de opacidade
+
+#### Resultado
+- Flash de conteúdo eliminado completamente
+- Perfil só aparece quando dados reais são carregados
+- Experiência de usuário melhorada
+
+---
+
+### 📝 Campo de Matrícula no Cadastro de Alunos
+
+#### Implementação
+- **Arquivo**: `public/Cadastrar.html`
+- **Data**: 2025-11-16 18:30:00
+
+#### Mudanças
+- Adicionado campo obrigatório "Matrícula" no formulário
+- Posicionado após "Nome Completo" e antes de "E-mail"
+- Campo incluído no `formData` enviado para a API
+- Hint explicativo: "Matrícula única do aluno na instituição"
+
+#### Compatibilidade
+- Backend já suporta campo `matricula` (campo `NOT NULL UNIQUE` no banco)
+- Validação automática de duplicatas via constraint do banco
+- Integração completa com API `/api/alunos`
+
+---
+
+### 🔌 Melhorias no Consumo de API
+
+#### Arquivo: `public/CadastrarGabarito.html`
+- **Data**: 2025-11-16 18:30:00
+
+#### Mudanças
+- **POST /api/gabaritos** (Cadastrar gabarito):
+  - Verificação de `response.ok` antes de parsear JSON
+  - Tratamento de erros HTTP melhorado
+  - Validação de `data.sucesso` corrigida
+  - Extração de `gabaritoId` melhorada com fallbacks
+
+- **POST /api/gabaritos/upload** (Upload CSV):
+  - Verificação de `content-type` antes de parsear JSON
+  - Tratamento de erros não bloqueante
+  - Logs detalhados para diagnóstico
+
+- **GET /api/gabaritos** (Listar gabaritos):
+  - Compatível com formato `{sucesso: true, gabaritos: []}`
+  - Fallbacks para diferentes formatos de resposta
+  - Tratamento de erros HTTP aprimorado
+
+- **DELETE /api/gabaritos/:id** (Excluir gabarito):
+  - Verificação de `response.ok` antes de parsear JSON
+  - Uso de `data.mensagem` da resposta da API
+  - Validação de `data.sucesso === false`
+  - Indentação corrigida
+
+#### Resultado
+- Todas as rotas da API agora têm tratamento de erro robusto
+- Mensagens de erro mais específicas e informativas
+- Compatibilidade total com formato de resposta da API
+- Logs detalhados para diagnóstico de problemas
+
+---
+
+### 📊 Resumo das Alterações
+
+#### Arquivos Modificados (16 arquivos)
+- **Backend**:
+  - `backend/routes/gabaritos.js` - Melhorias de parsing CSV
+  - `backend/routes/relatorios.js` - Novas rotas e melhorias
+
+- **Frontend HTML (9 arquivos)**:
+  - Remoção de conteúdo hardcoded na sidebar
+  - Adição de campo matrícula em `Cadastrar.html`
+
+- **Frontend JavaScript/CSS**:
+  - `public/utils.js` - Melhorias no carregamento de perfil
+  - `public/style.css` - Estilos para ocultar conteúdo até carregar
+  - `public/CadastrarGabarito.html` - Melhorias no consumo de API
+
+- **Scripts**:
+  - `limpar-dados.js` - Melhorias
+  - `populate-database.js` - Melhorias
+
+#### Funcionalidades
+- ✅ Flash de conteúdo na sidebar eliminado
+- ✅ Campo de matrícula adicionado ao cadastro
+- ✅ Consumo de API robusto e com tratamento de erros
+- ✅ Melhor experiência do usuário
 
 ---
 

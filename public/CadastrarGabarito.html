@@ -11,9 +11,9 @@
 <body>
   <div class="home-container">
     <aside class="sidebar">
-      <div class="profile">
+      <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil">
-        <span>Coordenador<br><small>coordenacao@uea.edu.br</small></span>
+        <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
       <nav class="nav-links">
         <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png"> Home</a>
@@ -78,13 +78,15 @@
           <img src="https://img.icons8.com/ios-filled/24/003b54/file.png" alt="Arquivo">
         </div>
 
-        <div class="input-wrapper" style="margin-top: 16px;">
-          <label for="etapa" style="display: block; margin-bottom: 8px; font-weight: 500;">Etapa</label>
-          <select id="etapa" style="width: 100%; padding: 12px; border: 1px solid #d2d2d2; border-radius: 8px;">
-            <option value="SIS1">SIS1</option>
-            <option value="SIS2">SIS2</option>
-            <option value="SIS3">SIS3</option>
+        <div class="input-group" style="margin-top: 16px;">
+          <label for="etapa">Etapa <span class="required-field"></span></label>
+          <select id="etapa" required>
+            <option value="">Selecione a etapa</option>
+            <option value="1º Ano">1º Ano</option>
+            <option value="2º Ano">2º Ano</option>
+            <option value="3º Ano">3º Ano</option>
           </select>
+          <span class="input-hint">Etapa educacional do simulado</span>
         </div>
 
         <button class="submit-btn" onclick="cadastrar()">Adicionar Gabarito</button>
@@ -116,18 +118,44 @@
 
     async function carregarGabaritos() {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        console.warn('Token não encontrado ao carregar gabaritos');
+        return;
+      }
 
       try {
         const response = await fetch('/api/gabaritos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ 
+            erro: `Erro HTTP ${response.status}: ${response.statusText}` 
+          }));
+          throw new Error(errorData.erro || errorData.detalhes || `Erro ao carregar gabaritos (status ${response.status})`);
+        }
+
         const data = await response.json();
-        if (data.sucesso || Array.isArray(data)) {
-          renderizarGabaritos(data.gabaritos || data);
+
+        // A API retorna: {sucesso: true, total: number, gabaritos: []}
+        if (data && data.sucesso === true && Array.isArray(data.gabaritos)) {
+          renderizarGabaritos(data.gabaritos);
+        } else if (Array.isArray(data)) {
+          // Fallback: se retornar array direto
+          renderizarGabaritos(data);
+        } else if (data && Array.isArray(data.gabaritos)) {
+          // Fallback: se gabaritos existir mas sucesso não
+          renderizarGabaritos(data.gabaritos);
+        } else {
+          console.warn('Formato de resposta inesperado da API:', data);
+          renderizarGabaritos([]);
         }
       } catch (error) {
         console.error('Erro ao carregar gabaritos:', error);
+        const container = document.getElementById('listaGabaritos');
+        if (container) {
+          container.innerHTML = '<p style="text-align: center; color: #ff6b6b; padding: 20px;">Erro ao carregar gabaritos. Tente recarregar a página.</p>';
+        }
       }
     }
 
@@ -141,12 +169,63 @@
         return;
       }
 
+      // Agrupar gabaritos por etapa
+      const gabaritosPorEtapa = {};
       gabaritos.forEach(gabarito => {
-        const div = document.createElement('div');
-        div.className = 'gabarito-item';
-        div.dataset.gabaritoId = gabarito.id;
-        div.innerHTML = `${gabarito.nome} (${gabarito.etapa})<img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir('${gabarito.id}')">`;
-        container.appendChild(div);
+        const etapa = gabarito.etapa || 'Sem etapa';
+        if (!gabaritosPorEtapa[etapa]) {
+          gabaritosPorEtapa[etapa] = [];
+        }
+        gabaritosPorEtapa[etapa].push(gabarito);
+      });
+
+      // Ordenar etapas
+      const etapasOrdenadas = Object.keys(gabaritosPorEtapa).sort((a, b) => {
+        const ordemEtapas = ['1º Ano', '2º Ano', '3º Ano'];
+        const indexA = ordemEtapas.findIndex(e => a.includes(e) || a === e);
+        const indexB = ordemEtapas.findIndex(e => b.includes(e) || b === e);
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.localeCompare(b);
+      });
+
+      // Renderizar por etapa
+      etapasOrdenadas.forEach(etapa => {
+        // Criar seção da etapa
+        const etapaSection = document.createElement('div');
+        etapaSection.className = 'gabarito-etapa-section';
+        
+        const etapaHeader = document.createElement('h4');
+        etapaHeader.className = 'gabarito-etapa-header';
+        etapaHeader.textContent = `${etapa} (${gabaritosPorEtapa[etapa].length} ${gabaritosPorEtapa[etapa].length === 1 ? 'simulado' : 'simulados'})`;
+        etapaSection.appendChild(etapaHeader);
+        
+        const etapaList = document.createElement('div');
+        etapaList.className = 'gabarito-etapa-list';
+        
+        // Ordenar gabaritos por data de criação (mais antigo primeiro)
+        const gabaritosEtapa = gabaritosPorEtapa[etapa].sort((a, b) => {
+          const dataA = new Date(a.criado_em || 0);
+          const dataB = new Date(b.criado_em || 0);
+          return dataA - dataB;
+        });
+        
+        gabaritosEtapa.forEach(gabarito => {
+          const div = document.createElement('div');
+          div.className = 'gabarito-item';
+          div.dataset.gabaritoId = gabarito.id;
+          
+          // Exibir apenas o nome do gabarito (sem adicionar data, pois o usuário já coloca no nome)
+          div.innerHTML = `
+            <span class="gabarito-nome">${gabarito.nome}</span>
+            <img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir('${gabarito.id}')" class="gabarito-delete-icon">
+          `;
+          etapaList.appendChild(div);
+        });
+        
+        etapaSection.appendChild(etapaList);
+        container.appendChild(etapaSection);
       });
     }
 
@@ -174,7 +253,7 @@
       }
 
       const nome = document.getElementById('gabaritoNome').value.trim();
-      const etapa = document.getElementById('etapa')?.value || 'SIS1';
+      const etapa = document.getElementById('etapa')?.value || '1º Ano';
       
       if (!nome) {
         showToast('Informe um nome válido para o gabarito', 'warning');
@@ -195,44 +274,107 @@
           body: JSON.stringify({ nome, etapa })
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-          throw new Error(data.erro || 'Erro ao cadastrar gabarito');
+          const errorData = await response.json().catch(() => ({ 
+            erro: `Erro HTTP ${response.status}: ${response.statusText}` 
+          }));
+          throw new Error(errorData.erro || errorData.detalhes || `Erro ao cadastrar gabarito (status ${response.status})`);
         }
 
-        const gabaritoId = data.gabarito?.id || data.id;
+        const data = await response.json();
 
-        // Se houver arquivo CSV, fazer upload
+        // Validar resposta da API
+        if (!data || data.sucesso === false || !data.sucesso) {
+          throw new Error(data?.erro || data?.detalhes || 'Erro ao cadastrar gabarito');
+        }
+
+        // Extrair ID do gabarito - a API retorna {sucesso: true, gabarito: {id, nome, etapa, criado_em}}
+        const gabaritoId = data.gabarito?.id || data.id || null;
+
+        if (!gabaritoId) {
+          console.error('Resposta da API:', data);
+          throw new Error('Não foi possível obter o ID do gabarito criado. Verifique a resposta do servidor.');
+        }
+
+        // Se houver arquivo CSV, fazer upload (não bloqueia o cadastro se falhar)
+        let uploadErro = null;
         if (arquivoSelecionado && gabaritoId) {
-          const formData = new FormData();
-          formData.append('file', arquivoSelecionado);
-          formData.append('gabarito_id', gabaritoId);
+          try {
+            const formData = new FormData();
+            formData.append('file', arquivoSelecionado);
+            formData.append('gabarito_id', gabaritoId);
 
-          const uploadResponse = await fetch('/api/gabaritos/upload', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            body: formData
-          });
+            const uploadResponse = await fetch('/api/gabaritos/upload', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
+              body: formData
+            });
 
-          const uploadData = await uploadResponse.json();
+            let uploadData = null;
+            const contentType = uploadResponse.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+              try {
+                uploadData = await uploadResponse.json();
+              } catch (jsonError) {
+                console.error('Erro ao parsear JSON da resposta:', jsonError);
+                uploadErro = `Erro ao processar resposta do servidor (status ${uploadResponse.status})`;
+              }
+            } else {
+              const text = await uploadResponse.text();
+              console.error('Resposta não é JSON:', text);
+              uploadErro = `Erro ao processar resposta do servidor: ${uploadResponse.status} ${uploadResponse.statusText}`;
+            }
 
-          if (!uploadResponse.ok) {
-            throw new Error(uploadData.erro || 'Erro ao fazer upload do arquivo');
+            if (uploadData && !uploadResponse.ok) {
+              uploadErro = uploadData.detalhes || uploadData.erro || 'Erro ao processar arquivo CSV';
+              console.error('Erro no upload do CSV:', uploadErro);
+              console.error('Resposta completa:', uploadData);
+            } else if (uploadData && uploadData.sucesso === false) {
+              uploadErro = uploadData.detalhes || uploadData.erro || 'Erro ao processar arquivo CSV';
+              console.error('Erro no upload do CSV:', uploadErro);
+            }
+          } catch (csvError) {
+            uploadErro = csvError.message || 'Erro ao fazer upload do arquivo CSV';
+            console.error('Erro ao fazer upload do CSV:', csvError);
+            console.error('Stack:', csvError.stack);
+            // Não interrompe o fluxo, apenas registra o erro
           }
         }
 
-        showToast(`Gabarito "${nome}" cadastrado com sucesso!`, 'success');
+        // Limpar campos antes de recarregar
         document.getElementById('gabaritoNome').value = '';
         document.getElementById('file-upload').value = '';
+        document.getElementById('etapa').value = '';
         arquivoSelecionado = null;
-        await carregarGabaritos();
+
+        // Pequeno delay para garantir que o banco foi atualizado
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Recarregar lista de gabaritos
+        try {
+          await carregarGabaritos();
+        } catch (carregarError) {
+          console.error('Erro ao recarregar lista:', carregarError);
+          // Não interrompe o fluxo, apenas loga o erro
+        }
+
+        // Mostrar mensagem apropriada
+        if (uploadErro) {
+          showToast(`Gabarito "${nome}" cadastrado com sucesso! Mas houve erro ao processar CSV: ${uploadErro}`, 'warning');
+        } else {
+          showToast(`Gabarito "${nome}" cadastrado com sucesso!`, 'success');
+        }
 
       } catch (error) {
         console.error('Erro ao cadastrar gabarito:', error);
-        showToast(`Erro ao cadastrar gabarito: ${error.message}`, 'error');
+        console.error('Stack:', error.stack);
+        
+        // Mensagem de erro mais detalhada
+        const mensagemErro = error.message || 'Erro desconhecido ao cadastrar gabarito';
+        showToast(`Erro ao cadastrar gabarito: ${mensagemErro}`, 'error');
       } finally {
         hideLoading();
       }
@@ -252,13 +394,20 @@
               headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-              throw new Error(data.erro || 'Erro ao excluir gabarito');
+              const errorData = await response.json().catch(() => ({ 
+                erro: `Erro HTTP ${response.status}: ${response.statusText}` 
+              }));
+              throw new Error(errorData.erro || errorData.detalhes || `Erro ao excluir gabarito (status ${response.status})`);
             }
 
-            showToast('Gabarito excluído com sucesso', 'success');
+            const data = await response.json();
+
+            if (data && data.sucesso === false) {
+              throw new Error(data.erro || data.detalhes || 'Erro ao excluir gabarito');
+            }
+
+            showToast(data?.mensagem || 'Gabarito excluído com sucesso', 'success');
             await carregarGabaritos();
 
           } catch (error) {

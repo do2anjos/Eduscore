@@ -392,6 +392,13 @@ function updateUserProfile(usuario) {
         ${perfilCapitalized}<br>
         <small>${usuario.email}</small>
       `;
+      // Marcar como carregado e mostrar com animação suave
+      profileSpan.style.opacity = '0';
+      profileSpan.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => {
+        profileSpan.style.opacity = '1';
+      }, 10);
+      sidebarProfile.setAttribute('data-loaded', 'true');
     }
     
     // Atualizar foto de perfil

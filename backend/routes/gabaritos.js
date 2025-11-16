@@ -5,6 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
+const crypto = require('crypto');
 const { authenticateToken } = require('../middleware/auth');
 const { withTransaction } = require('../utils/transaction');
 
@@ -103,34 +104,171 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       });
     }
 
-    // Processar CSV
+    // Função helper para normalizar nomes de colunas (case-insensitive)
+    const normalizeColumnName = (row, possibleNames) => {
+      // Primeiro tenta busca exata (mais rápido)
+      for (const name of possibleNames) {
+        if (row.hasOwnProperty(name)) {
+          return row[name];
+        }
+      }
+      
+      // Se não encontrou, faz busca case-insensitive
+      const rowKeys = Object.keys(row);
+      const normalizedPossibleNames = possibleNames.map(n => n.toLowerCase().trim());
+      
+      for (const key of rowKeys) {
+        const normalizedKey = key.toLowerCase().trim();
+        if (normalizedPossibleNames.includes(normalizedKey)) {
+          return row[key];
+        }
+      }
+      
+      return null;
+    };
+
+    // Detectar o separador do CSV (vírgula ou ponto e vírgula)
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const firstLine = fileContent.split('\n')[0];
+    const hasSemicolon = firstLine.includes(';');
+    const hasComma = firstLine.includes(',');
+    
+    // Priorizar ponto e vírgula se ambos existirem (padrão Excel/português)
+    const separator = hasSemicolon ? ';' : (hasComma ? ',' : ';');
+    
+    // Ler os cabeçalhos da primeira linha para mapear índices
+    const headers = firstLine.split(separator).map(h => h.trim().replace(/[\r\n]/g, ''));
+    console.log('Cabeçalhos detectados:', headers);
+    console.log('Separador detectado:', separator);
+    
+    // Mapear índices de colunas para nomes esperados (fallback se cabeçalhos não forem reconhecidos)
+    const getColumnIndex = (searchTerms) => {
+      for (const term of searchTerms) {
+        const index = headers.findIndex(h => 
+          h.toLowerCase().trim() === term.toLowerCase().trim() ||
+          h.toLowerCase().trim().includes(term.toLowerCase().trim()) ||
+          term.toLowerCase().trim().includes(h.toLowerCase().trim())
+        );
+        if (index !== -1) return index;
+      }
+      return -1;
+    };
+    
+    const numeroIndex = getColumnIndex(['questão', 'questao', 'numero', 'número', 'num']);
+    const respostaIndex = getColumnIndex(['resposta', 'resposta_correta', 'resp']);
+    const disciplinaIndex = getColumnIndex(['disciplina', 'disciplina_id', 'disciplina id']);
+    
+    console.log('Índices detectados:', { numeroIndex, respostaIndex, disciplinaIndex });
+    
+    // Processar CSV - aceita tanto cabeçalhos em português quanto em inglês
+    // Aceita tanto vírgula (,) quanto ponto e vírgula (;) como separador
     await new Promise((resolve, reject) => {
+      let linha = 0;
       fs.createReadStream(filePath)
-        .pipe(csv())
+        .pipe(csv({
+          separator: separator,
+          skipLinesWithError: false,
+          skipEmptyLines: true,
+          headers: true,
+          mapHeaders: ({ header }) => header.trim().replace(/[\r\n]/g, '') // Remove espaços e quebras de linha
+        }))
         .on('data', (row) => {
-          if (!row.numero || !row.resposta_correta) {
-            reject(new Error('Formato do CSV inválido - cada linha deve ter numero e resposta_correta'));
+          linha++;
+          
+          // Normalizar nomes das colunas (aceita português e inglês, case-insensitive)
+          let numero = normalizeColumnName(row, [
+            'numero', 'Numero', 'NÚMERO', 'numero_questao',
+            'Questão', 'Questao', 'questão', 'questao',
+            'Número', 'número'
+          ]);
+          
+          let resposta = normalizeColumnName(row, [
+            'resposta_correta', 'Resposta_correta', 'RESPOSTA_CORRETA',
+            'Resposta', 'resposta', 'RESPOSTA',
+            'respostaCorreta', 'Resposta Correta', 'resposta correta'
+          ]);
+          
+          // Se não encontrou pelos nomes, tenta pelos índices (fallback)
+          const rowKeys = Object.keys(row);
+          const rowValues = Object.values(row);
+          
+          if (!numero && numeroIndex >= 0 && rowValues[numeroIndex]) {
+            numero = rowValues[numeroIndex];
+          } else if (!numero && rowKeys.includes('_0')) {
+            numero = row['_0'] || row[0];
           }
+          
+          if (!resposta && respostaIndex >= 0 && rowValues[respostaIndex]) {
+            resposta = rowValues[respostaIndex];
+          } else if (!resposta && rowKeys.includes('_1')) {
+            resposta = row['_1'] || row[1];
+          }
+          
+          const disciplinaId = normalizeColumnName(row, [
+            'disciplina_id', 'Disciplina_id', 'disciplinaId',
+            'Disciplina ID', 'disciplina id', 'Disciplina', 'disciplina'
+          ]) || (disciplinaIndex >= 0 && rowValues[disciplinaIndex] ? rowValues[disciplinaIndex] : null);
+          
+          // Validar campos obrigatórios
+          if (!numero || !resposta) {
+            const camposEncontrados = Object.keys(row).join(', ');
+            const valoresEncontrados = Object.values(row).slice(0, 3).join(', ');
+            reject(new Error(
+              `Formato do CSV inválido na linha ${linha + 1} - cada linha deve ter 'numero' (ou 'Questão') e 'resposta_correta' (ou 'Resposta'). ` +
+              `Campos encontrados: ${camposEncontrados}. ` +
+              `Primeiros valores: ${valoresEncontrados}. ` +
+              `Valores: numero=${numero}, resposta=${resposta}`
+            ));
+            return;
+          }
+          
           questions.push({
-            numero: row.numero,
-            resposta_correta: row.resposta_correta,
-            disciplina_id: row.disciplina_id || null
+            numero: parseInt(numero) || numero,
+            resposta_correta: resposta.trim().toUpperCase(), // Normalizar para maiúsculas
+            disciplina_id: disciplinaId ? parseInt(disciplinaId) : null
           });
         })
-        .on('end', resolve)
-        .on('error', reject);
+        .on('end', () => {
+          if (questions.length === 0) {
+            reject(new Error('CSV está vazio ou não contém dados válidos'));
+            return;
+          }
+          resolve();
+        })
+        .on('error', (err) => {
+          reject(new Error(`Erro ao ler arquivo CSV: ${err.message}`));
+        });
     });
 
+    // Função helper para gerar UUID
+    const generateUUID = () => {
+      return crypto.randomUUID ? crypto.randomUUID() : 
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+    };
+
     // Inserir questões em transação
-    await withTransaction(async (db) => {
-      for (const q of questions) {
-        await db.query(
-          `INSERT INTO questoes (gabarito_id, numero, resposta_correta, disciplina_id)
-           VALUES ($1, $2, $3, $4)`,
-          [gabarito_id, q.numero, q.resposta_correta, q.disciplina_id]
-        );
-      }
-    });
+    try {
+      await withTransaction(async (db) => {
+        for (const q of questions) {
+          const questaoId = generateUUID();
+          try {
+            await db.query(
+              `INSERT INTO questoes (id, gabarito_id, numero, resposta_correta, disciplina_id)
+               VALUES ($1, $2, $3, $4, $5)`,
+              [questaoId, gabarito_id, q.numero, q.resposta_correta, q.disciplina_id]
+            );
+          } catch (insertErr) {
+            throw new Error(`Erro ao inserir questão número ${q.numero}: ${insertErr.message}`);
+          }
+        }
+      });
+    } catch (transactionErr) {
+      throw new Error(`Erro na transação: ${transactionErr.message}`);
+    }
     
     res.json({ 
       sucesso: true,
@@ -139,15 +277,23 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     });
   } catch (err) {
     console.error('Erro ao processar CSV:', err);
+    console.error('Stack trace:', err.stack);
+    
+    // Sempre retorna detalhes do erro em desenvolvimento ou para erros de validação
+    const isValidationError = err.message.includes('Formato') || err.message.includes('vazio') || err.message.includes('linha');
     
     res.status(500).json({ 
       sucesso: false,
       erro: 'Erro ao processar arquivo CSV',
-      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+      detalhes: (process.env.NODE_ENV === 'development' || isValidationError) ? err.message : 'Verifique o formato do arquivo CSV'
     });
   } finally {
     if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath); // Remove o arquivo após processar
+      try {
+        fs.unlinkSync(filePath); // Remove o arquivo após processar
+      } catch (unlinkErr) {
+        console.error('Erro ao remover arquivo temporário:', unlinkErr);
+      }
     }
   }
 });

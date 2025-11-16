@@ -12,12 +12,9 @@
 <body>
   <div class="home-container">
     <aside class="sidebar">
-      <div class="profile">
+      <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
-        <span>
-          Coordenador<br>
-          <small>coordenacao@uea.edu.br</small>
-        </span>
+        <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal">
         <a href="home.html">
@@ -92,7 +89,7 @@
           <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
             <div class="metric-value">
               <span class="value-number" id="qtdQuestoes">0</span>
-              <span class="value-label">questões respondidas</span>
+              <span class="value-label">questões respondidas<br><small>(total da soma de cada simulado)</small></span>
             </div>
           </div>
         </div>
@@ -105,7 +102,7 @@
           <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
             <div class="metric-value">
               <span class="value-number" id="acertosTotais">0</span>
-              <span class="value-label">acertos registrados</span>
+              <span class="value-label">acertos registrados<br><small>(soma de todos os acertos dos simulados feitos pelos alunos)</small></span>
             </div>
           </div>
         </div>
@@ -118,7 +115,7 @@
           <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
             <div class="metric-value">
               <span class="value-number" id="mediaAluno">0%</span>
-              <span class="value-label">média de acertos</span>
+              <span class="value-label">média de acertos<br><small>(percentual médio de acertos)</small></span>
             </div>
           </div>
         </div>

@@ -22,9 +22,9 @@ try {
   const gabaritos = db.prepare('DELETE FROM gabaritos').run();
   console.log(`   ✅ ${gabaritos.changes} gabaritos removidos`);
 
-  // Limpar alunos (opcional - comentado para manter os 3 alunos)
-  // const alunos = db.prepare('DELETE FROM alunos').run();
-  // console.log(`   ✅ ${alunos.changes} alunos removidos`);
+  // Limpar alunos
+  const alunos = db.prepare('DELETE FROM alunos').run();
+  console.log(`   ✅ ${alunos.changes} alunos removidos`);
 
   console.log('\n✅ Dados limpos com sucesso!\n');
   db.close();

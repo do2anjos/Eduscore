@@ -11,12 +11,9 @@
 <body>
   <div class="home-container">
     <aside class="sidebar">
-      <div class="profile">
+      <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
-        <span>
-          Coordenador<br>
-          <small>coordenacao@uea.edu.br</small>
-        </span>
+        <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal">
         <a href="home.html">
@@ -76,6 +73,12 @@
         </div>
 
         <div class="input-group">
+          <label for="matricula">Matrícula <span class="required-field"></span></label>
+          <input type="text" id="matricula" name="matricula" placeholder="Digite a matrícula do aluno" required autocomplete="off" />
+          <span class="input-hint">Matrícula única do aluno na instituição</span>
+        </div>
+
+        <div class="input-group">
           <label for="email">E-mail <span class="required-field"></span></label>
           <input type="email" id="email" name="email" placeholder="exemplo@email.com" required autocomplete="email" />
           <span class="input-hint">Email para contato e comunicação</span>
@@ -97,9 +100,9 @@
           <label for="etapa">Etapa <span class="required-field"></span></label>
           <select id="etapa" name="etapa" required>
             <option value="">Selecione a etapa</option>
-            <option value="SIS 1">SIS 1</option>
-            <option value="SIS 2">SIS 2</option>
-            <option value="SIS 3">SIS 3</option>
+            <option value="1º Ano">1º Ano</option>
+            <option value="2º Ano">2º Ano</option>
+            <option value="3º Ano">3º Ano</option>
           </select>
           <span class="input-hint">Etapa educacional do aluno</span>
         </div>
@@ -126,6 +129,7 @@
 
       const formData = {
         nome_completo: document.getElementById('nome').value.trim(),
+        matricula: document.getElementById('matricula').value.trim(),
         email: document.getElementById('email').value.trim(),
         telefone_responsavel: document.getElementById('telefone').value,
         data_nascimento: document.getElementById('nascimento').value,

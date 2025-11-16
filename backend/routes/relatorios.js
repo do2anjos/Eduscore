@@ -153,12 +153,22 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
       HAVING COUNT(DISTINCT q.id) > 0
     `);
 
+    // 7. Total de simulados aplicados (gabaritos únicos que têm respostas)
+    const totalSimuladosAplicados = await db.query(`
+      SELECT COUNT(DISTINCT g.id) as total
+      FROM gabaritos g
+      WHERE EXISTS (
+        SELECT 1 FROM respostas r WHERE r.gabarito_id = g.id
+      )
+    `);
+
     res.json({
       sucesso: true,
       estatisticas: {
         total_questoes: Number(totalQuestoes.rows[0].total) || 0,
         total_acertos: Number(totalAcertos.rows[0].total) || 0,
         media_geral: Number(mediaGeral.rows[0].media) || 0,
+        total_simulados_aplicados: Number(totalSimuladosAplicados.rows[0].total) || 0,
         maior_media_disciplina: maiorMedia.nome,
         menor_media_disciplina: menorMedia.nome,
         media_por_disciplina: mediaPorDisciplina.rows.map(row => ({
@@ -429,15 +439,20 @@ router.get('/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id', authen
 // GET /api/relatorios/estatisticas-mensal - Evolução mensal (média de acertos somando todas as etapas)
 router.get('/estatisticas-mensal', authenticateToken, async (req, res) => {
   try {
-    // Últimos 6 meses incluindo o mês corrente, usando a data de criação do simulado
+    // Buscar todos os meses que têm simulados e respostas, ordenados por mês
     const resultados = await db.query(`
       SELECT 
         strftime('%Y-%m', g.criado_em) AS mes,
         ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) AS media
       FROM gabaritos g
       LEFT JOIN respostas r ON r.gabarito_id = g.id
-      WHERE g.criado_em >= date('now', 'start of month', '-5 months')
+      WHERE g.criado_em IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM respostas r2 
+          WHERE r2.gabarito_id = g.id
+        )
       GROUP BY strftime('%Y-%m', g.criado_em)
+      HAVING COUNT(r.id) > 0
       ORDER BY mes ASC
     `);
 

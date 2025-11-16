@@ -12,12 +12,9 @@
 <body>
   <div class="home-container">
     <aside class="sidebar">
-      <div class="profile">
+      <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
-        <span>
-          Coordenador<br>
-          <small>coordenacao@uea.edu.br</small>
-        </span>
+        <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal">
         <a href="home.html" class="active" aria-current="page">
@@ -87,7 +84,7 @@
 
         <div class="metric-card-modern">
           <div class="metric-card-header">
-            <h3>Progresso Mensal</h3>
+            <h3>Progresso Mensal<br><small style="font-size: 11px; font-weight: 400; color: #666;">média mensal da % de acertos ao longo do tempo</small></h3>
             <span class="metric-icon">📈</span>
           </div>
           <div class="metric-card-content" style="min-height: 200px;">
@@ -183,10 +180,10 @@
     }
 
     function atualizarCards(stats) {
-      // Simulados aplicados: número de etapas disponíveis
-      const simuladosAtivos = Array.isArray(stats.por_etapa) ? stats.por_etapa.length : 0;
+      // Simulados aplicados: número total de simulados (gabaritos) que têm respostas
+      const totalSimulados = stats.total_simulados_aplicados || 0;
       const simuladosEl = document.querySelector('.metric-card-modern:nth-of-type(3) .value-number');
-      if (simuladosEl) simuladosEl.textContent = simuladosAtivos.toString();
+      if (simuladosEl) simuladosEl.textContent = totalSimulados.toString();
     }
 
     function renderizarProgresso(stats) {
