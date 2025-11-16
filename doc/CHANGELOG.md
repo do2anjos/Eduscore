@@ -256,9 +256,9 @@ Este documento registra todas as alterações significativas realizadas no proje
 - Tooltips estilizados
 - Altura ajustada: `180px`
 
-**Card 3 - Simulados Ativos** (NOVO):
+**Card 3 - Simulados aplicados** (NOVO):
 - Número destacado: `3`
-- Label: "simulados em andamento"
+- Label: "simulados aplicados"
 - Ícone: 📝
 - Layout centralizado
 - Altura: `200px` (alinhado com Progresso Mensal)

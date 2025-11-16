@@ -35,7 +35,7 @@ Desenvolvido para coordenadores e professores acompanharem o progresso dos aluno
 ## ✨ Funcionalidades Principais
 
 ### 📊 Dashboard e Relatórios
-- **Dashboard Geral**: Visão consolidada com métricas de alunos ativos, progresso mensal e retenção por disciplina
+- **Dashboard Geral**: Visão consolidada com métricas de alunos ativos, progresso mensal, simulados aplicados e retenção por disciplina
 - **Relatório Geral**: Estatísticas agregadas com filtro por etapa/turma
 - **Relatório Individual**: Análise detalhada por aluno incluindo:
   - Desempenho ao longo do tempo

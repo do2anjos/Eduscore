@@ -97,13 +97,13 @@
 
         <div class="metric-card-modern">
           <div class="metric-card-header">
-            <h3>Simulados Ativos</h3>
+            <h3>Simulados aplicados</h3>
             <span class="metric-icon">📝</span>
           </div>
           <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 200px;">
             <div class="metric-value">
               <span class="value-number">3</span>
-              <span class="value-label">simulados em andamento</span>
+              <span class="value-label">simulados aplicados</span>
             </div>
           </div>
         </div>
@@ -183,7 +183,7 @@
     }
 
     function atualizarCards(stats) {
-      // Simulados Ativos: número de etapas disponíveis
+      // Simulados aplicados: número de etapas disponíveis
       const simuladosAtivos = Array.isArray(stats.por_etapa) ? stats.por_etapa.length : 0;
       const simuladosEl = document.querySelector('.metric-card-modern:nth-of-type(3) .value-number');
       if (simuladosEl) simuladosEl.textContent = simuladosAtivos.toString();
