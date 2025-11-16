@@ -22,6 +22,344 @@ const formatRelatorio = (relatorio) => ({
   }
 });
 
+// GET /api/relatorios/estatisticas-gerais - Estatísticas gerais para o dashboard
+router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
+  try {
+    const { etapa } = req.query; // Filtro opcional por etapa
+
+    // Construir filtro de etapa para as queries
+    let filtroEtapa = '';
+    let paramsEtapa = [];
+    if (etapa && etapa !== 'Geral') {
+      filtroEtapa = 'AND g.etapa = $1';
+      paramsEtapa = [etapa];
+    }
+
+    // 1. Total de questões aplicadas (contar questões únicas por gabarito que foi respondido)
+    // Se 3 simulados foram aplicados, cada um com 60 questões = 180 questões totais
+    // Não multiplica por número de alunos, apenas conta questões dos simulados aplicados
+    // Conta questões únicas de gabaritos que têm pelo menos uma resposta
+    const totalQuestoesQuery = `
+      SELECT COUNT(DISTINCT q.id) as total 
+      FROM questoes q
+      INNER JOIN gabaritos g ON q.gabarito_id = g.id
+      WHERE g.id IN (
+        SELECT DISTINCT gabarito_id 
+        FROM respostas
+      )
+      ${filtroEtapa}
+    `;
+    const totalQuestoes = await db.query(totalQuestoesQuery, paramsEtapa);
+
+    // 2. Total de acertos (com filtro de etapa se aplicável)
+    let totalAcertosQuery = 'SELECT COUNT(*) as total FROM respostas r WHERE r.acertou = 1';
+    if (etapa && etapa !== 'Geral') {
+      totalAcertosQuery = `
+        SELECT COUNT(*) as total 
+        FROM respostas r
+        INNER JOIN gabaritos g ON r.gabarito_id = g.id
+        WHERE r.acertou = 1 AND g.etapa = $1
+      `;
+    }
+    const totalAcertos = await db.query(totalAcertosQuery, paramsEtapa);
+
+    // 3. Média geral de acertos (com filtro de etapa se aplicável)
+    let mediaGeralQuery = `
+      SELECT ROUND(AVG(CASE WHEN acertou = 1 THEN 100 ELSE 0 END), 2) as media
+      FROM respostas
+    `;
+    if (etapa && etapa !== 'Geral') {
+      mediaGeralQuery = `
+        SELECT ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+        FROM respostas r
+        INNER JOIN gabaritos g ON r.gabarito_id = g.id
+        WHERE g.etapa = $1
+      `;
+    }
+    const mediaGeral = await db.query(mediaGeralQuery, paramsEtapa);
+
+    // 4. Média por disciplina (contar questões únicas por gabarito, com filtro de etapa se aplicável)
+    let mediaPorDisciplinaQuery = `
+      SELECT 
+        d.id,
+        d.nome,
+        COUNT(DISTINCT q.id) as total_questoes,
+        COUNT(r.id) as total_respostas,
+        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+      FROM disciplinas d
+      LEFT JOIN questoes q ON d.id = q.disciplina_id
+      LEFT JOIN respostas r ON q.id = r.questao_id
+    `;
+    
+    if (etapa && etapa !== 'Geral') {
+      mediaPorDisciplinaQuery = `
+        SELECT 
+          d.id,
+          d.nome,
+          COUNT(DISTINCT q.id) as total_questoes,
+          COUNT(r.id) as total_respostas,
+          SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
+          ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+        FROM disciplinas d
+        INNER JOIN questoes q ON d.id = q.disciplina_id
+        INNER JOIN gabaritos g ON q.gabarito_id = g.id
+        LEFT JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
+        WHERE g.etapa = $1
+        GROUP BY d.id, d.nome
+        HAVING COUNT(DISTINCT q.id) > 0
+        ORDER BY media DESC
+      `;
+    } else {
+      mediaPorDisciplinaQuery += `
+        WHERE q.id IS NOT NULL
+        GROUP BY d.id, d.nome
+        HAVING COUNT(DISTINCT q.id) > 0
+        ORDER BY media DESC
+      `;
+    }
+    
+    const mediaPorDisciplina = await db.query(mediaPorDisciplinaQuery, paramsEtapa);
+
+    // 5. Disciplina com maior e menor média
+    const disciplinasOrdenadas = await db.query(`
+      SELECT 
+        d.nome,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+      FROM disciplinas d
+      LEFT JOIN questoes q ON d.id = q.disciplina_id
+      LEFT JOIN respostas r ON q.id = r.questao_id
+      GROUP BY d.id, d.nome
+      HAVING COUNT(r.id) > 0
+      ORDER BY media DESC
+    `);
+
+    const maiorMedia = disciplinasOrdenadas.rows[0] || { nome: 'N/A', media: 0 };
+    const menorMedia = disciplinasOrdenadas.rows[disciplinasOrdenadas.rows.length - 1] || { nome: 'N/A', media: 0 };
+
+    // 6. Estatísticas por etapa (turma) - contar questões únicas por gabarito
+    const estatisticasPorEtapa = await db.query(`
+      SELECT 
+        g.etapa,
+        COUNT(DISTINCT q.id) as total_questoes,
+        COUNT(DISTINCT r.id) as total_respostas,
+        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+      FROM gabaritos g
+      LEFT JOIN questoes q ON g.id = q.gabarito_id
+      LEFT JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
+      WHERE g.etapa IS NOT NULL AND g.etapa != ''
+      GROUP BY g.etapa
+      HAVING COUNT(DISTINCT q.id) > 0
+    `);
+
+    res.json({
+      sucesso: true,
+      estatisticas: {
+        total_questoes: Number(totalQuestoes.rows[0].total) || 0,
+        total_acertos: Number(totalAcertos.rows[0].total) || 0,
+        media_geral: Number(mediaGeral.rows[0].media) || 0,
+        maior_media_disciplina: maiorMedia.nome,
+        menor_media_disciplina: menorMedia.nome,
+        media_por_disciplina: mediaPorDisciplina.rows.map(row => ({
+          id: row.id,
+          nome: row.nome,
+          media: Number(row.media) || 0,
+          total_questoes: Number(row.total_questoes) || 0,
+          total_respostas: Number(row.total_respostas) || 0,
+          acertos: Number(row.acertos) || 0
+        })),
+        por_etapa: estatisticasPorEtapa.rows.map(row => ({
+          etapa: row.etapa,
+          total_questoes: Number(row.total_questoes) || 0,
+          total_respostas: Number(row.total_respostas) || 0,
+          acertos: Number(row.acertos) || 0,
+          media: Number(row.media) || 0
+        }))
+      }
+    });
+
+  } catch (err) {
+    console.error('Erro ao buscar estatísticas gerais:', err);
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro interno ao buscar estatísticas'
+    });
+  }
+});
+
+// GET /api/relatorios/estatisticas-individual/:aluno_id - Estatísticas individuais de um aluno
+router.get('/estatisticas-individual/:aluno_id', authenticateToken, async (req, res) => {
+  try {
+    const { aluno_id } = req.params;
+
+    // Verificar se o aluno existe
+    const alunoCheck = await db.query(
+      'SELECT id, nome_completo, matricula FROM alunos WHERE id = $1',
+      [aluno_id]
+    );
+
+    if (alunoCheck.rows.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Aluno não encontrado'
+      });
+    }
+
+    const aluno = alunoCheck.rows[0];
+
+    // 1. Total de questões respondidas pelo aluno
+    const totalQuestoes = await db.query(`
+      SELECT COUNT(*) as total FROM respostas WHERE aluno_id = $1
+    `, [aluno_id]);
+
+    // 2. Total de acertos do aluno
+    const totalAcertos = await db.query(`
+      SELECT COUNT(*) as total FROM respostas WHERE aluno_id = $1 AND acertou = 1
+    `, [aluno_id]);
+
+    // 3. Taxa de acertos geral
+    const taxaAcertos = await db.query(`
+      SELECT ROUND(AVG(CASE WHEN acertou = 1 THEN 100 ELSE 0 END), 2) as taxa
+      FROM respostas WHERE aluno_id = $1
+    `, [aluno_id]);
+
+    // 4. Média por disciplina
+    const mediaPorDisciplina = await db.query(`
+      SELECT 
+        d.id,
+        d.nome,
+        COUNT(r.id) as total_respostas,
+        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+      FROM disciplinas d
+      LEFT JOIN questoes q ON d.id = q.disciplina_id
+      LEFT JOIN respostas r ON q.id = r.questao_id AND r.aluno_id = $1
+      GROUP BY d.id, d.nome
+      HAVING COUNT(r.id) > 0
+      ORDER BY media DESC
+    `, [aluno_id]);
+
+    // 5. Disciplina com maior e menor média
+    const disciplinasOrdenadas = await db.query(`
+      SELECT 
+        d.nome,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+      FROM disciplinas d
+      LEFT JOIN questoes q ON d.id = q.disciplina_id
+      LEFT JOIN respostas r ON q.id = r.questao_id AND r.aluno_id = $1
+      GROUP BY d.id, d.nome
+      HAVING COUNT(r.id) > 0
+      ORDER BY media DESC
+    `, [aluno_id]);
+
+    const maiorMedia = disciplinasOrdenadas.rows[0] || { nome: 'N/A', media: 0 };
+    const menorMedia = disciplinasOrdenadas.rows[disciplinasOrdenadas.rows.length - 1] || { nome: 'N/A', media: 0 };
+
+    // 6. Desempenho ao longo do tempo (por data de resposta)
+    const desempenhoTempo = await db.query(`
+      SELECT 
+        strftime('%Y-%m-%d', r.data_resposta) as data,
+        COUNT(r.id) as total_questoes,
+        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+      FROM respostas r
+      WHERE r.aluno_id = $1
+      GROUP BY strftime('%Y-%m-%d', r.data_resposta)
+      ORDER BY data ASC
+    `, [aluno_id]);
+
+    // 7. Desempenho por gabarito (simulado)
+    const desempenhoPorGabarito = await db.query(`
+      SELECT 
+        g.id,
+        g.nome,
+        g.etapa,
+        COUNT(r.id) as total_questoes,
+        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media,
+        MAX(r.data_resposta) as data_ultima_resposta
+      FROM gabaritos g
+      LEFT JOIN respostas r ON g.id = r.gabarito_id AND r.aluno_id = $1
+      WHERE r.id IS NOT NULL
+      GROUP BY g.id, g.nome, g.etapa
+      ORDER BY data_ultima_resposta DESC
+    `, [aluno_id]);
+
+    res.json({
+      sucesso: true,
+      aluno: {
+        id: aluno.id,
+        nome: aluno.nome_completo,
+        matricula: aluno.matricula
+      },
+      estatisticas: {
+        total_questoes: Number(totalQuestoes.rows[0].total) || 0,
+        total_acertos: Number(totalAcertos.rows[0].total) || 0,
+        taxa_acertos: Number(taxaAcertos.rows[0].taxa) || 0,
+        maior_media_disciplina: maiorMedia.nome,
+        menor_media_disciplina: menorMedia.nome,
+        media_por_disciplina: mediaPorDisciplina.rows.map(row => ({
+          id: row.id,
+          nome: row.nome,
+          media: Number(row.media) || 0,
+          total_respostas: Number(row.total_respostas) || 0,
+          acertos: Number(row.acertos) || 0
+        })),
+        desempenho_tempo: desempenhoTempo.rows.map(row => ({
+          data: row.data,
+          total_questoes: Number(row.total_questoes) || 0,
+          acertos: Number(row.acertos) || 0,
+          media: Number(row.media) || 0
+        })),
+        desempenho_por_gabarito: desempenhoPorGabarito.rows.map(row => ({
+          id: row.id,
+          nome: row.nome,
+          etapa: row.etapa,
+          total_questoes: Number(row.total_questoes) || 0,
+          acertos: Number(row.acertos) || 0,
+          media: Number(row.media) || 0,
+          data: row.data_ultima_resposta
+        }))
+      }
+    });
+
+  } catch (err) {
+    console.error('Erro ao buscar estatísticas individuais:', err);
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro interno ao buscar estatísticas'
+    });
+  }
+});
+
+// GET /api/relatorios/estatisticas-mensal - Evolução mensal (média de acertos somando todas as etapas)
+router.get('/estatisticas-mensal', authenticateToken, async (req, res) => {
+  try {
+    // Últimos 6 meses incluindo o mês corrente, usando a data de criação do simulado
+    const resultados = await db.query(`
+      SELECT 
+        strftime('%Y-%m', g.criado_em) AS mes,
+        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) AS media
+      FROM gabaritos g
+      LEFT JOIN respostas r ON r.gabarito_id = g.id
+      WHERE g.criado_em >= date('now', 'start of month', '-5 months')
+      GROUP BY strftime('%Y-%m', g.criado_em)
+      ORDER BY mes ASC
+    `);
+
+    const series = resultados.rows.map(row => ({
+      mes: row.mes,
+      media: Number(row.media) || 0
+    }));
+
+    res.json({ sucesso: true, series });
+  } catch (err) {
+    console.error('Erro ao buscar estatísticas mensais:', err);
+    res.status(500).json({ sucesso: false, erro: 'Erro ao carregar estatísticas mensais' });
+  }
+});
+
 // GET /api/relatorios - Listar relatórios
 router.get('/', async (req, res) => {
   try {
@@ -105,7 +443,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const { rows } = await db.query(
       `INSERT INTO relatorios 
        (sessao_id, etapa, media_geral, grafico_linha, grafico_coluna, data_geracao)
-       VALUES ($1, $2, $3, $4, $5, NOW())
+       VALUES ($1, $2, $3, $4, $5, datetime('now'))
        RETURNING id, sessao_id, etapa, media_geral, grafico_linha, grafico_coluna, data_geracao`,
       [
         sessao_id, 
