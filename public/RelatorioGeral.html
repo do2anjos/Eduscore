@@ -19,13 +19,13 @@
           <small>coordenacao@uea.edu.br</small>
         </span>
       </div>
-      <nav class="nav-links">
+      <nav class="nav-links" role="navigation" aria-label="Menu principal">
         <a href="home.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" /> Home
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
         </a>
         <div class="dropdown">
           <a href="RelatorioGeral.html">
-            <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" /> Gerar Relatório
+            <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
           </a>
           <div class="dropdown-options">
             <a href="RelatorioGeral.html" class="sub active">Relatório Geral</a>
@@ -33,171 +33,400 @@
           </div>
         </div>
         <a href="Cadastrar.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" /> Cadastrar
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar
         </a>
         <a href="CadastrarGabarito.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" /> Simulado
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
         </a>
         <a href="AgendarSessao.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" /> Agendar Sessão
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão
         </a>
       </nav>
     </aside>
 
-    <div class="content">
-      <!-- Breadcrumb (Heurística 4: Consistência) -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="home.html">Home</a>
-        <span class="breadcrumb-separator">/</span>
-        <span>Relatório Geral</span>
-      </nav>
+    <main class="content">
+      <!-- Breadcrumb e User Profile na mesma linha -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
+          <a href="home.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <span>Relatório Geral</span>
+        </nav>
+        <div class="user-profile-menu">
+          <button class="user-avatar-button" id="user-menu-button" aria-label="Abrir menu do usuário">CO</button>
+          <div class="dropdown-menu hidden" id="user-dropdown">
+            <div class="dropdown-header">
+              <p class="user-name">Coordenador</p>
+              <p class="user-email">coordenacao@uea.edu.br</p>
+              <p class="user-score"><strong>Coordenador</strong></p>
+            </div>
+            <ul>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
       <div class="dashboard-header">
-        <div class="user-box">
-          <img src="https://img.icons8.com/ios-filled/24/user-group-man-man.png" alt="Usuário" />
-          <span>Rede UEA - Relatório Geral</span>
-          <img src="https://img.icons8.com/material-outlined/24/barcode.png" alt="Código de Barras" />
+        <div>
+          <h2>Desempenho Geral das Turmas</h2>
+          <p class="dashboard-subtitle">Visão consolidada do desempenho por disciplina e turma</p>
         </div>
-      </div>
-
-      <h2>Desempenho Geral das Turmas</h2>
-
-      <div class="dashboard-metrics" id="metricas">
-        <div class="metric-card">
-          <strong id="qtdQuestoes">1.280</strong>
-          <div class="subtitle">Questões Aplicadas</div>
-        </div>
-        <div class="metric-card">
-          <strong id="acertosTotais">982</strong>
-          <div class="subtitle">Acertos Totais</div>
-        </div>
-        <div class="metric-card">
-          <strong id="mediaAluno">76%</strong>
-          <div class="subtitle">Média por Aluno</div>
-        </div>
-        <div class="metric-card">
-          <div class="title" id="maiorMediaDisciplina">Matemática</div>
-          <div class="subtitle">Maior Média</div>
-        </div>
-        <div class="metric-card">
-          <div class="title" id="menorMediaDisciplina">História</div>
-          <div class="subtitle">Menor Média</div>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <div class="chart-header">
-          <h3>Média de Acertos por Disciplina</h3>
-          <select id="filtroTurma" onchange="atualizarGrafico()" style="padding: 6px; border-radius: 6px; border: 1px solid #ccc;">
+        <div>
+          <label for="filtroTurma" style="margin-right: 8px; font-weight: 600; color: #003b54;">Etapa:</label>
+          <select id="filtroTurma" onchange="atualizarGrafico()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 14px; cursor: pointer;">
             <option value="Geral" selected>Geral</option>
-            <option value="SIS1">SIS 1</option>
-            <option value="SIS2">SIS 2</option>
-            <option value="SIS3">SIS 3</option>
           </select>
         </div>
-        <canvas id="graficoGeralTurmas"></canvas>
       </div>
-    </div>
+
+      <!-- Cards de Métricas Principais -->
+      <div class="metrics-grid">
+        <div class="metric-card-modern">
+          <div class="metric-card-header">
+            <h3>Questões Aplicadas</h3>
+            <span class="metric-icon">📊</span>
+          </div>
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+            <div class="metric-value">
+              <span class="value-number" id="qtdQuestoes">0</span>
+              <span class="value-label">questões respondidas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card-modern">
+          <div class="metric-card-header">
+            <h3>Acertos Totais</h3>
+            <span class="metric-icon">✅</span>
+          </div>
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+            <div class="metric-value">
+              <span class="value-number" id="acertosTotais">0</span>
+              <span class="value-label">acertos registrados</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card-modern">
+          <div class="metric-card-header">
+            <h3>Média Geral</h3>
+            <span class="metric-icon">📈</span>
+          </div>
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+            <div class="metric-value">
+              <span class="value-number" id="mediaAluno">0%</span>
+              <span class="value-label">média de acertos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card-modern">
+          <div class="metric-card-header">
+            <h3>Maior Média</h3>
+            <span class="metric-icon">🏆</span>
+          </div>
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+            <div class="metric-value">
+              <span class="value-number" id="maiorMediaDisciplina">-</span>
+              <span class="value-label">disciplina com melhor desempenho</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card-modern">
+          <div class="metric-card-header">
+            <h3>Menor Média</h3>
+            <span class="metric-icon">📉</span>
+          </div>
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+            <div class="metric-value">
+              <span class="value-number" id="menorMediaDisciplina">-</span>
+              <span class="value-label">disciplina que precisa de atenção</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico de Média por Disciplina -->
+      <div class="metric-card-modern full-width" style="margin-top: 24px;">
+        <div class="metric-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3>Média de Acertos por Disciplina</h3>
+        </div>
+        <div class="metric-card-content" style="min-height: 400px; padding: 20px;">
+          <canvas id="graficoGeralTurmas"></canvas>
+        </div>
+      </div>
+    </main>
   </div>
 
   <script>
-    const dadosPorTurma = {
-      Geral: { dados: [84, 78, 65, 71, 75, 70, 68, 73], questoes: 1280, acertos: 982, media: '76%', maior: 'Matemática', menor: 'História' },
-      SIS1: { dados: [88, 81, 67, 74, 79, 73, 70, 75], questoes: 430, acertos: 370, media: '82%', maior: 'Matemática', menor: 'História' },
-      SIS2: { dados: [80, 74, 60, 69, 72, 68, 64, 70], questoes: 410, acertos: 310, media: '75%', maior: 'Matemática', menor: 'História' },
-      SIS3: { dados: [76, 70, 58, 65, 70, 66, 60, 68], questoes: 440, acertos: 302, media: '69%', maior: 'Matemática', menor: 'História' }
-    };
+    let grafico = null;
+    let dadosEstatisticas = null;
+    let etapasDisponiveis = [];
 
-    const labels = ['Matemática', 'Português', 'História', 'Geografia', 'Biologia', 'Química', 'Física', 'Inglês'];
-    const ctx = document.getElementById('graficoGeralTurmas').getContext('2d');
-    const grafico = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Média de Acertos (%)',
-          data: dadosPorTurma['Geral'].dados,
-          backgroundColor: '#00b386',
-          borderColor: '#007a5a',
-          borderWidth: 1,
-          borderRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            ticks: {
-              font: {
-                weight: 'bold',
-                size: 12
-              },
-              color: '#000000'
-            },
-            grid: {
-              display: false
-            }
-          },
-          y: {
-            beginAtZero: true,
-            max: 100,
-            ticks: {
-              stepSize: 10,
-              color: '#000000',
-              font: {
-                weight: 'bold'
-              }
-            },
-            grid: {
-              color: 'rgba(0,0,0,0.1)'
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            labels: {
-              font: {
-                weight: 'bold',
-                size: 14
-              },
-              color: '#000000',
-              padding: 20
-            },
-            position: 'top',
-            align: 'center'
-          },
-          tooltip: {
-            titleFont: {
-              weight: 'bold'
-            },
-            bodyFont: {
-              weight: 'bold'
-            }
-          }
-        },
-        layout: {
-          padding: {
-            top: 20,
-            right: 20,
-            bottom: 20,
-            left: 20
-          }
-        }
-      }
+    // Carregar dados ao inicializar
+    document.addEventListener('DOMContentLoaded', async () => {
+      await carregarEstatisticas();
+      await loadUserData();
     });
 
-    function atualizarGrafico() {
-      const turma = document.getElementById('filtroTurma').value;
-      const dados = dadosPorTurma[turma];
-      grafico.data.datasets[0].data = dados.dados;
-      grafico.update();
+    async function carregarEstatisticas(etapaFiltro = null) {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
 
-      document.getElementById('qtdQuestoes').textContent = dados.questoes;
-      document.getElementById('acertosTotais').textContent = dados.acertos;
-      document.getElementById('mediaAluno').textContent = dados.media;
-      document.getElementById('maiorMediaDisciplina').textContent = dados.maior;
-      document.getElementById('menorMediaDisciplina').textContent = dados.menor;
+      try {
+        showLoading();
+        
+        // Adicionar filtro de etapa na URL se especificado
+        let url = '/api/relatorios/estatisticas-gerais';
+        if (etapaFiltro && etapaFiltro !== 'Geral') {
+          url += `?etapa=${encodeURIComponent(etapaFiltro)}`;
+        }
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+            return;
+          }
+          throw new Error('Erro ao carregar estatísticas');
+        }
+
+        const data = await response.json();
+        
+        if (data.sucesso && data.estatisticas) {
+          dadosEstatisticas = data.estatisticas;
+          atualizarMetricas();
+          atualizarSelectEtapas();
+
+          // Ajustar seleção do filtro para refletir o filtro atual
+          const select = document.getElementById('filtroTurma');
+          const valorDesejado = etapaFiltro && etapaFiltro !== 'Geral' ? etapaFiltro : 'Geral';
+          if ([...select.options].some(opt => opt.value === valorDesejado)) {
+            select.value = valorDesejado;
+          } else {
+            select.value = 'Geral';
+          }
+
+          inicializarGrafico();
+        } else {
+          showToast('Erro ao carregar dados do relatório', 'error');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+        showToast('Erro ao carregar estatísticas. Tente novamente.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function atualizarMetricas() {
+      if (!dadosEstatisticas) return;
+
+      const stats = dadosEstatisticas;
+      
+      // Formatar números com separador de milhar
+      document.getElementById('qtdQuestoes').textContent = 
+        stats.total_questoes.toLocaleString('pt-BR');
+      document.getElementById('acertosTotais').textContent = 
+        stats.total_acertos.toLocaleString('pt-BR');
+      document.getElementById('mediaAluno').textContent = 
+        stats.media_geral.toFixed(1) + '%';
+      document.getElementById('maiorMediaDisciplina').textContent = 
+        stats.maior_media_disciplina || '-';
+      document.getElementById('menorMediaDisciplina').textContent = 
+        stats.menor_media_disciplina || '-';
+    }
+
+    function atualizarSelectEtapas() {
+      if (!dadosEstatisticas || !dadosEstatisticas.por_etapa) return;
+
+      const select = document.getElementById('filtroTurma');
+      const etapas = dadosEstatisticas.por_etapa;
+      
+      // Limpar opções existentes (exceto "Geral")
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+
+      // Adicionar etapas disponíveis
+      etapas.forEach(etapa => {
+        if (etapa.etapa) {
+          const option = document.createElement('option');
+          option.value = etapa.etapa;
+          option.textContent = etapa.etapa;
+          select.appendChild(option);
+        }
+      });
+
+      etapasDisponiveis = etapas;
+    }
+
+    function inicializarGrafico() {
+      if (!dadosEstatisticas) return;
+
+      // Destruir gráfico existente se houver
+      if (grafico) {
+        grafico.destroy();
+        grafico = null;
+      }
+
+      const ctx = document.getElementById('graficoGeralTurmas').getContext('2d');
+      
+      const dadosGeral = dadosEstatisticas.media_por_disciplina || [];
+      
+      // Ordenar por média (maior para menor) e encurtar nomes longos
+      const dadosOrdenados = [...dadosGeral].sort((a, b) => b.media - a.media);
+      
+      const labels = dadosOrdenados.map(d => {
+        // Encurtar nomes longos para melhor visualização
+        const nome = d.nome;
+        if (nome.length > 30) {
+          return nome.substring(0, 27) + '...';
+        }
+        return nome;
+      });
+      const medias = dadosOrdenados.map(d => d.media);
+
+      grafico = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels.length > 0 ? labels : ['Sem dados'],
+          datasets: [{
+            label: 'Média de Acertos (%)',
+            data: medias.length > 0 ? medias : [0],
+            backgroundColor: '#008cc4',
+            borderColor: '#006a9a',
+            borderWidth: 2,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                font: {
+                  size: 14,
+                  weight: 'bold'
+                },
+                color: '#003b54',
+                padding: 15
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleFont: {
+                size: 14,
+                weight: 'bold'
+              },
+              bodyFont: {
+                size: 13
+              },
+              padding: 12,
+              displayColors: false,
+              callbacks: {
+                label: function(context) {
+                  return `Média: ${context.parsed.y.toFixed(1)}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                font: {
+                  size: 11,
+                  weight: 'bold'
+                },
+                color: '#003b54',
+                maxRotation: 45,
+                minRotation: 45,
+                autoSkip: false
+              },
+              grid: {
+                display: false
+              }
+            },
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                stepSize: 10,
+                font: {
+                  size: 12,
+                  weight: 'bold'
+                },
+                color: '#003b54',
+                callback: function(value) {
+                  return value + '%';
+                }
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.1)',
+                lineWidth: 1
+              }
+            }
+          },
+          layout: {
+            padding: {
+              top: 10,
+              right: 20,
+              bottom: 10,
+              left: 20
+            }
+          }
+        }
+      });
+    }
+
+    async function atualizarGrafico() {
+      const turma = document.getElementById('filtroTurma').value;
+      
+      try {
+        showLoading();
+        
+        // Recarregar dados com filtro de etapa
+        await carregarEstatisticas(turma);
+        
+        // O gráfico será atualizado automaticamente pelo carregarEstatisticas
+        // que chama inicializarGrafico, que já destrói o gráfico anterior
+      } catch (error) {
+        console.error('Erro ao atualizar gráfico:', error);
+        showToast('Erro ao atualizar gráfico. Tente novamente.', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function showLoading() {
+      // Mostrar indicador de carregamento se necessário
+      const cards = document.querySelectorAll('.metric-card-modern .value-number');
+      cards.forEach(card => {
+        if (card.textContent === '0' || card.textContent === '-') {
+          card.textContent = '...';
+        }
+      });
+    }
+
+    function hideLoading() {
+      // Ocultar indicador de carregamento
     }
   </script>
 </body>
