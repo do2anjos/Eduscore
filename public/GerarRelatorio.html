@@ -363,7 +363,7 @@
       sugestoesDiv.style.display = 'block';
     }
 
-    function selecionarAluno(id, nome, matricula) {
+    async function selecionarAluno(id, nome, matricula) {
       alunoSelecionado = { id, nome, matricula };
       document.getElementById('buscaAluno').value = nome;
       document.getElementById('sugestoesAlunos').style.display = 'none';
@@ -372,6 +372,9 @@
       document.getElementById('nomeAlunoSelecionado').textContent = nome;
       document.getElementById('matriculaAlunoSelecionado').textContent = matricula || 'N/A';
       document.getElementById('infoAlunoSelecionado').style.display = 'none';
+      
+      // Buscar relatório automaticamente ao selecionar o aluno
+      await buscarRelatorio();
     }
 
     async function buscarRelatorio() {
@@ -852,6 +855,7 @@
       corpoTabela.innerHTML = dados.map((simulado, index) => {
         const nome = simulado.nome || 'Simulado sem nome';
         const etapa = simulado.etapa || 'N/A';
+        const gabaritoId = simulado.id;
         const totalQuestoes = Number(simulado.total_questoes || 0);
         const questoesCapturadas = Number(simulado.questoes_capturadas || 0);
         const acertos = Number(simulado.acertos || 0);
@@ -899,11 +903,14 @@
         }
         
         return `
-          <tr style="background: ${corFundo}; transition: background 0.2s;" 
+          <tr id="simulado-row-${gabaritoId}" style="background: ${corFundo}; transition: background 0.2s;" 
               onmouseover="this.style.background='rgba(0, 140, 196, 0.1)'" 
               onmouseout="this.style.background='${corFundo}'">
-            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: ${corTexto};">
-              ${nome}
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: ${corTexto}; cursor: pointer; position: relative;" 
+                onclick="toggleDetalhesSimulado('${gabaritoId}', '${alunoSelecionado ? alunoSelecionado.id : ''}')"
+                title="Clique para ver detalhes do gabarito">
+              <span id="icon-${gabaritoId}" style="display: inline-block; margin-right: 8px; transition: transform 0.3s;">▶</span>
+              <span style="display: inline-block;">${nome}</span>
             </td>
             <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center; color: #666;">
               ${etapa}
@@ -922,6 +929,16 @@
             </td>
             <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center; color: #666;">
               ${dataFormatada}
+            </td>
+          </tr>
+          <tr id="detalhes-${gabaritoId}" style="display: none;">
+            <td colspan="7" style="padding: 0; border-bottom: 1px solid #e0e0e0; background: #f8f9fa;">
+              <div id="conteudo-detalhes-${gabaritoId}" style="padding: 20px;">
+                <div style="text-align: center; color: #666;">
+                  <div class="loading-spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,140,196,.3); border-radius: 50%; border-top-color: #008cc4; animation: spin 1s ease-in-out infinite;"></div>
+                  <span style="margin-left: 10px;">Carregando detalhes...</span>
+                </div>
+              </div>
             </td>
           </tr>
         `;
@@ -1113,7 +1130,170 @@
         document.getElementById('infoAlunoSelecionado').style.display = 'none';
       }
     });
-</script>
+
+    async function toggleDetalhesSimulado(gabaritoId, alunoId) {
+      const detalhesRow = document.getElementById(`detalhes-${gabaritoId}`);
+      const icon = document.getElementById(`icon-${gabaritoId}`);
+      const conteudoDiv = document.getElementById(`conteudo-detalhes-${gabaritoId}`);
+      
+      if (!detalhesRow) return;
+      
+      // Se alunoId não foi fornecido, tentar pegar de alunoSelecionado
+      if (!alunoId && alunoSelecionado && alunoSelecionado.id) {
+        alunoId = alunoSelecionado.id;
+      }
+      
+      if (!alunoId) {
+        showToast('Erro: Aluno não selecionado', 'error');
+        return;
+      }
+
+      // Alternar visibilidade
+      const isVisible = detalhesRow.style.display !== 'none';
+      
+      if (isVisible) {
+        // Fechar
+        detalhesRow.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+        icon.textContent = '▶';
+      } else {
+        // Abrir
+        detalhesRow.style.display = 'table-row';
+        icon.style.transform = 'rotate(90deg)';
+        icon.textContent = '▼';
+        
+        // Se ainda não carregou os dados, carregar agora
+        if (conteudoDiv.innerHTML.includes('Carregando detalhes')) {
+          await carregarDetalhesSimulado(gabaritoId, alunoId);
+        }
+      }
+    }
+
+    async function carregarDetalhesSimulado(gabaritoId, alunoId) {
+      const conteudoDiv = document.getElementById(`conteudo-detalhes-${gabaritoId}`);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        conteudoDiv.innerHTML = '<div style="color: #e74c3c; text-align: center; padding: 20px;">Erro: Token não encontrado</div>';
+        return;
+      }
+
+      try {
+        // Buscar questões do gabarito e respostas do aluno em paralelo
+        const [questoesRes, respostasRes] = await Promise.all([
+          fetch(`/api/questoes/gabarito/${gabaritoId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }),
+          fetch(`/api/respostas?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
+        ]);
+
+        if (!questoesRes.ok || !respostasRes.ok) {
+          throw new Error('Erro ao carregar dados');
+        }
+
+        const questoesData = await questoesRes.json();
+        const respostasData = await respostasRes.json();
+
+        const questoes = questoesData.questoes || [];
+        const respostas = respostasData.respostas || [];
+
+        // Criar mapa de respostas por questão_id
+        const mapaRespostas = {};
+        respostas.forEach(resposta => {
+          if (resposta.resposta_aluno && 
+              resposta.resposta_aluno.trim() !== '' && 
+              !resposta.resposta_aluno.includes(',')) {
+            mapaRespostas[resposta.questao_id] = resposta.resposta_aluno.trim().toUpperCase();
+          }
+        });
+
+        // Ordenar questões por número
+        const questoesOrdenadas = [...questoes].sort((a, b) => Number(a.numero) - Number(b.numero));
+
+        // Gerar HTML da tabela de detalhes
+        let html = `
+          <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <h4 style="margin: 0 0 16px 0; color: #003b54; font-size: 16px; font-weight: 600;">
+              Detalhes do Gabarito
+            </h4>
+            <div style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="background: #f0f7fa; border-bottom: 2px solid #008cc4;">
+                    <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 80px;">Questão</th>
+                    <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 120px;">Gabarito</th>
+                    <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 120px;">Capturada</th>
+                    <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+        `;
+
+        questoesOrdenadas.forEach(questao => {
+          const numero = questao.numero;
+          const gabarito = (questao.resposta_correta || '').trim().toUpperCase();
+          const capturada = mapaRespostas[questao.id] || '-';
+          const acertou = capturada !== '-' && capturada === gabarito;
+          
+          let statusHtml = '';
+          let statusColor = '#666';
+          
+          if (capturada === '-') {
+            statusHtml = '<span style="color: #666;">Não respondida</span>';
+          } else if (acertou) {
+            statusHtml = '<span style="color: #2ecc71; font-weight: 600;">✓ Acertou</span>';
+            statusColor = '#2ecc71';
+          } else {
+            statusHtml = '<span style="color: #e74c3c; font-weight: 600;">✗ Errou</span>';
+            statusColor = '#e74c3c';
+          }
+
+          html += `
+            <tr style="border-bottom: 1px solid #e0e0e0;">
+              <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54;">${numero}</td>
+              <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #008cc4; font-size: 14px;">${gabarito || '-'}</td>
+              <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: ${statusColor}; font-size: 14px;">${capturada}</td>
+              <td style="padding: 10px 12px; text-align: center;">${statusHtml}</td>
+            </tr>
+          `;
+        });
+
+        html += `
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
+        conteudoDiv.innerHTML = html;
+
+      } catch (error) {
+        console.error('Erro ao carregar detalhes:', error);
+        conteudoDiv.innerHTML = `
+          <div style="color: #e74c3c; text-align: center; padding: 20px;">
+            Erro ao carregar detalhes do simulado. Tente novamente.
+          </div>
+        `;
+      }
+    }
+
+    // Adicionar animação de spin para o spinner
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
 </body>
 </html>
 
