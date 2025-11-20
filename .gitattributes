@@ -1,0 +1,17 @@
+# Incluir Python na contagem
+*.py linguist-detectable=true
+
+# Incluir JSON na contagem
+*.json linguist-detectable=true
+
+# Incluir Markdown na contagem
+*.md linguist-detectable=true
+
+# Excluir binários e gerados
+*.sqlite linguist-detectable=false
+*.png linguist-detectable=false
+*.jpg linguist-detectable=false
+*.jpeg linguist-detectable=false
+node_modules/** linguist-vendored=true
+__pycache__/** linguist-vendored=true
+
