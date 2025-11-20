@@ -262,17 +262,28 @@
 
     function renderizarRetencao(stats) {
       const disciplinas = Array.isArray(stats.media_por_disciplina) ? stats.media_por_disciplina : [];
-      const labels = disciplinas.map(d => d.nome);
-      const valores = disciplinas.map(d => Number(d.media || 0));
-
+      // Usar taxa_erro (não media) para o gráfico de Retenção
+      // Ordenar do maior para o menor (maior taxa de erro = pior retenção = aparece primeiro no topo)
+      const disciplinasOrdenadas = [...disciplinas].sort((a, b) => {
+        const taxaErroA = Number(a.taxa_erro || 0);
+        const taxaErroB = Number(b.taxa_erro || 0);
+        return taxaErroB - taxaErroA; // Descendente: maior para menor
+      });
+      
+      const labels = disciplinasOrdenadas.map(d => d.nome);
+      const valores = disciplinasOrdenadas.map(d => Number(d.taxa_erro || 0));
+      
+      // Armazenar dados completos para tooltip
+      const dadosCompletos = disciplinasOrdenadas;
+ 
       new Chart(document.getElementById('retencaoChart'), {
         type: 'bar',
         data: {
           labels: labels.length ? labels : ['Sem dados'],
-          datasets: [{
+            datasets: [{
             label: 'Retenção (%)',
             data: valores.length ? valores : [0],
-            backgroundColor: '#008cc4',
+            backgroundColor: '#e74c3c',
             borderRadius: 8,
             barThickness: 28,
           }]
@@ -290,7 +301,13 @@
               bodyFont: { size: 13 },
               cornerRadius: 8,
               callbacks: {
-                label: context => `Retenção: ${context.raw.toFixed(1)}%`
+                label: context => {
+                  const disciplina = dadosCompletos[context.dataIndex];
+                  const erros = disciplina ? Number(disciplina.erros || 0) : 0;
+                  const total = disciplina ? Number(disciplina.total_respostas || 0) : 0;
+                  const taxaErro = disciplina ? Number(disciplina.taxa_erro || 0) : 0;
+                  return `Taxa de erro: ${taxaErro.toFixed(1)}% (${erros.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')} respostas)`;
+                }
               }
             }
           },
