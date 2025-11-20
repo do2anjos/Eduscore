@@ -6,27 +6,26 @@ Este documento registra todas as alterações significativas realizadas no proje
 
 ---
 
-## [2025-01-21] - Padronização Visual dos Cards
+## [2025-01-21] - Correções de Layout e Estrutura HTML
 
-### 🎨 Correção: Estrutura Visual dos Cards Full-Width
+### 🔧 Correção: Card "Nenhum aluno selecionado" Colado na Sidebar
 
 #### Problema
-- O card "mensagemInicial" não tinha a mesma estrutura visual dos outros 3 cards full-width
-- Faltava o `metric-card-header` e `metric-card-content` padronizados
-- Visual inconsistente entre os cards
+- Card `mensagemInicial` estava se unindo à sidebar antes de selecionar um aluno
+- O card não tinha o mesmo espaçamento visual dos outros 3 cards full-width
+- Estrutura HTML incorreta com fechamento prematuro do `<main>`
 
 #### Solução
 - **Arquivo modificado**: `public/GerarRelatorio.html`
 - **Mudanças**:
-  - Adicionado `metric-card-header` com `<h3>` padronizado
-  - Envolvido o conteúdo em `metric-card-content` seguindo o padrão dos outros cards
-  - Adicionado `margin-top: var(--spacing-xl)` para manter espaçamento consistente
-  - Estrutura visual agora idêntica aos outros 3 cards full-width
+  - Removido `</div>` extra na linha 278 que fechava prematuramente o `<main>`
+  - Adicionado `margin-top: var(--spacing-xl)` ao card `mensagemInicial` para igualar aos outros cards
+  - Estrutura HTML corrigida: card agora está corretamente dentro do `<main class="content">`
 
 #### Resultado
-- Todos os 4 cards full-width agora têm estrutura visual idêntica
-- Consistência visual mantida em toda a página
-- Melhor experiência do usuário com design uniforme
+- Card "Nenhum aluno selecionado" agora está visualmente alinhado com os outros cards full-width
+- Não cola mais na sidebar antes de selecionar um aluno
+- Consistência visual mantida em todos os estados da página
 
 ---
 
