@@ -141,7 +141,9 @@ classy-main/
 │   │   ├── errorHandler.js  # Tratamento de erros
 │   │   └── validation.js    # Validação de dados
 │   ├── scripts/          # Scripts Python para processamento
-│   │   ├── processar_respostas.py  # Algoritmo de OCR/detecção de marcações
+│   │   ├── detectar_tipo_imagem.py  # Detecta automaticamente se imagem precisa de processamento
+│   │   ├── processar_respostas_Imagem_original.py  # Processa imagens originais (com correção de perspectiva)
+│   │   ├── processar_respostas_imagem_processadas.py  # Processa imagens já pré-processadas (sem correção de perspectiva)
 │   │   └── requirements.txt        # Dependências Python
 │   ├── routes/          # Rotas da API
 │   │   ├── alunos.js    # Gestão de alunos
