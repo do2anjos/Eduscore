@@ -386,11 +386,11 @@ router.get('/:id/foto', async (req, res) => {
           const commaIndex = fotoPerfil.indexOf(',');
           if (commaIndex === -1) {
             console.error('[DEBUG] Erro: formato data URL inválido (sem vírgula)');
-            return res.status(500).json({
-              sucesso: false,
-              erro: 'Erro ao processar foto'
-            });
-          }
+          return res.status(500).json({
+            sucesso: false,
+            erro: 'Erro ao processar foto'
+          });
+        }
           base64Data = fotoPerfil.substring(commaIndex + 1);
         }
         
@@ -406,7 +406,7 @@ router.get('/:id/foto', async (req, res) => {
           // Tentar detectar PNG pelo formato base64 (pode ser impreciso)
           // Melhor verificar pelo prefixo data: se existir
           if (fotoPerfil.startsWith('data:image/png')) {
-            contentType = 'image/png';
+          contentType = 'image/png';
           }
         } else if (fotoPerfil.startsWith('data:image/gif')) {
           contentType = 'image/gif';
@@ -426,11 +426,11 @@ router.get('/:id/foto', async (req, res) => {
           erro: 'Erro ao processar foto'
         });
       }
-    }
+    } 
     // Se for URL de arquivo, servir arquivo
     else {
-      const path = require('path');
-      const fs = require('fs');
+        const path = require('path');
+        const fs = require('fs');
       let filePath = null;
       
       // Se começa com /uploads ou uploads/, servir como arquivo estático
