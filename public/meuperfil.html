@@ -601,7 +601,10 @@
         }
         
         // Recarregar dados do usuário para atualizar sidebar
-        await loadUserData();
+        // Aguardar um pouco para garantir que o banco foi atualizado antes de recarregar
+        setTimeout(async () => {
+          await loadUserData();
+        }, 1000);
 
       } catch (error) {
         console.error('Erro ao atualizar perfil:', error);

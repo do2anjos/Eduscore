@@ -403,77 +403,77 @@ function updateUserProfile(usuario) {
     
     // Atualizar foto de perfil
     const profileImg = sidebarProfile.querySelector('img');
-    if (profileImg) {
+    if (profileImg && usuario.id) {
       // SEMPRE definir imagem padrão primeiro para evitar tentar carregar base64 diretamente
       profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
       profileImg.alt = 'Perfil';
       profileImg.onerror = null;
       
-      if (usuario.foto_perfil && usuario.id) {
-        // SEMPRE usar endpoint da API para carregar fotos
-        // Isso evita completamente o erro 431 ao usar base64 diretamente como URL
-        const userId = usuario.id;
-        const token = localStorage.getItem('token');
+      // SEMPRE tentar carregar foto via endpoint da API quando houver ID do usuário
+      // Isso garante que a foto seja carregada corretamente, independentemente de como está armazenada
+      const userId = usuario.id;
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        // Limpar blob URL anterior se existir
+        if (profileImg.src && profileImg.src.startsWith('blob:')) {
+          URL.revokeObjectURL(profileImg.src);
+        }
         
-        if (token) {
-          // Limpar blob URL anterior se existir
-          if (profileImg.src && profileImg.src.startsWith('blob:')) {
-            URL.revokeObjectURL(profileImg.src);
+        // Usar timestamp para evitar cache
+        fetch(`/api/usuarios/${userId}/foto?t=${Date.now()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-          
-          // Usar endpoint da API para carregar a foto
-          fetch(`/api/usuarios/${userId}/foto?t=${Date.now()}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          })
-          .then(response => {
-            if (response.ok) {
-              return response.blob();
-            }
-            // Se retornar 404, a foto não está disponível
-            if (response.status === 404) {
-              console.warn('[DEBUG] Foto não encontrada no servidor (404)');
-              return null;
-            }
-            throw new Error(`Erro ao carregar foto: ${response.status}`);
-          })
-          .then(blob => {
-            if (blob) {
-              // Criar blob URL para exibir a imagem
-              const blobUrl = URL.createObjectURL(blob);
-              profileImg.src = blobUrl;
-              profileImg.alt = usuario.nome || 'Perfil';
-              
-              profileImg.onerror = function() {
-                URL.revokeObjectURL(blobUrl);
-                this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-                this.alt = 'Perfil';
-                this.onerror = null;
-              };
-            } else {
-              // Se blob for null (404), manter imagem padrão
-              profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-              profileImg.alt = 'Perfil';
-            }
-          })
-          .catch(error => {
-            console.warn('[DEBUG] Erro ao carregar foto via API:', error);
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.blob();
+          }
+          // Se retornar 404, a foto não está disponível (não foi salva ainda ou foi deletada)
+          if (response.status === 404) {
+            console.log('[DEBUG] Foto não encontrada no servidor (404) - usando imagem padrão');
+            return null;
+          }
+          throw new Error(`Erro ao carregar foto: ${response.status}`);
+        })
+        .then(blob => {
+          if (blob) {
+            // Criar blob URL para exibir a imagem
+            const blobUrl = URL.createObjectURL(blob);
+            profileImg.src = blobUrl;
+            profileImg.alt = usuario.nome || 'Perfil';
+            
+            // Limpar blob URL quando a imagem for removida
+            profileImg.onload = function() {
+              // Manter o blob URL enquanto a imagem estiver visível
+            };
+            
+            profileImg.onerror = function() {
+              URL.revokeObjectURL(blobUrl);
+              this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+              this.alt = 'Perfil';
+              this.onerror = null;
+            };
+          } else {
+            // Se blob for null (404), manter imagem padrão
             profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
             profileImg.alt = 'Perfil';
-            profileImg.onerror = null;
-          });
-        } else {
-          console.warn('[DEBUG] Token não disponível, usando imagem padrão');
+          }
+        })
+        .catch(error => {
+          console.warn('[DEBUG] Erro ao carregar foto via API:', error);
           profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
           profileImg.alt = 'Perfil';
-        }
+          profileImg.onerror = null;
+        });
       } else {
-        // Se não houver foto, manter a imagem padrão
-        profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-        profileImg.alt = 'Perfil';
-        profileImg.onerror = null;
+        console.warn('[DEBUG] Token não disponível, usando imagem padrão');
       }
+    } else if (profileImg) {
+      // Se não houver ID do usuário, manter a imagem padrão
+      profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+      profileImg.alt = 'Perfil';
     }
   }
 
