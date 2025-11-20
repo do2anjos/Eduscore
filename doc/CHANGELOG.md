@@ -2,7 +2,60 @@
 
 Este documento registra todas as alterações significativas realizadas no projeto.
 
-**Última atualização**: 2025-01-21 12:00:00
+**Última atualização**: 2025-01-21 15:00:00
+
+---
+
+## [2025-01-21] - Melhorias na Interface de Relatórios
+
+### 🎯 Funcionalidade: Sanfona (Accordion) no Relatório Individual por Simulado
+
+#### Problema
+- Usuário precisava de uma forma de visualizar detalhes do gabarito e respostas do aluno por simulado
+- Não havia uma interface para comparar respostas corretas com respostas capturadas do aluno
+
+#### Solução
+- **Arquivo modificado**: `public/GerarRelatorio.html`
+- **Funcionalidade implementada**:
+  - Célula "Simulado" agora é clicável com ícone ▶/▼
+  - Ao clicar, expande uma linha adicional mostrando:
+    - Tabela completa com todas as questões
+    - Coluna "Questão": número da questão
+    - Coluna "Gabarito": resposta correta (A, B, C, D, E)
+    - Coluna "Capturada": resposta do aluno
+    - Coluna "Status": ✓ Acertou / ✗ Errou / Não respondida
+  - Carregamento assíncrono: dados são buscados apenas quando expandido pela primeira vez
+  - Visual com cores diferenciadas (verde para acerto, vermelho para erro, cinza para não respondida)
+  - Animações suaves de expansão/colapso
+
+#### APIs utilizadas
+- `GET /api/questoes/gabarito/:gabarito_id` - Busca questões do gabarito
+- `GET /api/respostas?aluno_id=:id&gabarito_id=:id` - Busca respostas do aluno para o gabarito
+
+#### Resultado
+- Interface intuitiva para visualizar detalhes por simulado
+- Comparação visual entre gabarito e respostas do aluno
+- Melhor experiência do usuário ao analisar desempenho detalhado
+
+---
+
+### ⚡ Melhoria: Busca Automática ao Selecionar Aluno
+
+#### Problema
+- Ao clicar em um aluno da lista de sugestões, apenas preenchia o campo
+- Usuário ainda precisava clicar no botão "Buscar" manualmente
+
+#### Solução
+- **Arquivo modificado**: `public/GerarRelatorio.html`
+- **Mudança**:
+  - Função `selecionarAluno()` agora é `async`
+  - Chama automaticamente `buscarRelatorio()` após selecionar o aluno
+  - Remove a necessidade de clicar no botão "Buscar"
+
+#### Resultado
+- Fluxo mais rápido e intuitivo
+- Um único clique seleciona o aluno e busca o relatório automaticamente
+- Melhor UX ao reduzir ações desnecessárias
 
 ---
 
