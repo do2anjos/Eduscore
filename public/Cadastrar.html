@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cadastrar Aluno</title>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
+  <title>Cadastrar Aluno - EduScore</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="utils.js" defer></script>
 </head>
@@ -35,8 +35,8 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb e User Profile na mesma linha -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <!-- Breadcrumb e User Profile -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -59,62 +59,126 @@
         </div>
       </div>
 
-      <div class="dashboard-header">
+      <!-- Header -->
+      <div class="dashboard-header" style="margin-bottom: var(--spacing-lg);">
         <div>
-          <h2>Cadastrar Novo Aluno</h2>
+          <h2 style="margin-bottom: var(--spacing-sm);">Cadastrar Novo Aluno</h2>
+          <p class="dashboard-subtitle" style="margin: 0;">Preencha os dados do aluno para cadastrá-lo na plataforma</p>
         </div>
       </div>
       
-      <form id="cadastroAlunoForm" onsubmit="handleCadastroAluno(event)">
-        <div class="input-group">
-          <label for="nome">Nome Completo <span class="required-field"></span></label>
-          <input type="text" id="nome" name="nome" placeholder="Digite o nome completo do aluno" required autocomplete="name" />
-          <span class="input-hint">Nome completo conforme documento de identidade</span>
+      <!-- Formulário em Card -->
+      <div class="card" style="max-width: 800px; margin: var(--spacing-xl) auto 0; padding: var(--spacing-3xl);">
+        <div class="card-header" style="margin-bottom: var(--spacing-xl);">
+          <h3 class="card-title" style="margin: 0; color: var(--color-primary-darker);">Informações do Aluno</h3>
         </div>
+        <form id="cadastroAlunoForm" onsubmit="handleCadastroAluno(event)" style="display: flex; flex-direction: column; gap: var(--spacing-xl);">
+          <div class="input-group">
+            <label for="nome">Nome Completo <span class="required-field"></span></label>
+            <input 
+              type="text" 
+              id="nome" 
+              name="nome" 
+              placeholder="Digite o nome completo do aluno" 
+              required 
+              autocomplete="name"
+              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+            />
+            <span class="input-hint">Nome completo conforme documento de identidade</span>
+          </div>
 
-        <div class="input-group">
-          <label for="matricula">Matrícula <span class="required-field"></span></label>
-          <input type="text" id="matricula" name="matricula" placeholder="Digite a matrícula do aluno" required autocomplete="off" />
-          <span class="input-hint">Matrícula única do aluno na instituição</span>
-        </div>
+          <div class="input-group">
+            <label for="matricula">Matrícula <span class="required-field"></span></label>
+            <input 
+              type="text" 
+              id="matricula" 
+              name="matricula" 
+              placeholder="Digite a matrícula do aluno" 
+              required 
+              autocomplete="off"
+              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+            />
+            <span class="input-hint">Matrícula única do aluno na instituição</span>
+          </div>
 
-        <div class="input-group">
-          <label for="email">E-mail <span class="required-field"></span></label>
-          <input type="email" id="email" name="email" placeholder="exemplo@email.com" required autocomplete="email" />
-          <span class="input-hint">Email para contato e comunicação</span>
-        </div>
+          <div class="input-group">
+            <label for="email">E-mail <span class="required-field"></span></label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="exemplo@email.com" 
+              required 
+              autocomplete="email"
+              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+            />
+            <span class="input-hint">Email para contato e comunicação</span>
+          </div>
 
-        <div class="input-group">
-          <label for="telefone">Telefone do Responsável <span class="required-field"></span></label>
-          <input type="tel" id="telefone" name="telefone" placeholder="(99) 99999-9999" required autocomplete="tel" />
-          <span class="input-hint">Formato: (XX) XXXXX-XXXX</span>
-        </div>
+          <div class="input-group">
+            <label for="telefone">Telefone do Responsável <span class="required-field"></span></label>
+            <input 
+              type="tel" 
+              id="telefone" 
+              name="telefone" 
+              placeholder="(99) 99999-9999" 
+              required 
+              autocomplete="tel"
+              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+            />
+            <span class="input-hint">Formato: (XX) XXXXX-XXXX</span>
+          </div>
 
-        <div class="input-group">
-          <label for="nascimento">Data de Nascimento <span class="required-field"></span></label>
-          <input type="date" id="nascimento" name="nascimento" required max="2010-12-31" />
-          <span class="input-hint">Data de nascimento do aluno</span>
-        </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+            <style>
+              @media (max-width: 768px) {
+                #cadastroAlunoForm > div[style*="grid-template-columns"] {
+                  grid-template-columns: 1fr !important;
+                }
+              }
+            </style>
+            <div class="input-group">
+              <label for="nascimento">Data de Nascimento <span class="required-field"></span></label>
+              <input 
+                type="date" 
+                id="nascimento" 
+                name="nascimento" 
+                required 
+                max="2010-12-31"
+                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+              />
+              <span class="input-hint">Data de nascimento do aluno</span>
+            </div>
 
-        <div class="input-group">
-          <label for="etapa">Etapa <span class="required-field"></span></label>
-          <select id="etapa" name="etapa" required>
-            <option value="">Selecione a etapa</option>
-            <option value="1º Ano">1º Ano</option>
-            <option value="2º Ano">2º Ano</option>
-            <option value="3º Ano">3º Ano</option>
-          </select>
-          <span class="input-hint">Etapa educacional do aluno</span>
-        </div>
+            <div class="input-group">
+              <label for="etapa">Etapa <span class="required-field"></span></label>
+              <select 
+                id="etapa" 
+                name="etapa" 
+                required
+                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
+              >
+                <option value="">Selecione a etapa</option>
+                <option value="1º Ano">1º Ano</option>
+                <option value="2º Ano">2º Ano</option>
+                <option value="3º Ano">3º Ano</option>
+              </select>
+              <span class="input-hint">Etapa educacional do aluno</span>
+            </div>
+          </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-          <button type="button" class="btn-secondary" onclick="window.location.href='home.html'">Cancelar</button>
-          <button type="submit" class="email-btn" style="flex: 1;">
-            <span id="submitBtnText">Cadastrar Aluno</span>
-            <span id="submitSpinner" class="loading-spinner" style="display: none;"></span>
-          </button>
-        </div>
-      </form>
+          <!-- Divisor visual -->
+          <div style="height: 1px; background: var(--color-border-light); margin: var(--spacing-md) 0;"></div>
+
+          <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+            <button type="button" class="btn-secondary" onclick="window.location.href='home.html'" style="flex: 1; min-width: 0;">Cancelar</button>
+            <button type="submit" class="btn-primary" style="flex: 1; min-width: 0;">
+              <span id="submitBtnText">Cadastrar Aluno</span>
+              <span id="submitSpinner" class="loading-spinner" style="display: none;"></span>
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   </div>
 
