@@ -126,7 +126,7 @@
               </div>
             </div>
 
-            <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+            <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light); display: flex; justify-content: center;">
               <button type="submit" class="btn-primary" id="submitBtn" style="max-width: 200px;">
                 <span id="btnText">Salvar Alterações</span>
                 <span id="btnSpinner" class="loading-spinner" style="display: none;"></span>
@@ -144,7 +144,7 @@
         </div>
 
         <form id="formSenha" onsubmit="alterarSenha(event)">
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+          <div style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg);">
             <div class="input-group">
               <label for="senhaAtual">Senha Atual <span class="required-field">*</span></label>
               <input type="password" id="senhaAtual" name="senhaAtual" placeholder="Digite sua senha atual" required />
@@ -155,16 +155,14 @@
               <input type="password" id="novaSenha" name="novaSenha" placeholder="Digite a nova senha" required />
               <span class="input-hint">Mínimo 8 caracteres, incluindo maiúscula, minúscula, número e símbolo</span>
             </div>
-          </div>
 
-          <div style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
             <div class="input-group">
               <label for="confirmarNovaSenha">Confirmar Nova Senha <span class="required-field">*</span></label>
               <input type="password" id="confirmarNovaSenha" name="confirmarNovaSenha" placeholder="Confirme a nova senha" required />
             </div>
           </div>
 
-          <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+          <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light); display: flex; justify-content: center;">
             <button type="submit" class="btn-secondary" id="submitSenhaBtn" style="max-width: 200px;">
               <span id="btnSenhaText">Alterar Senha</span>
               <span id="btnSenhaSpinner" class="loading-spinner" style="display: none;"></span>
