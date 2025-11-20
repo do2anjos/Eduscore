@@ -222,13 +222,44 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             ));
             return;
           }
+
+          // Validar se o número é válido (deve ser um número entre 1 e 60)
+          const numeroQuestao = parseInt(numero);
+          const respostaNormalizada = resposta.trim().toUpperCase();
+
+          // Ignorar linhas que são cabeçalhos ou têm número inválido
+          if (isNaN(numeroQuestao) || numeroQuestao < 1 || numeroQuestao > 60) {
+            // Verificar se é um cabeçalho comum
+            const numLower = String(numero).toLowerCase().trim();
+            const respLower = respostaNormalizada.toLowerCase().trim();
+            const cabecalhos = ['questão', 'questao', 'numero', 'número', 'num', 'resposta', 'resposta_correta', 'resp'];
+            
+            if (cabecalhos.includes(numLower) || cabecalhos.includes(respLower)) {
+              console.log(`[GABARITO_UPLOAD] Pulando linha ${linha + 1}: parece ser cabeçalho`);
+              return; // Pula esta linha (é cabeçalho)
+            }
+            
+            // Se não for cabeçalho, mas tem número inválido, rejeitar
+            reject(new Error(
+              `Formato do CSV inválido na linha ${linha + 1} - o número da questão deve ser um número entre 1 e 60. ` +
+              `Valor recebido: "${numero}"`
+            ));
+            return;
+          }
           
-          const numeroQuestao = parseInt(numero) || numero;
+          // Validar se a resposta é uma alternativa válida (A, B, C, D, E)
+          if (!['A', 'B', 'C', 'D', 'E'].includes(respostaNormalizada)) {
+            reject(new Error(
+              `Formato do CSV inválido na linha ${linha + 1} - a resposta deve ser A, B, C, D ou E. ` +
+              `Valor recebido: "${resposta}"`
+            ));
+            return;
+          }
 
           // Armazenar disciplina_id do CSV se fornecido, senão será classificado depois
           questions.push({
             numero: numeroQuestao,
-            resposta_correta: resposta.trim().toUpperCase(), // Normalizar para maiúsculas
+            resposta_correta: respostaNormalizada, // Já normalizada acima
             disciplina_id: disciplinaId ? parseInt(disciplinaId) : null // Será classificado depois se NULL
           });
         })
