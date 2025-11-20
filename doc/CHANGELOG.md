@@ -2,7 +2,31 @@
 
 Este documento registra todas as alterações significativas realizadas no projeto.
 
-**Última atualização**: 2025-01-21 15:00:00
+**Última atualização**: 2025-01-21 16:00:00
+
+---
+
+## [2025-01-21] - Padronização Visual dos Cards
+
+### 🎨 Correção: Estrutura Visual dos Cards Full-Width
+
+#### Problema
+- O card "mensagemInicial" não tinha a mesma estrutura visual dos outros 3 cards full-width
+- Faltava o `metric-card-header` e `metric-card-content` padronizados
+- Visual inconsistente entre os cards
+
+#### Solução
+- **Arquivo modificado**: `public/GerarRelatorio.html`
+- **Mudanças**:
+  - Adicionado `metric-card-header` com `<h3>` padronizado
+  - Envolvido o conteúdo em `metric-card-content` seguindo o padrão dos outros cards
+  - Adicionado `margin-top: var(--spacing-xl)` para manter espaçamento consistente
+  - Estrutura visual agora idêntica aos outros 3 cards full-width
+
+#### Resultado
+- Todos os 4 cards full-width agora têm estrutura visual idêntica
+- Consistência visual mantida em toda a página
+- Melhor experiência do usuário com design uniforme
 
 ---
 
