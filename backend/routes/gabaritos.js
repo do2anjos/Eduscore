@@ -5,9 +5,10 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
-const crypto = require('crypto');
 const { authenticateToken } = require('../middleware/auth');
 const { withTransaction } = require('../utils/transaction');
+const { generateUUID } = require('../db');
+const { obterDisciplinaIdPorNumero } = require('../utils/disciplinaClassifier');
 
 // Aplicar autenticação em todas as rotas
 router.use(authenticateToken);
@@ -222,10 +223,13 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             return;
           }
           
+          const numeroQuestao = parseInt(numero) || numero;
+
+          // Armazenar disciplina_id do CSV se fornecido, senão será classificado depois
           questions.push({
-            numero: parseInt(numero) || numero,
+            numero: numeroQuestao,
             resposta_correta: resposta.trim().toUpperCase(), // Normalizar para maiúsculas
-            disciplina_id: disciplinaId ? parseInt(disciplinaId) : null
+            disciplina_id: disciplinaId ? parseInt(disciplinaId) : null // Será classificado depois se NULL
           });
         })
         .on('end', () => {
@@ -233,22 +237,39 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             reject(new Error('CSV está vazio ou não contém dados válidos'));
             return;
           }
-          resolve();
+
+          // Classificar automaticamente questões que não têm disciplina_id
+          // Fazer isso de forma assíncrona antes de resolver a Promise
+          (async () => {
+            try {
+              for (const q of questions) {
+                if (!q.disciplina_id) {
+                  const disciplinaId = await obterDisciplinaIdPorNumero(q.numero);
+                  q.disciplina_id = disciplinaId;
+                  
+                  if (!disciplinaId) {
+                    console.warn(`[GABARITO_UPLOAD] Não foi possível classificar automaticamente a questão ${q.numero}. A questão será criada sem disciplina_id.`);
+                  } else {
+                    // Buscar nome da disciplina para log
+                    const disciplinaInfo = await db.query(
+                      'SELECT nome FROM disciplinas WHERE id = $1',
+                      [disciplinaId]
+                    );
+                    const nomeDisciplina = disciplinaInfo.rows[0]?.nome || 'Desconhecida';
+                    console.log(`[GABARITO_UPLOAD] Questão ${q.numero} classificada automaticamente como: ${nomeDisciplina}`);
+                  }
+                }
+              }
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
+          })();
         })
         .on('error', (err) => {
           reject(new Error(`Erro ao ler arquivo CSV: ${err.message}`));
         });
     });
-
-    // Função helper para gerar UUID
-    const generateUUID = () => {
-      return crypto.randomUUID ? crypto.randomUUID() : 
-        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-          const r = Math.random() * 16 | 0;
-          const v = c === 'x' ? r : (r & 0x3 | 0x8);
-          return v.toString(16);
-        });
-    };
 
     // Inserir questões em transação
     try {

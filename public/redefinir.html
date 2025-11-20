@@ -1,52 +1,123 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Redefinir</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Redefina sua senha na plataforma EduScore." />
+  <title>Redefinir Senha - EduScore</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="utils.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <div class="left">
-      <img src="/eduscore.png" alt="Ícone elegante" class="login-icon" />
-      <h2>Redefina sua senha</h2>
-      <p>É necessário seu <strong>email institucional</strong></p>
-
-      <div class="input-group">
-        <label for="email"></label>
-        <input type="email" id="email" placeholder="Email institucional" required />
+  <!-- Header -->
+  <header class="landing-header" role="banner">
+    <div class="landing-header-container">
+      <div class="landing-logo">
+        <img src="/eduscore.png" alt="EduScore Logo" />
+        <span class="landing-logo-text">EduScore</span>
       </div>
-
-      <div class="input-group">
-        <label for="senha"></label>
-        <input type="password" id="senha" placeholder="Nova senha" required />
-      </div>
-
-      <div class="input-group">
-        <label for="confirmarSenha"></label>
-        <input type="password" id="confirmarSenha" placeholder="Confirmar nova senha" required />
-      </div>
-
-      <button class="email-btn">Redefinir</button>
+      <nav class="landing-nav" role="navigation" aria-label="Navegação principal">
+        <a href="login.html" class="landing-nav-link">Voltar ao Login</a>
+        <a href="perfil.html" class="landing-nav-link landing-nav-link-primary">Cadastrar-se</a>
+      </nav>
     </div>
+  </header>
 
-    <div class="right">
-      <div class="quote">
-        <div class="quote-text">
-          Educar não é ensinar respostas, é ensinar a pensar.
+  <!-- Redefinir Senha Section -->
+  <section class="features-section" style="min-height: calc(100vh - 200px); display: flex; align-items: center; padding: var(--spacing-4xl) 0;">
+    <div class="section-container">
+      <div style="max-width: 500px; margin: 0 auto;">
+        <!-- Logo e Título -->
+        <div style="text-align: center; margin-bottom: var(--spacing-3xl);">
+          <img src="/eduscore.png" alt="EduScore Logo" style="width: 80px; height: 80px; margin-bottom: var(--spacing-lg);" />
+          <h1 class="section-title" style="font-size: var(--font-size-3xl); margin-bottom: var(--spacing-sm);">Redefina sua senha</h1>
+          <p class="section-subtitle" style="font-size: var(--font-size-base); margin-bottom: 0;">
+            É necessário seu <strong>email institucional</strong>
+          </p>
         </div>
-        <div class="quote-author">
-          Jean Piaget<br />
+
+        <!-- Formulário -->
+        <div class="card" style="padding: var(--spacing-3xl);">
+          <form id="redefinirForm" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+            <div class="input-group">
+              <label for="email">Email institucional</label>
+              <input 
+                type="email" 
+                id="email" 
+                placeholder="Email institucional" 
+                required
+                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+              />
+            </div>
+
+            <div class="input-group">
+              <label for="senha">Nova senha</label>
+              <input 
+                type="password" 
+                id="senha" 
+                placeholder="Nova senha" 
+                required
+                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+              />
+              <span class="input-hint">Mínimo 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo</span>
+            </div>
+
+            <div class="input-group">
+              <label for="confirmarSenha">Confirmar nova senha</label>
+              <input 
+                type="password" 
+                id="confirmarSenha" 
+                placeholder="Confirmar nova senha" 
+                required
+                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+              />
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: var(--spacing-md);">
+              Redefinir Senha
+            </button>
+          </form>
+
+          <!-- Links -->
+          <div style="margin-top: var(--spacing-xl); text-align: center; padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+            <a href="login.html" style="color: var(--color-primary); text-decoration: none; font-size: var(--font-size-sm);">Voltar ao Login</a>
+          </div>
+        </div>
+
+        <!-- Quote Card -->
+        <div class="card" style="margin-top: var(--spacing-xl); padding: var(--spacing-xl); background: linear-gradient(135deg, var(--color-primary-darker) 0%, var(--color-primary) 100%); color: var(--color-surface); text-align: center;">
+          <div style="font-size: var(--font-size-xl); line-height: var(--line-height-relaxed); margin-bottom: var(--spacing-md);">
+            "Educar não é ensinar respostas, é ensinar a pensar."
+          </div>
+          <div style="font-size: var(--font-size-sm); opacity: 0.9;">
+            Jean Piaget
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="landing-footer" role="contentinfo">
+    <div class="section-container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <img src="/eduscore.png" alt="EduScore Logo" class="footer-logo" />
+          <span class="footer-brand-text">EduScore</span>
+        </div>
+        <p class="footer-text">
+          Plataforma de gestão pedagógica desenvolvida para equipes educacionais.
+        </p>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copyright">&copy; 2024 EduScore. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
 
   <script>
-    document.querySelector('.email-btn').addEventListener('click', async function(event) {
+    document.getElementById('redefinirForm').addEventListener('submit', async function(event) {
       event.preventDefault();
 
       const email = document.querySelector('#email').value.trim();
@@ -78,7 +149,6 @@
       const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d#@$!%*?&]{8,}$/;
       if (!PASSWORD_REGEX.test(senha)) {
         showToast('A senha deve conter: 8+ caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo (#@$!%*?&)', 'error');
-        hideLoading();
         return;
       }
 

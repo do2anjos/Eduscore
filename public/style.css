@@ -2769,3 +2769,50 @@ button:active {
     width: 100%;
   }
 }
+
+/* ==================== */
+/* FORMULÁRIOS DE PERFIL - RESPONSIVIDADE */
+/* ==================== */
+@media (max-width: 1024px) {
+  /* Em tablets, ajustar layout de perfil */
+  .metric-card-modern > div[style*="grid-template-columns: auto 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: var(--spacing-xl) !important;
+  }
+  
+  .metric-card-modern > div[style*="grid-template-columns: auto 1fr"] > div:first-child {
+    justify-self: center;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Em mobile, ajustar formulários de perfil */
+  .metric-card-modern form > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Foto de perfil centralizada em mobile */
+  .metric-card-modern > div[style*="grid-template-columns"] > div:first-child {
+    justify-self: center;
+  }
+  
+  /* Botões ocupam largura total em mobile */
+  .metric-card-modern button[style*="max-width"] {
+    max-width: 100% !important;
+    width: 100%;
+  }
+  
+  /* Espaçamento reduzido em mobile */
+  .metric-card-modern {
+    padding: var(--spacing-lg) !important;
+  }
+  
+  /* Headers de seção com menos espaço em mobile */
+  .metric-card-header {
+    margin-bottom: var(--spacing-lg) !important;
+  }
+  
+  .metric-card-header h3 {
+    font-size: var(--font-size-lg) !important;
+  }
+}

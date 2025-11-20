@@ -123,7 +123,7 @@ staticRoutes.forEach(route => {
       '/home': 'home.html',
       '/GerarRelatorio': 'GerarRelatorio.html',
       '/Cadastrar': 'Cadastrar.html',
-      '/Simula': 'Simulado.html',
+      '/Simula': 'CorrigirSimulado.html',
       '/Agendar': 'AgendarSessao.html'
     };
     res.sendFile(path.join(__dirname, 'public', fileMap[route]));

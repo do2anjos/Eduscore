@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agendar Sessão</title>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
+  <title>Agendar Sessão - EduScore</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="utils.js" defer></script>
 </head>
@@ -25,8 +25,8 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb e User Profile na mesma linha -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <!-- Breadcrumb e User Profile -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -49,57 +49,106 @@
         </div>
       </div>
 
+      <!-- Header -->
       <div class="dashboard-header">
         <div>
-      <h2>Agendar Sessão</h2>
+          <h2>Agendar Sessão</h2>
+          <p class="dashboard-subtitle">Gerencie as sessões de avaliação dos alunos</p>
         </div>
       </div>
 
-      <button class="add-button" onclick="abrirFormulario()">+ Adicionar Sessão</button>
+      <!-- Botão Adicionar -->
+      <div style="margin-top: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+        <button class="btn-primary" onclick="abrirFormulario()" style="display: block; margin: 0 auto;">
+          + Adicionar Sessão
+        </button>
+      </div>
 
-      <div class="form-modal" id="modalAgendar">
-  <div class="form-group">
-    <label for="alunoNome">Nome do Aluno</label>
-          <select id="alunoNome" required>
-            <option value="">Selecione o aluno</option>
-          </select>
-  </div>
+      <!-- Modal de Formulário em Card -->
+      <div class="card" id="modalAgendar" style="max-width: 600px; margin: 0 auto var(--spacing-xl); display: none;">
+        <div class="card-header">
+          <h3 class="card-title" id="modalTitle">Nova Sessão</h3>
+        </div>
+        <div style="padding: var(--spacing-xl);">
+          <form id="formSessao" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+            <div class="input-group">
+              <label for="alunoNome">Nome do Aluno <span class="required-field"></span></label>
+              <select 
+                id="alunoNome" 
+                required
+                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
+              >
+                <option value="">Selecione o aluno</option>
+              </select>
+            </div>
 
-  <div class="form-group">
-    <label for="etapa">Etapa</label>
-          <select id="etapa" required>
-      <option value="">Selecione</option>
-      <option value="1º Ano">1º Ano</option>
-      <option value="2º Ano">2º Ano</option>
-      <option value="3º Ano">3º Ano</option>
-    </select>
-  </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+              <div class="input-group">
+                <label for="etapa">Etapa <span class="required-field"></span></label>
+                <select 
+                  id="etapa" 
+                  required
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
+                >
+                  <option value="">Selecione</option>
+                  <option value="1º Ano">1º Ano</option>
+                  <option value="2º Ano">2º Ano</option>
+                  <option value="3º Ano">3º Ano</option>
+                </select>
+              </div>
 
-<div class="form-group">
-          <label for="materia">Disciplina</label>
-          <select id="materia" required>
-            <option value="">Selecione a disciplina</option>
-  </select>
-</div>
+              <div class="input-group">
+                <label for="materia">Disciplina <span class="required-field"></span></label>
+                <select 
+                  id="materia" 
+                  required
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
+                >
+                  <option value="">Selecione a disciplina</option>
+                </select>
+              </div>
+            </div>
 
-  <div class="form-group">
-    <label for="dataSessao">Data</label>
-          <input type="date" id="dataSessao" required />
-  </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+              <div class="input-group">
+                <label for="dataSessao">Data <span class="required-field"></span></label>
+                <input 
+                  type="date" 
+                  id="dataSessao" 
+                  required
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+                />
+              </div>
 
-  <div class="form-group">
-    <label for="horaSessao">Horário</label>
-          <input type="time" id="horaSessao" required />
-  </div>
+              <div class="input-group">
+                <label for="horaSessao">Horário <span class="required-field"></span></label>
+                <input 
+                  type="time" 
+                  id="horaSessao" 
+                  required
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+                />
+              </div>
+            </div>
 
-  <div class="form-actions">
-          <button type="button" class="cancel" onclick="fecharFormulario()">Cancelar</button>
-          <button type="button" class="save" onclick="confirmarAgendamento()">Agendar</button>
-  </div>
-</div>
+            <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md);">
+              <button type="button" class="btn-secondary" onclick="fecharFormulario()" style="flex: 1;">Cancelar</button>
+              <button type="button" class="btn-primary" onclick="confirmarAgendamento()" style="flex: 1;">Agendar</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
-      <div class="session-list">
-        <!-- Sessões adicionadas aparecerão aqui -->
+      <!-- Lista de Sessões -->
+      <div class="card" style="margin-top: var(--spacing-xl);">
+        <div class="card-header">
+          <h3 class="card-title">Sessões Agendadas</h3>
+        </div>
+        <div style="padding: var(--spacing-lg);">
+          <div class="session-list" id="sessionList">
+            <!-- Sessões adicionadas aparecerão aqui -->
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -213,12 +262,12 @@
     }
 
     function renderizarSessoes(sessoes) {
-      const container = document.querySelector('.session-list');
+      const container = document.getElementById('sessionList');
       if (!container) return;
       
       container.innerHTML = '';
       if (!sessoes || sessoes.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhuma sessão agendada</p>';
+        container.innerHTML = '<div class="empty-state"><p style="color: var(--color-text-light);">Nenhuma sessão agendada</p></div>';
         return;
       }
 
@@ -228,10 +277,10 @@
         div.dataset.sessaoId = sessao.id;
         const dataFormatada = sessao.data ? sessao.data.split('-').reverse().slice(0, 2).join('/') : '';
         div.innerHTML = `
-          <span><strong>${sessao.aluno_nome || 'Aluno'}</strong> | ${sessao.etapa} | ${dataFormatada} | ${sessao.hora} | ${sessao.disciplina_nome || 'Disciplina'}</span>
-          <div class="actions">
-            <button onclick="editarSessao('${sessao.id}')">Editar</button>
-            <button onclick="excluirSessao('${sessao.id}')">Excluir</button>
+          <span style="flex: 1;"><strong>${sessao.aluno_nome || 'Aluno'}</strong> | ${sessao.etapa} | ${dataFormatada} | ${sessao.hora} | ${sessao.disciplina_nome || 'Disciplina'}</span>
+          <div class="actions" style="display: flex; gap: var(--spacing-sm);">
+            <button class="btn-secondary" onclick="editarSessao('${sessao.id}')" style="padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm);">Editar</button>
+            <button class="btn-secondary" onclick="excluirSessao('${sessao.id}')" style="padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm); background: var(--color-error); color: white;">Excluir</button>
           </div>
         `;
         container.appendChild(div);
@@ -244,7 +293,8 @@
       document.getElementById('materia').value = '';
       document.getElementById('dataSessao').value = '';
       document.getElementById('horaSessao').value = '';
-    document.getElementById('modalAgendar').classList.add('active');
+      document.getElementById('modalAgendar').style.display = 'block';
+      document.getElementById('modalTitle').textContent = 'Nova Sessão';
       sessaoEditandoId = null;
     }
 
@@ -264,7 +314,8 @@
           document.getElementById('materia').value = s.disciplina_id || '';
           document.getElementById('dataSessao').value = s.data || '';
           document.getElementById('horaSessao').value = s.hora || '';
-          document.getElementById('modalAgendar').classList.add('active');
+          document.getElementById('modalAgendar').style.display = 'block';
+          document.getElementById('modalTitle').textContent = 'Editar Sessão';
           sessaoEditandoId = sessaoId;
         }
       } catch (error) {
@@ -274,7 +325,7 @@
   }
 
   function fecharFormulario() {
-    document.getElementById('modalAgendar').classList.remove('active');
+    document.getElementById('modalAgendar').style.display = 'none';
       document.getElementById('alunoNome').value = '';
       document.getElementById('etapa').value = '';
       document.getElementById('materia').value = '';

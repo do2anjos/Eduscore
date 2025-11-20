@@ -419,7 +419,6 @@
           
           // Armazenar dados gerais e popular dropdown de simulados
           dadosDisciplinasGerais = data.estatisticas.media_por_disciplina || [];
-          atualizarGraficoDisciplinas(dadosDisciplinasGerais);
           popularDropdownSimulados(data.estatisticas.desempenho_por_gabarito || []);
           
           atualizarTabelaSimulados(data.estatisticas.desempenho_por_gabarito || []);
@@ -455,6 +454,14 @@
           if (selectFiltro) {
             selectFiltro.value = 'geral';
           }
+          
+          // Aguardar um frame para garantir que o container está visível antes de atualizar o gráfico
+          // Isso garante que o canvas tenha as dimensões corretas
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              atualizarGraficoDisciplinas(dadosDisciplinasGerais);
+            }, 100);
+          });
           
           showToast('Relatório carregado com sucesso!', 'success');
         } else {
@@ -767,11 +774,21 @@
         if (data.sucesso) {
           const disciplinas = data.media_por_disciplina || [];
           
+          console.log('[DEBUG] Dados recebidos do simulado:', {
+            gabaritoId,
+            gabaritoNome: data.gabarito?.nome,
+            gabaritoEtapa: data.gabarito?.etapa,
+            totalDisciplinas: disciplinas.length,
+            disciplinas: disciplinas
+          });
+          
           // Armazenar em cache (mesmo se for array vazio)
           dadosDisciplinasPorSimulado[gabaritoId] = disciplinas;
           
           if (disciplinas.length === 0) {
-            showToast('Este aluno não possui respostas válidas para este simulado ou não há disciplinas com dados.', 'info');
+            const gabaritoNome = data.gabarito?.nome || 'este simulado';
+            const gabaritoEtapa = data.gabarito?.etapa || '';
+            showToast(`Este aluno não possui respostas válidas para o simulado "${gabaritoNome}${gabaritoEtapa ? ' - ' + gabaritoEtapa : ''}" ou não há disciplinas com dados.`, 'info');
             // Mostrar gráfico vazio
             atualizarGraficoDisciplinas([]);
           } else {
@@ -912,7 +929,27 @@
     }
 
     function atualizarGraficoDisciplinas(disciplinas) {
+      const canvas = document.getElementById('graficoDisciplinas');
+      if (!canvas) {
+        console.error('Canvas graficoDisciplinas não encontrado');
+        return;
+      }
+      
+      const ctx = canvas.getContext('2d');
       let dados = Array.isArray(disciplinas) ? disciplinas : [];
+      
+      // Configurar alta resolução para telas Retina
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      
+      // Ajustar tamanho do canvas para alta resolução
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      
+      // Ajustar estilo do canvas para manter tamanho visual
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
       
       // Se não houver dados, mostrar gráfico vazio com mensagem
       if (dados.length === 0) {
@@ -920,7 +957,16 @@
           graficoDisciplinas.destroy();
         }
         
-        graficoDisciplinas = new Chart(document.getElementById('graficoDisciplinas'), {
+        // Reconfigurar canvas antes de criar novo gráfico
+        const dprEmpty = window.devicePixelRatio || 1;
+        const rectEmpty = canvas.getBoundingClientRect();
+        canvas.width = rectEmpty.width * dprEmpty;
+        canvas.height = rectEmpty.height * dprEmpty;
+        ctx.scale(dprEmpty, dprEmpty);
+        canvas.style.width = rectEmpty.width + 'px';
+        canvas.style.height = rectEmpty.height + 'px';
+        
+        graficoDisciplinas = new Chart(ctx, {
           type: 'bar',
           data: {
             labels: ['Sem dados'],
@@ -935,6 +981,7 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            devicePixelRatio: window.devicePixelRatio || 2,
             plugins: {
               legend: { display: false },
               tooltip: { enabled: false }
@@ -968,7 +1015,16 @@
         graficoDisciplinas.destroy();
       }
 
-      graficoDisciplinas = new Chart(document.getElementById('graficoDisciplinas'), {
+      // Reconfigurar canvas antes de criar novo gráfico (garantir alta resolução)
+      const dprChart = window.devicePixelRatio || 1;
+      const rectChart = canvas.getBoundingClientRect();
+      canvas.width = rectChart.width * dprChart;
+      canvas.height = rectChart.height * dprChart;
+      ctx.scale(dprChart, dprChart);
+      canvas.style.width = rectChart.width + 'px';
+      canvas.style.height = rectChart.height + 'px';
+
+      graficoDisciplinas = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: labels.length > 0 ? labels : ['Sem dados'],
@@ -978,13 +1034,13 @@
             backgroundColor: '#008cc4',
             borderRadius: 8,
             barThickness: 28,
-            maxBarThickness: 28,
           }]
         },
         options: {
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
+          devicePixelRatio: window.devicePixelRatio || 2,
           plugins: {
             legend: {
               display: false

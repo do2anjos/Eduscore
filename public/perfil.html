@@ -1,113 +1,212 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cadastro de Usuário</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Cadastre-se na plataforma EduScore para começar a gerenciar seus alunos e simulados." />
+  <title>Cadastro de Usuário - EduScore</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="utils.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <div class="left">
-      <div style="background-color: white; border-radius: 12px; padding: 40px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-        <label for="uploadFoto" style="cursor: pointer; position: relative;">
-          <img id="previewImagem" src="https://img.icons8.com/ios/150/000000/user-male-circle.png" alt="Foto de Perfil" style="width: 150px; height: 150px; margin-bottom: 15px; object-fit: cover; border-radius: 50%;" />
-          <div style="position: absolute; bottom: 20px; right: 0; background: #4CAF50; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">
-            <span style="font-size: 16px;">+</span>
+  <!-- Header -->
+  <header class="landing-header" role="banner">
+    <div class="landing-header-container">
+      <div class="landing-logo">
+        <img src="/eduscore.png" alt="EduScore Logo" />
+        <span class="landing-logo-text">EduScore</span>
+      </div>
+      <nav class="landing-nav" role="navigation" aria-label="Navegação principal">
+        <a href="login.html" class="landing-nav-link">Entrar</a>
+        <a href="landing.html" class="landing-nav-link">Voltar</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Cadastro Section -->
+  <section class="features-section" style="padding: var(--spacing-4xl) 0;">
+    <div class="section-container">
+      <div style="max-width: 900px; margin: 0 auto;">
+        <!-- Título -->
+        <div style="text-align: center; margin-bottom: var(--spacing-3xl);">
+          <h1 class="section-title" style="font-size: var(--font-size-3xl); margin-bottom: var(--spacing-sm);">Cadastro de Usuário</h1>
+          <p class="section-subtitle" style="font-size: var(--font-size-base); margin-bottom: 0;">
+            Crie sua conta para começar a usar a plataforma
+          </p>
+        </div>
+
+        <!-- Grid com Foto e Formulário -->
+        <div style="display: grid; grid-template-columns: 300px 1fr; gap: var(--spacing-3xl); align-items: start;">
+          <!-- Foto de Perfil -->
+          <div class="card" style="padding: var(--spacing-xl); text-align: center;">
+            <label for="uploadFoto" style="cursor: pointer; position: relative; display: inline-block;">
+              <img 
+                id="previewImagem" 
+                src="https://img.icons8.com/ios/150/000000/user-male-circle.png" 
+                alt="Foto de Perfil" 
+                style="width: 150px; height: 150px; margin-bottom: var(--spacing-md); object-fit: cover; border-radius: 50%; border: 3px solid var(--color-primary);"
+              />
+              <div style="position: absolute; bottom: var(--spacing-md); right: 0; background: var(--color-secondary); color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
+                <span style="font-size: var(--font-size-lg);">+</span>
+              </div>
+            </label>
+            
+            <input type="file" id="uploadFoto" accept="image/*" style="display: none;" onchange="previewImagemPerfil(event)" />
+            <input type="hidden" id="fotoBase64" name="fotoBase64" />
+            
+            <p style="color: var(--color-text-light); font-size: var(--font-size-sm); margin-top: var(--spacing-md);">Clique na imagem para adicionar foto</p>
+            
+            <div id="successMessage" class="success-message" style="margin-top: var(--spacing-md);"></div>
+            <div id="errorMessage" class="error-message" style="margin-top: var(--spacing-md);"></div>
           </div>
-        </label>
-        
-        <input type="file" id="uploadFoto" accept="image/*" style="display: none;" onchange="previewImagemPerfil(event)" />
-        <input type="hidden" id="fotoBase64" name="fotoBase64" />
-        
-        <p style="color: #555; font-size: 14px;">Clique na imagem para adicionar foto</p>
-        
-        <div id="successMessage" class="success-message"></div>
-        <div id="errorMessage" class="error-message" style="margin-top: 10px;"></div>
+
+          <!-- Formulário -->
+          <div class="card" style="padding: var(--spacing-3xl);">
+            <form id="formCadastro" onsubmit="cadastrarUsuario(event)" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+              <div class="input-group">
+                <label class="required-field">Nome completo</label>
+                <input 
+                  type="text" 
+                  id="nome" 
+                  name="nome" 
+                  placeholder="Digite seu nome completo" 
+                  required
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+                />
+              </div>
+              
+              <div class="input-group">
+                <label class="required-field">Email institucional</label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email" 
+                  placeholder="exemplo@instituicao.edu.br" 
+                  required
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+                />
+              </div>
+              
+              <div class="input-group">
+                <label class="required-field">Matrícula</label>
+                <input 
+                  type="text" 
+                  id="matricula" 
+                  name="matricula" 
+                  placeholder="Digite sua matrícula" 
+                  required
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+                />
+              </div>
+              
+              <div class="input-group">
+                <label>Telefone</label>
+                <input 
+                  type="text" 
+                  id="telefone" 
+                  name="telefone" 
+                  placeholder="(00) 00000-0000" 
+                  oninput="formatarTelefone(this)"
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+                />
+              </div>
+
+              <div class="input-group">
+                <label class="required-field">Perfil</label>
+                <select 
+                  id="perfil" 
+                  name="perfil" 
+                  required
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
+                >
+                  <option value="">Selecione seu perfil</option>
+                  <option value="professor">Professor</option>
+                  <option value="coordenador">Coordenador</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              
+              <div class="input-group">
+                <label class="required-field">Senha</label>
+                <input 
+                  type="password" 
+                  id="senha" 
+                  name="senha" 
+                  placeholder="Crie uma senha segura" 
+                  required 
+                  onkeyup="validarSenha()" 
+                  onfocus="showPasswordRequirements()" 
+                  onblur="hidePasswordRequirements()"
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+                />
+                
+                <div id="passwordRequirements" class="password-requirements" style="display: none; margin-top: var(--spacing-sm);">
+                  <div class="requirement invalid" id="reqLength">
+                    <span class="icon">✘</span> Mínimo 8 caracteres
+                  </div>
+                  <div class="requirement invalid" id="reqUpper">
+                    <span class="icon">✘</span> Pelo menos 1 letra maiúscula (A-Z)
+                  </div>
+                  <div class="requirement invalid" id="reqLower">
+                    <span class="icon">✘</span> Pelo menos 1 letra minúscula (a-z)
+                  </div>
+                  <div class="requirement invalid" id="reqNumber">
+                    <span class="icon">✘</span> Pelo menos 1 número (0-9)
+                  </div>
+                  <div class="requirement invalid" id="reqSpecial">
+                    <span class="icon">✘</span> Pelo menos 1 símbolo (@$!%*?&)
+                  </div>
+                </div>
+                
+                <div class="password-strength" style="margin-top: var(--spacing-sm);">
+                  <div id="passwordStrengthBar" class="password-strength-bar"></div>
+                </div>
+                <div id="senhaError" class="error-message"></div>
+              </div>
+              
+              <div class="input-group">
+                <label class="required-field">Confirmar Senha</label>
+                <input 
+                  type="password" 
+                  id="confirmarSenha" 
+                  name="confirmarSenha" 
+                  placeholder="Repita a senha" 
+                  required 
+                  onkeyup="validarConfirmacaoSenha()"
+                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+                />
+                <div id="confirmarSenhaError" class="error-message" style="display: none;">As senhas não coincidem</div>
+              </div>
+              
+              <button type="submit" class="btn-primary" id="submitBtn" style="width: 100%; margin-top: var(--spacing-md);">
+                <span id="btnText">Cadastrar Usuário</span>
+                <span id="btnSpinner" class="loading-spinner" style="display: none;"></span>
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="right">
-      <form id="formCadastro" class="form-box" onsubmit="cadastrarUsuario(event)">
-        <h2>Cadastro de Usuário</h2>
-        
-        <div class="input-group">
-          <label class="required-field">Nome completo</label>
-          <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required />
+  <!-- Footer -->
+  <footer class="landing-footer" role="contentinfo">
+    <div class="section-container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <img src="/eduscore.png" alt="EduScore Logo" class="footer-logo" />
+          <span class="footer-brand-text">EduScore</span>
         </div>
-        
-        <div class="input-group">
-          <label class="required-field">Email institucional</label>
-          <input type="email" id="email" name="email" placeholder="exemplo@instituicao.edu.br" required />
-        </div>
-        
-        <div class="input-group">
-          <label class="required-field">Matrícula</label>
-          <input type="text" id="matricula" name="matricula" placeholder="Digite sua matrícula" required />
-        </div>
-        
-        <div class="input-group">
-          <label>Telefone</label>
-          <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" oninput="formatarTelefone(this)" />
-        </div>
-
-        <div class="input-group">
-          <label class="required-field">Perfil</label>
-          <select id="perfil" name="perfil" required>
-            <option value="">Selecione seu perfil</option>
-            <option value="professor">Professor</option>
-            <option value="coordenador">Coordenador</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        
-        <div class="input-group">
-          <label class="required-field">Senha</label>
-          <input type="password" id="senha" name="senha" placeholder="Crie uma senha segura" required 
-                 onkeyup="validarSenha()" onfocus="showPasswordRequirements()" onblur="hidePasswordRequirements()" />
-          
-          <div id="passwordRequirements" class="password-requirements" style="display: none;">
-            <div class="requirement invalid" id="reqLength">
-              <span class="icon">✘</span> Mínimo 8 caracteres
-            </div>
-            <div class="requirement invalid" id="reqUpper">
-              <span class="icon">✘</span> Pelo menos 1 letra maiúscula (A-Z)
-            </div>
-            <div class="requirement invalid" id="reqLower">
-              <span class="icon">✘</span> Pelo menos 1 letra minúscula (a-z)
-            </div>
-            <div class="requirement invalid" id="reqNumber">
-              <span class="icon">✘</span> Pelo menos 1 número (0-9)
-            </div>
-            <div class="requirement invalid" id="reqSpecial">
-              <span class="icon">✘</span> Pelo menos 1 símbolo (@$!%*?&)
-            </div>
-          </div>
-          
-          <div class="password-strength">
-            <div id="passwordStrengthBar" class="password-strength-bar"></div>
-          </div>
-          <div id="senhaError" class="error-message"></div>
-        </div>
-        
-        <div class="input-group">
-          <label class="required-field">Confirmar Senha</label>
-          <input type="password" id="confirmarSenha" name="confirmarSenha" placeholder="Repita a senha" required 
-                 onkeyup="validarConfirmacaoSenha()" />
-          <div id="confirmarSenhaError" class="error-message">As senhas não coincidem</div>
-        </div>
-        
-        <div class="input-group" style="margin-top: 20px;">
-          <button type="submit" class="email-btn" id="submitBtn">
-            <span id="btnText">Cadastrar Usuário</span>
-            <span id="btnSpinner" class="loading-spinner"></span>
-          </button>
-        </div>
-      </form>
+        <p class="footer-text">
+          Plataforma de gestão pedagógica desenvolvida para equipes educacionais.
+        </p>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copyright">&copy; 2024 EduScore. Todos os direitos reservados.</p>
+      </div>
     </div>
-  </div>
+  </footer>
 
   <script>
     function previewImagemPerfil(event) {
@@ -167,12 +266,12 @@
       
       if (senhaValida) {
         strengthBar.style.width = '100%';
-        strengthBar.style.backgroundColor = '#4CAF50';
+        strengthBar.style.backgroundColor = var(--color-success);
         errorElement.style.display = 'none';
         return true;
       } else {
         strengthBar.style.width = '30%';
-        strengthBar.style.backgroundColor = '#ff0000';
+        strengthBar.style.backgroundColor = var(--color-error);
         errorElement.textContent = 'A senha não atende a todos os requisitos';
         errorElement.style.display = 'block';
         return false;

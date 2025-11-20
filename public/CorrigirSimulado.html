@@ -33,8 +33,8 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb e User Profile na mesma linha -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <!-- Breadcrumb e User Profile -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -57,66 +57,91 @@
         </div>
       </div>
 
-      <button id="voltarBtn" onclick="previousStep()" class="voltar-btn" aria-label="Voltar passo anterior">←</button>
-
+      <!-- Header -->
       <div class="dashboard-header">
-        <div>
-          <span id="alunoInfo" style="font-size: 18px; font-weight: 600; color: #003b54;">Ler código!</span>
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; gap: var(--spacing-md); position: relative;">
+          <button id="voltarBtn" onclick="previousStep()" class="voltar-btn-inline" aria-label="Voltar passo anterior" style="display: none; position: absolute; left: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Voltar
+          </button>
+          <span id="alunoInfo" style="font-size: var(--font-size-lg); font-weight: 600; color: var(--color-primary-darker);">Ler código!</span>
         </div>
       </div>
 
+      <!-- Step 1: Identificar Aluno -->
       <div class="step active" id="step1">
-        <img src="https://img.icons8.com/material-outlined/96/000000/barcode-scanner.png" alt="Código de Barras" />
-        <h3>IDENTIFICAR ALUNO</h3>
-        <p>Digite ou escaneie o código de barras/matrícula do aluno</p>
-        <div style="margin: 20px 0;">
-          <input type="text" id="codigoAlunoInput" placeholder="Digite o código ou matrícula"
-            oninput="verificarCodigo()" 
-            style="padding: 12px; width: 80%; border-radius: 20px; border: 1px solid #ccc; text-align: center; font-size: 16px;" />
+        <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
+          <img src="https://img.icons8.com/material-outlined/96/000000/barcode-scanner.png" alt="Código de Barras" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
+          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">IDENTIFICAR ALUNO</h3>
+          <p style="color: var(--color-text-light); margin-bottom: var(--spacing-xl); font-size: var(--font-size-base);">Digite ou escaneie o código de barras/matrícula do aluno</p>
+          <div style="margin: var(--spacing-xl) 0; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+            <input 
+              type="text" 
+              id="codigoAlunoInput" 
+              placeholder="Digite o código ou matrícula"
+              oninput="verificarCodigo()" 
+              style="padding: var(--spacing-md); width: 100%; max-width: 400px; border-radius: var(--radius-md); border: 1px solid var(--color-border); text-align: center; font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
+            />
+          </div>
+          <button id="btnProximoAluno" class="btn-primary" onclick="nextStep()" style="display:none; margin: 0 auto; width: 100%; max-width: 400px;">Próximo</button>
         </div>
-        <button id="btnProximoAluno" onclick="nextStep()" style="display:none">Próximo</button>
       </div>
 
+      <!-- Step 2: Anexar Foto -->
       <div class="step" id="step2">
-        <img src="https://img.icons8.com/material-outlined/96/000000/camera.png" alt="Câmera" />
-        <h3>ABRIR CÂMERA</h3>
-        <button onclick="nextStep()">Tirar foto</button>
-        <p>ou</p>
-        <button onclick="nextStep()">Anexar foto</button>
+        <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
+          <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Anexar Foto" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
+          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">ANEXAR FOTO</h3>
+          <p style="color: var(--color-text-light); margin-bottom: var(--spacing-xl); font-size: var(--font-size-base);">Selecione a foto da folha de resposta do aluno</p>
+          <input type="file" id="fotoInput" accept="image/*" style="display: none;" onchange="handleFileUpload(event)" />
+          <button class="btn-primary" onclick="document.getElementById('fotoInput').click()" style="width: 100%; max-width: 400px;">Anexar foto</button>
+        </div>
       </div>
 
+      <!-- Step 3: Aluno Selecionado -->
       <div class="step" id="step3">
-        <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Documentos" />
-        <h3>Alunos Cadastrados</h3>
-        <div class="list-box" id="listaAlunos">
-          <!-- Alunos serão carregados dinamicamente -->
+        <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
+          <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Documentos" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
+          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">Aluno Selecionado</h3>
+          <div class="list-box" id="listaAlunos" style="margin: var(--spacing-xl) 0;">
+            <!-- Aluno selecionado será carregado dinamicamente -->
+          </div>
+          <button class="btn-primary" onclick="nextStep()" style="width: 100%; max-width: 400px;">Próximo</button>
         </div>
-        <button onclick="nextStep()">Próximo</button>
       </div>
 
+      <!-- Step 3.5: Respostas Capturadas -->
       <div class="step" id="step3_5">
-        <img src="https://img.icons8.com/material-outlined/96/000000/view-file.png" alt="Visualizar Respostas" />
-        <h3>Respostas Capturadas</h3>
-        <p id="alunoSelecionado">Confira as alternativas marcadas para o aluno:</p>
-        <div class="list-box" style="max-height: 300px; overflow-y: auto; text-align: left;" id="respostasCapturadas"></div>
-        <button onclick="nextStep()">Próximo</button>
-      </div>
-
-      <div class="step" id="step4">
-        <img src="https://img.icons8.com/material-outlined/96/000000/test-passed.png" alt="Gabarito" />
-        <h3>Selecionar Gabarito Cadastrado</h3>
-        <div class="list-box" id="gabaritoList">
-          <div onclick="selectItem(this)">SIMULADO01_SIS_1</div>
-          <div onclick="selectItem(this)">SIMULADO01_SIS_2</div>
-          <div onclick="selectItem(this)">SIMULADO01_SIS_3</div>
+        <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl);">
+          <img src="https://img.icons8.com/material-outlined/96/000000/view-file.png" alt="Visualizar Respostas" style="width: 96px; height: 96px; margin: 0 auto var(--spacing-lg); display: block;" />
+          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl); text-align: center;">Respostas Capturadas</h3>
+          <p id="alunoSelecionado" style="color: var(--color-text-light); margin-bottom: var(--spacing-lg); text-align: center; font-size: var(--font-size-base);">Confira as alternativas marcadas para o aluno:</p>
+          <div class="list-box" style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: var(--spacing-xl);" id="respostasCapturadas"></div>
+          <button class="btn-primary" onclick="nextStep()" style="width: 100%; max-width: 400px; margin: 0 auto; display: block;">Próximo</button>
         </div>
-        <button onclick="finalizar()">Corrigir</button>
       </div>
 
+      <!-- Step 4: Selecionar Gabarito -->
+      <div class="step" id="step4">
+        <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
+          <img src="https://img.icons8.com/material-outlined/96/000000/test-passed.png" alt="Gabarito" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
+          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">Selecionar Gabarito Cadastrado</h3>
+          <div class="list-box" id="gabaritoList" style="margin: var(--spacing-xl) 0;">
+            <!-- Gabaritos serão carregados dinamicamente -->
+          </div>
+          <button class="btn-primary" onclick="finalizar()" style="width: 100%; max-width: 400px;">Corrigir</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Sucesso -->
       <div class="step" id="step5">
-        <img src="https://img.icons8.com/ios-filled/100/007aa3/checked--v1.png" alt="Sucesso" />
-        <h3>Simulado corrigido<br>com sucesso</h3>
-        <a href="CorrigirSimulado.html" class="step-button">Voltar ao Início</a>
+        <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
+          <img src="https://img.icons8.com/ios-filled/100/007aa3/checked--v1.png" alt="Sucesso" style="width: 100px; height: 100px; margin-bottom: var(--spacing-lg);" />
+          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-xl); font-size: var(--font-size-xl);">Simulado corrigido<br>com sucesso</h3>
+          <a href="CorrigirSimulado.html" class="btn-primary" style="display: inline-block; text-decoration: none; width: 100%; max-width: 400px;">Voltar ao Início</a>
+        </div>
       </div>
     </main>
   </div>
@@ -237,17 +262,24 @@
       if (!container) return;
       
       container.innerHTML = '';
-      if (alunos.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum aluno cadastrado</p>';
+      
+      // Mostrar apenas o aluno selecionado no Step 1
+      if (!alunoSelecionado) {
+        container.innerHTML = '<p style="text-align: center; color: #ff6b6b; padding: 20px;">Nenhum aluno selecionado. Por favor, volte ao passo anterior e identifique o aluno.</p>';
         return;
       }
 
-      alunos.forEach(aluno => {
-        const div = document.createElement('div');
-        div.onclick = () => selecionarAluno(aluno);
-        div.textContent = `${aluno.nome_completo} - ${aluno.matricula}`;
-        container.appendChild(div);
-      });
+      // Mostrar apenas o aluno selecionado
+      const div = document.createElement('div');
+      div.onclick = () => selecionarAluno(alunoSelecionado);
+      div.textContent = `${alunoSelecionado.nome_completo} - ${alunoSelecionado.matricula}`;
+      div.style.cursor = 'pointer';
+      container.appendChild(div);
+      
+      // Auto-selecionar o aluno e avançar automaticamente para step3_5
+      setTimeout(() => {
+        selecionarAluno(alunoSelecionado);
+      }, 100);
     }
 
     async function selecionarAluno(aluno) {
@@ -257,9 +289,14 @@
       document.getElementById('alunoSelecionado').innerText = `Confira as alternativas marcadas para o aluno: ${aluno.nome_completo}`;
       document.getElementById('alunoInfo').innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
       
-      // Carregar respostas existentes do aluno se houver
+      // Carregar respostas existentes do aluno se houver (preserva respostas temporárias)
       await carregarRespostasAluno(aluno.id);
-      preencherRespostasCapturadas();
+      
+      // Aguardar um pouco para garantir que as respostas foram preservadas
+      setTimeout(() => {
+        preencherRespostasCapturadas();
+      }, 100);
+      
       currentStep = '3_5';
       atualizarBotaoVoltar();
     }
@@ -269,6 +306,14 @@
       if (!token) return;
 
       try {
+        // Salvar respostas temporárias existentes antes de carregar do banco
+        const respostasTemporarias = {};
+        Object.keys(respostasAluno).forEach(key => {
+          if (key.startsWith('temp_')) {
+            respostasTemporarias[key] = respostasAluno[key];
+          }
+        });
+
         const response = await fetch('/api/respostas', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -277,9 +322,17 @@
         const respostasArray = data.respostas || (Array.isArray(data) ? data : []);
         // Filtrar respostas do aluno
         const respostasDoAluno = respostasArray.filter(r => r.aluno_id === alunoId);
+        
+        // Mesclar respostas do banco com respostas temporárias
+        // Respostas temporárias têm prioridade (são as mais recentes)
         respostasAluno = {};
         respostasDoAluno.forEach(r => {
           respostasAluno[r.questao_id] = r.resposta_aluno;
+        });
+        
+        // Restaurar respostas temporárias (sobrescrever se houver conflito)
+        Object.keys(respostasTemporarias).forEach(key => {
+          respostasAluno[key] = respostasTemporarias[key];
         });
       } catch (error) {
         console.error('Erro ao carregar respostas:', error);
@@ -288,23 +341,61 @@
 
     function preencherRespostasCapturadas() {
       const container = document.getElementById('respostasCapturadas');
+      if (!container) return;
+      
       container.innerHTML = "";
       
-      if (Object.keys(respostasAluno).length === 0) {
+      // Contar apenas respostas temporárias (do processamento atual) e respostas do banco já mapeadas
+      const respostasTemporarias = Object.keys(respostasAluno).filter(k => k.startsWith('temp_'));
+      
+      if (respostasTemporarias.length === 0 && Object.keys(respostasAluno).length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
         return;
       }
 
-      // Ordenar por número da questão (assumindo que temos as questões do gabarito)
-      const questoesOrdenadas = questoesGabarito.length > 0 
-        ? questoesGabarito.map(q => ({ id: q.id, numero: q.numero, resposta: respostasAluno[q.id] || 'N/A' }))
-        : Object.entries(respostasAluno).map(([id, resposta]) => ({ id, numero: id, resposta }));
+      // Preparar lista de respostas para exibição
+      const questoesOrdenadas = [];
+      
+      // Primeiro, adicionar respostas que já estão mapeadas por questao_id (se gabarito foi carregado)
+      if (questoesGabarito.length > 0) {
+        questoesGabarito.forEach(q => {
+          const resposta = respostasAluno[q.id];
+          if (resposta !== undefined && resposta !== null) {
+            // Incluir resposta mesmo se for vazia (indica não marcado)
+            questoesOrdenadas.push({ id: q.id, numero: q.numero, resposta: resposta || '' });
+          }
+        });
+      }
+      
+      // Adicionar respostas temporárias (temp_${numero}) que ainda não foram mapeadas
+      Object.keys(respostasAluno).forEach(key => {
+        if (key.startsWith('temp_')) {
+          const questaoNumero = parseInt(key.replace('temp_', ''));
+          // Verificar se já não foi adicionada
+          if (!questoesOrdenadas.find(q => q.numero === questaoNumero)) {
+            const resposta = respostasAluno[key];
+            // Incluir resposta temporária mesmo se for vazia
+            questoesOrdenadas.push({ id: key, numero: questaoNumero, resposta: resposta || '' });
+          }
+        }
+      });
 
+      // Ordenar por número da questão
       questoesOrdenadas.sort((a, b) => a.numero - b.numero);
+
+      if (questoesOrdenadas.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
+        return;
+      }
 
       questoesOrdenadas.forEach((item, index) => {
         const div = document.createElement('div');
-        div.innerHTML = `<strong>Questão ${String(item.numero).padStart(2, '0')}:</strong> ${item.resposta}`;
+        const respostaTexto = item.resposta.trim() === '' 
+          ? '<span style="color: #999; font-style: italic;">Não marcado</span>' 
+          : item.resposta.includes(',') 
+            ? `<span style="color: #ff6b6b; font-weight: 600;">${item.resposta} (dupla marcação - inválida)</span>`
+            : item.resposta;
+        div.innerHTML = `<strong>Questão ${String(item.numero).padStart(2, '0')}:</strong> ${respostaTexto}`;
         container.appendChild(div);
       });
     }
@@ -330,6 +421,138 @@
         }
       } catch (error) {
         console.error('Erro ao carregar questões:', error);
+      }
+    }
+
+    let imagemAnexada = null;
+
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validar tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        showToast('Por favor, selecione uma imagem válida', 'error');
+        return;
+      }
+
+      // Validar tamanho (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('A imagem deve ter no máximo 10MB', 'error');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+
+      try {
+        showLoading('Processando imagem...');
+
+        // Criar FormData para enviar a imagem
+        const formData = new FormData();
+        formData.append('imagem', file);
+
+        // Enviar imagem para o backend para processamento
+        const response = await fetch('/api/respostas/processar-imagem', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.erro || data.detalhes || 'Erro ao processar imagem');
+        }
+
+        if (!data.sucesso) {
+          throw new Error(data.erro || data.detalhes || 'Erro ao processar imagem');
+        }
+
+        // Armazenar a imagem anexada
+        imagemAnexada = {
+          nome: data.imagem?.nome,
+          caminho: data.imagem?.caminho,
+          tamanho: data.imagem?.tamanho
+        };
+
+        // Processar respostas extraídas
+        const respostasExtraidas = data.respostas || [];
+        const detalhes = data.detalhes || {};
+        
+        if (respostasExtraidas.length > 0) {
+          // Limpar respostas temporárias anteriores para evitar conflito
+          Object.keys(respostasAluno).forEach(key => {
+            if (key.startsWith('temp_')) {
+              delete respostasAluno[key];
+            }
+          });
+          
+          // Armazenar com o número da questão como chave temporária
+          respostasExtraidas.forEach((item) => {
+            // Buscar dinamicamente pelos campos (resolver problema de encoding com acentos)
+            const keys = Object.keys(item);
+            const questKey = keys.find(k => k.toLowerCase().includes('quest') || k.toLowerCase().includes('num'));
+            const respKey = keys.find(k => k.toLowerCase().includes('resposta') || k.toLowerCase().includes('resp'));
+            
+            const questaoNumero = questKey ? item[questKey] : (item['Questão'] || item.Questão || item.Questao || item.questao || item.numero);
+            const resposta = respKey ? item[respKey] : (item['Resposta'] || item.Resposta || item.resposta || item.resposta_aluno || '');
+            
+            if (questaoNumero !== undefined && questaoNumero !== null && questaoNumero !== '') {
+              // Converter para número se for string
+              const numQuestao = typeof questaoNumero === 'string' ? parseInt(questaoNumero.trim()) : questaoNumero;
+              
+              if (!isNaN(numQuestao) && numQuestao > 0) {
+                // Armazenar temporariamente usando número da questão
+                respostasAluno[`temp_${numQuestao}`] = resposta || '';
+              }
+            }
+          });
+
+          // Construir mensagem detalhada
+          let mensagem = `${respostasExtraidas.length} respostas extraídas!`;
+          
+          if (detalhes.questoes_validas > 0) {
+            mensagem += `\n✓ ${detalhes.questoes_validas} válida(s)`;
+          }
+          
+          if (detalhes.questoes_com_dupla_marcacao > 0) {
+            mensagem += `\n⚠ ${detalhes.questoes_com_dupla_marcacao} com dupla marcação (inválidas)`;
+            showToast(mensagem, 'warning');
+          } else if (detalhes.questoes_sem_marcacao > 0) {
+            mensagem += `\n○ ${detalhes.questoes_sem_marcacao} em branco`;
+            showToast(mensagem, 'info');
+          } else {
+            showToast(mensagem, 'success');
+          }
+          
+          // Exibir avisos se houver
+          if (detalhes.avisos && detalhes.avisos.length > 0) {
+            detalhes.avisos.forEach(aviso => {
+              setTimeout(() => {
+                showToast(aviso, detalhes.questoes_com_dupla_marcacao > 0 ? 'warning' : 'info');
+              }, 1000);
+            });
+          }
+        } else {
+          showToast('Imagem processada, mas nenhuma resposta foi encontrada.', 'warning');
+        }
+
+        // Avançar para o próximo passo
+        setTimeout(() => {
+          nextStep();
+        }, 500);
+
+      } catch (error) {
+        console.error('Erro ao processar imagem:', error);
+        showToast(`Erro ao processar imagem: ${error.message}`, 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -376,7 +599,30 @@
         return;
       }
 
-      if (Object.keys(respostasAluno).length === 0) {
+      // Mapear respostas temporárias (temp_${numero}) para questao_id quando gabarito é selecionado
+      const respostasMapeadas = {};
+      
+      // Primeiro, copiar respostas que já estão mapeadas por questao_id
+      Object.keys(respostasAluno).forEach(key => {
+        if (!key.startsWith('temp_')) {
+          respostasMapeadas[key] = respostasAluno[key];
+        }
+      });
+
+      // Mapear respostas temporárias para questao_id baseado no número da questão
+      Object.keys(respostasAluno).forEach(key => {
+        if (key.startsWith('temp_')) {
+          const questaoNumero = parseInt(key.replace('temp_', ''));
+          // Encontrar questão no gabarito pelo número
+          const questao = questoesGabarito.find(q => q.numero === questaoNumero);
+          if (questao) {
+            respostasMapeadas[questao.id] = respostasAluno[key];
+          }
+        }
+      });
+
+      // Se não houver respostas após mapeamento, mostrar aviso
+      if (Object.keys(respostasMapeadas).length === 0) {
         showToast('Nenhuma resposta capturada. Use a câmera ou anexe foto para capturar as respostas.', 'warning');
         return;
       }
@@ -391,15 +637,55 @@
         showLoading('Corrigindo simulado e salvando respostas...');
 
         // Comparar respostas do aluno com o gabarito e salvar
+        // IMPORTANTE: Processar apenas questões que foram capturadas (têm resposta mapeada)
         let respostasSalvas = 0;
+        let acertos = 0;
         let erros = 0;
+        let questoesVazias = 0;
+        let questoesDuplaMarcacao = 0;
 
-        for (const questao of questoesGabarito) {
-          const respostaAluno = respostasAluno[questao.id];
+        // Obter apenas as questões que foram capturadas (têm resposta mapeada)
+        const questoesCapturadas = questoesGabarito.filter(questao => {
+          return respostasMapeadas.hasOwnProperty(questao.id);
+        });
+
+        // Se não houver questões capturadas, mostrar aviso
+        if (questoesCapturadas.length === 0) {
+          showToast('Nenhuma questão foi capturada. Use a câmera ou anexe foto para capturar as respostas.', 'warning');
+          hideLoading();
+          return;
+        }
+
+        // Processar apenas questões capturadas
+        for (const questao of questoesCapturadas) {
+          const respostaAluno = respostasMapeadas[questao.id] || ''; // String vazia se não houver resposta
           
-          if (!respostaAluno) continue; // Pular se não houver resposta
-
-          const acertou = respostaAluno.toUpperCase() === questao.resposta_correta.toUpperCase();
+          // Verificar tipo de resposta
+          const respostaTrim = respostaAluno.trim();
+          const temDuplaMarcacao = respostaTrim.includes(',');
+          const estaVazia = respostaTrim === '';
+          
+          // Contabilizar tipos
+          if (estaVazia) {
+            questoesVazias++;
+          } else if (temDuplaMarcacao) {
+            questoesDuplaMarcacao++;
+          }
+          
+          // Se for dupla marcação ou vazio, não conta como acerto
+          // Dupla marcação = inválida (acertou = false)
+          // Vazio = não marcado (acertou = false)
+          let acertou = false;
+          
+          if (!temDuplaMarcacao && !estaVazia) {
+            // Apenas verifica acerto se houver resposta única válida
+            acertou = respostaTrim.toUpperCase() === questao.resposta_correta.toUpperCase().trim();
+            if (acertou) {
+              acertos++;
+            } else {
+              erros++;
+            }
+          }
 
           try {
             const response = await fetch('/api/respostas', {
@@ -421,7 +707,6 @@
 
             if (response.ok && data.sucesso) {
               respostasSalvas++;
-              if (!acertou) erros++;
             }
           } catch (error) {
             console.error(`Erro ao salvar resposta da questão ${questao.numero}:`, error);
@@ -429,7 +714,16 @@
         }
 
         if (respostasSalvas > 0) {
-          showToast(`Simulado corrigido! ${respostasSalvas} respostas salvas.`, 'success');
+          let mensagem = `Simulado corrigido! ${respostasSalvas} questões processadas.`;
+          mensagem += `\n✓ Acertos: ${acertos}`;
+          mensagem += `\n✗ Erros: ${erros}`;
+          if (questoesVazias > 0) {
+            mensagem += `\n○ Não marcadas: ${questoesVazias}`;
+          }
+          if (questoesDuplaMarcacao > 0) {
+            mensagem += `\n⚠ Dupla marcação (inválidas): ${questoesDuplaMarcacao}`;
+          }
+          showToast(mensagem, 'success');
         document.getElementById('step4').classList.remove('active');
         document.getElementById('step5').classList.add('active');
         document.getElementById('alunoInfo').innerText = "Ler código!";
@@ -440,6 +734,7 @@
           gabaritoSelecionado = null;
           respostasAluno = {};
           questoesGabarito = [];
+          imagemAnexada = null;
           document.getElementById('codigoAlunoInput').value = '';
       } else {
           showToast('Erro ao salvar respostas', 'error');

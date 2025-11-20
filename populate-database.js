@@ -41,12 +41,12 @@ try {
   const disciplinasNomes = [
     'Língua Portuguesa e Artes',
     'Língua Estrangeira',
-    'Matemática',
     'História, Filosofia e Educação Física',
-    'Geografia e Literatura',
+    'Geografia',
     'Biologia',
     'Química',
-    'Física'
+    'Física',
+    'Matemática'
   ];
   const disciplinas = [];
 
@@ -195,12 +195,12 @@ try {
   const estruturaSIS = [
     { disciplina: 'Língua Portuguesa e Artes', quantidade: 8 },
     { disciplina: 'Língua Estrangeira', quantidade: 4 },
-    { disciplina: 'Matemática', quantidade: 8 },
     { disciplina: 'História, Filosofia e Educação Física', quantidade: 8 },
-    { disciplina: 'Geografia e Literatura', quantidade: 8 },
+    { disciplina: 'Geografia', quantidade: 8 },
     { disciplina: 'Biologia', quantidade: 8 },
     { disciplina: 'Química', quantidade: 8 },
-    { disciplina: 'Física', quantidade: 8 }
+    { disciplina: 'Física', quantidade: 8 },
+    { disciplina: 'Matemática', quantidade: 8 }
   ];
 
   // Gerar questões para cada gabarito

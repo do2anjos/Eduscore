@@ -10,7 +10,7 @@ Plataforma educacional integrada que combina digitalização de folhas de respos
 
 O **EduScore** é uma plataforma completa de analytics educacional que oferece:
 
-- 📝 **Digitalização de Folhas de Resposta**: Processamento automatizado de simulados e provas
+- 📝 **Digitalização de Folhas de Resposta**: Processamento automatizado de simulados e provas usando OCR e detecção de marcações em bolhas
 - 📊 **Análise de Desempenho**: Relatórios detalhados e métricas em tempo real
 - 🔮 **Predição de Desempenho**: Modelo de machine learning para previsão de resultados (em desenvolvimento)
 - 📈 **Visualização de Dados**: Gráficos interativos e dashboards personalizados
@@ -64,6 +64,8 @@ Desenvolvido para coordenadores e professores acompanharem o progresso dos aluno
 - Node.js 14+ 
 - SQLite 3 (incluído no Node.js via better-sqlite3)
 - npm ou yarn
+- **Python 3.7+** (para processamento de imagens de folhas de resposta)
+- **OpenCV (cv2)** e **NumPy** instalados via pip
 
 ## 📦 Instalação
 
@@ -73,12 +75,23 @@ git clone <url-do-repositorio>
 cd classy-main
 ```
 
-2. Instale as dependências:
+2. Instale as dependências do Node.js:
 ```bash
 npm install
 ```
 
-3. Configure o arquivo `.env` em `backend/` (veja [Configuração](#configuração))
+3. Instale as dependências Python para processamento de imagens:
+```bash
+# Windows
+pip install -r backend/scripts/requirements.txt
+
+# Linux/Mac
+pip3 install -r backend/scripts/requirements.txt
+```
+
+**Nota**: Certifique-se de que o Python está instalado e no PATH do sistema.
+
+4. Configure o arquivo `.env` em `backend/` (veja [Configuração](#configuração))
 
 ## ⚙️ Configuração
 
@@ -127,6 +140,9 @@ classy-main/
 │   │   ├── auth.js      # Autenticação JWT
 │   │   ├── errorHandler.js  # Tratamento de erros
 │   │   └── validation.js    # Validação de dados
+│   ├── scripts/          # Scripts Python para processamento
+│   │   ├── processar_respostas.py  # Algoritmo de OCR/detecção de marcações
+│   │   └── requirements.txt        # Dependências Python
 │   ├── routes/          # Rotas da API
 │   │   ├── alunos.js    # Gestão de alunos
 │   │   ├── disciplinas.js   # Gestão de disciplinas

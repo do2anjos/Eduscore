@@ -79,17 +79,22 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
     const mediaGeral = await db.query(mediaGeralQuery, paramsEtapa);
 
     // 4. Média por disciplina (contar questões únicas por gabarito, com filtro de etapa se aplicável)
+    // IMPORTANTE: Usar COUNT(DISTINCT r.id) para evitar duplicação quando há múltiplas respostas por questão
     let mediaPorDisciplinaQuery = `
       SELECT 
         d.id,
         d.nome,
         COUNT(DISTINCT q.id) as total_questoes,
-        COUNT(r.id) as total_respostas,
+        COUNT(DISTINCT r.id) as total_respostas,
         SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
         ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
       FROM disciplinas d
-      LEFT JOIN questoes q ON d.id = q.disciplina_id
-      LEFT JOIN respostas r ON q.id = r.questao_id
+      INNER JOIN questoes q ON d.id = q.disciplina_id
+      INNER JOIN respostas r ON q.id = r.questao_id
+      WHERE r.questao_id IS NOT NULL
+      GROUP BY d.id, d.nome
+      HAVING COUNT(DISTINCT q.id) > 0
+      ORDER BY media DESC
     `;
     
     if (etapa && etapa !== 'Geral') {
@@ -98,21 +103,14 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
           d.id,
           d.nome,
           COUNT(DISTINCT q.id) as total_questoes,
-          COUNT(r.id) as total_respostas,
+          COUNT(DISTINCT r.id) as total_respostas,
           SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
           ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
         FROM disciplinas d
         INNER JOIN questoes q ON d.id = q.disciplina_id
         INNER JOIN gabaritos g ON q.gabarito_id = g.id
-        LEFT JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
+        INNER JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
         WHERE g.etapa = $1
-        GROUP BY d.id, d.nome
-        HAVING COUNT(DISTINCT q.id) > 0
-        ORDER BY media DESC
-      `;
-    } else {
-      mediaPorDisciplinaQuery += `
-        WHERE q.id IS NOT NULL
         GROUP BY d.id, d.nome
         HAVING COUNT(DISTINCT q.id) > 0
         ORDER BY media DESC
@@ -121,16 +119,17 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
     
     const mediaPorDisciplina = await db.query(mediaPorDisciplinaQuery, paramsEtapa);
 
-    // 5. Disciplina com maior e menor média
+    // 5. Disciplina com maior e menor média (garantir contagem correta sem duplicação)
     const disciplinasOrdenadas = await db.query(`
       SELECT 
+        d.id,
         d.nome,
         ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
       FROM disciplinas d
-      LEFT JOIN questoes q ON d.id = q.disciplina_id
-      LEFT JOIN respostas r ON q.id = r.questao_id
+      INNER JOIN questoes q ON d.id = q.disciplina_id
+      INNER JOIN respostas r ON q.id = r.questao_id
       GROUP BY d.id, d.nome
-      HAVING COUNT(r.id) > 0
+      HAVING COUNT(DISTINCT r.id) > 0
       ORDER BY media DESC
     `);
 
@@ -234,32 +233,33 @@ router.get('/estatisticas-individual/:aluno_id', authenticateToken, async (req, 
       FROM respostas WHERE aluno_id = $1
     `, [aluno_id]);
 
-    // 4. Média por disciplina
+    // 4. Média por disciplina (garantir contagem correta sem duplicação)
     const mediaPorDisciplina = await db.query(`
       SELECT 
         d.id,
         d.nome,
-        COUNT(r.id) as total_respostas,
+        COUNT(DISTINCT r.id) as total_respostas,
         SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
         ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
       FROM disciplinas d
-      LEFT JOIN questoes q ON d.id = q.disciplina_id
-      LEFT JOIN respostas r ON q.id = r.questao_id AND r.aluno_id = $1
+      INNER JOIN questoes q ON d.id = q.disciplina_id
+      INNER JOIN respostas r ON q.id = r.questao_id AND r.aluno_id = $1
       GROUP BY d.id, d.nome
-      HAVING COUNT(r.id) > 0
+      HAVING COUNT(DISTINCT r.id) > 0
       ORDER BY media DESC
     `, [aluno_id]);
 
-    // 5. Disciplina com maior e menor média
+    // 5. Disciplina com maior e menor média (garantir contagem correta sem duplicação)
     const disciplinasOrdenadas = await db.query(`
       SELECT 
+        d.id,
         d.nome,
         ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
       FROM disciplinas d
-      LEFT JOIN questoes q ON d.id = q.disciplina_id
-      LEFT JOIN respostas r ON q.id = r.questao_id AND r.aluno_id = $1
+      INNER JOIN questoes q ON d.id = q.disciplina_id
+      INNER JOIN respostas r ON q.id = r.questao_id AND r.aluno_id = $1
       GROUP BY d.id, d.nome
-      HAVING COUNT(r.id) > 0
+      HAVING COUNT(DISTINCT r.id) > 0
       ORDER BY media DESC
     `, [aluno_id]);
 
@@ -280,20 +280,44 @@ router.get('/estatisticas-individual/:aluno_id', authenticateToken, async (req, 
     `, [aluno_id]);
 
     // 7. Desempenho por gabarito (simulado)
+    // Só mostrar simulados que têm pelo menos uma resposta válida (não vazia e sem dupla marcação)
     const desempenhoPorGabarito = await db.query(`
       SELECT 
         g.id,
         g.nome,
         g.etapa,
-        COUNT(r.id) as total_questoes,
+        COUNT(DISTINCT q.id) as total_questoes,
+        COUNT(r.id) as total_respostas,
+        SUM(CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%' 
+          THEN 1 
+          ELSE 0
+        END) as questoes_capturadas,
         SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
         ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media,
         MAX(r.data_resposta) as data_ultima_resposta
       FROM gabaritos g
-      LEFT JOIN respostas r ON g.id = r.gabarito_id AND r.aluno_id = $1
-      WHERE r.id IS NOT NULL
+      INNER JOIN questoes q ON g.id = q.gabarito_id
+      LEFT JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id AND r.aluno_id = $1
+      WHERE EXISTS (
+        SELECT 1 FROM respostas r2 
+        WHERE r2.gabarito_id = g.id 
+        AND r2.aluno_id = $1
+        AND r2.resposta_aluno IS NOT NULL 
+        AND r2.resposta_aluno != '' 
+        AND r2.resposta_aluno NOT LIKE '%,%'
+      )
       GROUP BY g.id, g.nome, g.etapa
-      ORDER BY data_ultima_resposta DESC
+      HAVING SUM(CASE 
+        WHEN r.resposta_aluno IS NOT NULL 
+        AND r.resposta_aluno != '' 
+        AND r.resposta_aluno NOT LIKE '%,%' 
+        THEN 1 
+        ELSE 0
+      END) > 0
+      ORDER BY data_ultima_resposta ASC
     `, [aluno_id]);
 
     res.json({
@@ -327,6 +351,7 @@ router.get('/estatisticas-individual/:aluno_id', authenticateToken, async (req, 
           nome: row.nome,
           etapa: row.etapa,
           total_questoes: Number(row.total_questoes) || 0,
+          questoes_capturadas: Number(row.questoes_capturadas) || 0,
           acertos: Number(row.acertos) || 0,
           media: Number(row.media) || 0,
           data: row.data_ultima_resposta
@@ -384,14 +409,49 @@ router.get('/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id', authen
       });
     }
 
+    // Verificar quantas respostas o aluno tem para este gabarito (para debug)
+    const totalRespostasQuery = await db.query(`
+      SELECT COUNT(*) as total_respostas
+      FROM respostas
+      WHERE aluno_id = $1 AND gabarito_id = $2
+    `, [aluno_id, gabarito_id]);
+
+    const respostasValidasQuery = await db.query(`
+      SELECT COUNT(*) as total_validas
+      FROM respostas
+      WHERE aluno_id = $1 
+        AND gabarito_id = $2
+        AND resposta_aluno IS NOT NULL 
+        AND resposta_aluno != '' 
+        AND resposta_aluno NOT LIKE '%,%'
+    `, [aluno_id, gabarito_id]);
+
+    const totalQuestoesQuery = await db.query(`
+      SELECT COUNT(*) as total_questoes
+      FROM questoes
+      WHERE gabarito_id = $1
+    `, [gabarito_id]);
+
+    console.log('[DEBUG] Estatísticas do simulado:', {
+      aluno_id,
+      gabarito_id,
+      gabarito_nome: gabaritoCheck.rows[0].nome,
+      gabarito_etapa: gabaritoCheck.rows[0].etapa,
+      total_questoes_gabarito: totalQuestoesQuery.rows[0]?.total_questoes || 0,
+      total_respostas_aluno: totalRespostasQuery.rows[0]?.total_respostas || 0,
+      total_respostas_validas: respostasValidasQuery.rows[0]?.total_validas || 0
+    });
+
     // Média por disciplina filtrado por gabarito e aluno
-    // Buscar apenas disciplinas que têm questões neste gabarito e respostas do aluno
-    // Usar WHERE para filtrar por gabarito e aluno, evitando uso duplicado do mesmo parâmetro
+    // Buscar apenas disciplinas que têm questões neste gabarito e respostas válidas do aluno
+    // Filtrar apenas respostas válidas (não vazias e sem dupla marcação)
+    // IMPORTANTE: Usar COUNT(DISTINCT r.id) para evitar duplicação
     const mediaPorDisciplina = await db.query(`
       SELECT 
         d.id,
         d.nome,
-        COUNT(r.id) as total_respostas,
+        COUNT(DISTINCT q.id) as total_questoes,
+        COUNT(DISTINCT r.id) as total_respostas,
         SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
         ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100.0 ELSE 0.0 END), 2) as media
       FROM disciplinas d
@@ -400,9 +460,15 @@ router.get('/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id', authen
       WHERE q.gabarito_id = $2
         AND r.aluno_id = $1
         AND r.gabarito_id = $2
+        AND r.resposta_aluno IS NOT NULL 
+        AND r.resposta_aluno != '' 
+        AND r.resposta_aluno NOT LIKE '%,%'
       GROUP BY d.id, d.nome
+      HAVING COUNT(DISTINCT r.id) > 0
       ORDER BY media DESC
     `, [aluno_id, gabarito_id]);
+
+    console.log('[DEBUG] Disciplinas encontradas:', mediaPorDisciplina.rows.length);
 
     res.json({
       sucesso: true,
@@ -415,6 +481,7 @@ router.get('/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id', authen
         id: row.id,
         nome: row.nome,
         media: Number(row.media) || 0,
+        total_questoes: Number(row.total_questoes) || 0,
         total_respostas: Number(row.total_respostas) || 0,
         acertos: Number(row.acertos) || 0
       }))
