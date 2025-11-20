@@ -1,6 +1,6 @@
 # Documentação da API
 
-**Última atualização**: 2025-11-16 20:30:00
+**Última atualização**: 2025-01-21 12:00:00
 
 ## Base URL
 
@@ -379,6 +379,12 @@ DELETE /sessoes/:id
 #### Estatísticas Gerais
 ```http
 GET /relatorios/estatisticas-gerais?etapa=3º ano
+
+**Nota**: No modo "Geral" (sem filtro de etapa), os cálculos consideram TODOS os alunos.
+- `media`: Média de acertos = (acertos / total_respostas) * 100
+- `taxa_erro`: Taxa de erro = (erros / total_respostas) * 100
+- `total_respostas`: Usa COUNT (não COUNT DISTINCT) para contar todas as respostas válidas
+- `total_questoes`: Total de questões únicas da disciplina nos gabaritos que têm respostas válidas
 ```
 
 **Headers:** `Authorization: Bearer <token>`
@@ -400,10 +406,12 @@ GET /relatorios/estatisticas-gerais?etapa=3º ano
       {
         "id": "...",
         "nome": "Matemática",
-        "media": 85.5,
-        "total_questoes": 30,
-        "total_respostas": 120,
-        "acertos": 102
+        "media": 85.5,              // Média de acertos (%)
+        "taxa_erro": 14.5,          // Taxa de erro (%)
+        "total_questoes": 30,       // Total de questões únicas da disciplina
+        "total_respostas": 120,     // Total de respostas válidas (COUNT, não DISTINCT)
+        "acertos": 102,             // Total de acertos
+        "erros": 18                 // Total de erros
       }
     ],
     "por_etapa": [
@@ -445,9 +453,10 @@ GET /relatorios/estatisticas-individual/:aluno_id
       {
         "id": "...",
         "nome": "Matemática",
-        "media": 80.0,
-        "total_respostas": 30,
-        "acertos": 24
+        "media": 80.0,              // Média de acertos (%)
+        "total_questoes": 32,       // Total de questões da disciplina nos gabaritos respondidos
+        "total_respostas": 30,      // Total de respostas válidas do aluno
+        "acertos": 24               // Total de acertos
       }
     ],
     "desempenho_tempo": [
@@ -480,6 +489,12 @@ GET /relatorios/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id
 
 **Adicionado em**: 2025-11-16 17:41:12
 
+**Nota**: A média é calculada considerando TODAS as questões da disciplina no gabarito:
+- `media`: (acertos válidos / total_questoes) * 100
+- Questões não respondidas ou inválidas reduzem a média
+- `total_questoes`: Total de questões da disciplina no gabarito
+- `total_respostas`: Apenas respostas válidas (não vazias e sem dupla marcação)
+
 **Headers:** `Authorization: Bearer <token>`
 
 **Path Parameters:**
@@ -499,9 +514,10 @@ GET /relatorios/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id
     {
       "id": "...",
       "nome": "Matemática",
-      "media": 75.5,
-      "total_respostas": 20,
-      "acertos": 15
+      "media": 75.5,              // Média de acertos (%) = (acertos / total_questoes) * 100
+      "total_questoes": 8,        // Total de questões da disciplina neste gabarito
+      "total_respostas": 20,      // Total de respostas válidas do aluno
+      "acertos": 15               // Total de acertos
     },
     {
       "id": "...",

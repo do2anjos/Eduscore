@@ -2,7 +2,127 @@
 
 Este documento registra todas as alterações significativas realizadas no projeto.
 
-**Última atualização**: 2025-11-16 18:30:00
+**Última atualização**: 2025-01-21 12:00:00
+
+---
+
+## [2025-01-21] - Correções em Cálculos de Relatórios e Gráficos
+
+### 🔧 Correção: Validação de Questões no Upload de CSV
+
+#### Problema
+- Questões inválidas (cabeçalhos processados como dados) eram criadas no banco
+- Gabarito "DEZ - 1º Ano" mostrava 61 questões em vez de 60
+- Questão com número "Questão" (cabeçalho) estava sendo salva
+
+#### Solução
+- **Arquivo modificado**: `backend/routes/gabaritos.js`
+- **Melhorias implementadas**:
+  - Validação de número da questão (deve ser entre 1 e 60)
+  - Detecção e filtragem automática de cabeçalhos CSV
+  - Validação de resposta (deve ser A, B, C, D ou E)
+  - Rejeição de linhas com formato inválido com mensagens claras
+- **Questão inválida removida**: Script executado para limpar questão com número inválido
+
+#### Resultado
+- Upload de CSV mais robusto e seguro
+- Apenas questões válidas são criadas
+- Gabaritos sempre têm a quantidade correta de questões
+
+---
+
+### 📊 Correção: Cálculo de Média por Disciplina em Relatórios
+
+#### Problema
+- Gráfico "Desempenho por Disciplina" mostrava 100% quando todas as respostas válidas eram corretas
+- Questões não respondidas ou invalidadas não eram consideradas no cálculo
+- Tooltip mostrava "X de X questões" em vez do total real de questões da disciplina
+
+#### Solução
+- **Arquivos modificados**: 
+  - `backend/routes/relatorios.js`
+  - `public/GerarRelatorio.html`
+- **Mudanças na query**:
+  - Mudança de `INNER JOIN respostas` para `LEFT JOIN respostas`
+  - Agora considera TODAS as questões da disciplina (não apenas as respondidas)
+  - Média calculada como: `(acertos válidos / total de questões da disciplina) * 100`
+- **Correção do tooltip**:
+  - Usa `total_questoes` (total da disciplina) em vez de `total_respostas`
+  - Mostra corretamente "X acertos de Y questões"
+
+#### Resultado
+- Média reflete corretamente questões não respondidas/inválidas
+- Tooltip mostra informações precisas
+- Gráficos mais precisos e confiáveis
+
+---
+
+### 📈 Separação entre Média de Acertos e Taxa de Erro
+
+#### Problema
+- "Taxa de Erro por Disciplina" e "Média de Acertos por Disciplina" mostravam os mesmos valores
+- Ambos usavam o mesmo campo `media` da API
+- Cálculo de erro estava incorreto (usava COUNT DISTINCT em vez de COUNT)
+
+#### Solução
+- **Arquivos modificados**:
+  - `backend/routes/relatorios.js`
+  - `public/home.html`
+  - `public/RelatorioGeral.html`
+- **Mudanças na query**:
+  - Campo `media`: Média de Acertos = (Acertos / Total de respostas válidas) * 100
+  - Campo `taxa_erro`: Taxa de Erro = (Erros / Total de respostas válidas) * 100
+  - Uso de `COUNT(*)` (não COUNT DISTINCT) para contar todas as respostas válidas
+- **Atualização dos frontends**:
+  - `RelatorioGeral.html` usa `media` (média de acertos)
+  - `home.html` usa `taxa_erro` (taxa de erro)
+
+#### Resultado
+- Gráficos mostram informações diferentes e complementares
+- Média de Acertos + Taxa de Erro = 100%
+- Cálculos precisos usando todas as respostas válidas
+
+---
+
+### 📉 Gráfico "Retenção por Disciplina"
+
+#### Problema
+- Gráfico chamado "Taxa de Erro por Disciplina" deveria ser "Retenção por Disciplina"
+- Ordenação estava do menor para o maior
+
+#### Solução
+- **Arquivo modificado**: `public/home.html`
+- **Mudanças**:
+  - Título alterado para "Retenção por Disciplina"
+  - Label do dataset atualizado para "Retenção (%)"
+  - Ordenação corrigida: maior taxa de erro (pior retenção) aparece primeiro (no topo)
+  - Tooltip mantém informações de erros e total de respostas
+
+#### Resultado
+- Nomenclatura correta e consistente
+- Ordenação lógica: disciplinas que precisam mais atenção aparecem primeiro
+- Visualização clara da retenção por disciplina
+
+---
+
+### 🔍 Correção: Query de Estatísticas Gerais
+
+#### Problema
+- Endpoint `/api/relatorios/estatisticas-gerais` estava filtrando por aluno específico
+- Query usava `INNER JOIN respostas` com filtro de aluno, mas deveria ser estatística geral
+- Modo "Geral" não retornava dados corretos
+
+#### Solução
+- **Arquivo modificado**: `backend/routes/relatorios.js`
+- **Mudanças**:
+  - Removido filtro `AND r.aluno_id = $1` do modo Geral
+  - Query agora agrega respostas de TODOS os alunos
+  - Correção para calcular estatísticas gerais corretamente
+
+#### Resultado
+- Dashboard em `home.html` mostra dados gerais corretos
+- Gráfico de retenção funciona corretamente com dados de todos os alunos
+- Estatísticas gerais precisas e confiáveis
 
 ---
 
