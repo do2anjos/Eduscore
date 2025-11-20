@@ -79,40 +79,143 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
     const mediaGeral = await db.query(mediaGeralQuery, paramsEtapa);
 
     // 4. Média por disciplina (contar questões únicas por gabarito, com filtro de etapa se aplicável)
-    // IMPORTANTE: Usar COUNT(DISTINCT r.id) para evitar duplicação quando há múltiplas respostas por questão
-    let mediaPorDisciplinaQuery = `
-      SELECT 
-        d.id,
-        d.nome,
-        COUNT(DISTINCT q.id) as total_questoes,
-        COUNT(DISTINCT r.id) as total_respostas,
-        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
-        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
-      FROM disciplinas d
-      INNER JOIN questoes q ON d.id = q.disciplina_id
-      INNER JOIN respostas r ON q.id = r.questao_id
-      WHERE r.questao_id IS NOT NULL
-      GROUP BY d.id, d.nome
-      HAVING COUNT(DISTINCT q.id) > 0
-      ORDER BY media DESC
-    `;
+    // IMPORTANTE: Para modo "Geral", considerar TODAS as questões dos gabaritos que o aluno respondeu
+    // Para modo por etapa, considerar TODAS as questões da disciplina nessa etapa
+    let mediaPorDisciplinaQuery;
     
     if (etapa && etapa !== 'Geral') {
+      // Modo por etapa: contar todas as questões da disciplina nesta etapa
+      // Mas contar como acerto apenas respostas válidas
       mediaPorDisciplinaQuery = `
         SELECT 
           d.id,
           d.nome,
           COUNT(DISTINCT q.id) as total_questoes,
-          COUNT(DISTINCT r.id) as total_respostas,
-          SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
-          ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+          COUNT(DISTINCT CASE 
+            WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            THEN r.id
+            ELSE NULL
+          END) as total_respostas,
+          SUM(CASE 
+            WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            AND r.acertou = 1 
+            THEN 1 
+            ELSE 0 
+          END) as acertos,
+          ROUND(
+            (SUM(CASE 
+              WHEN r.resposta_aluno IS NOT NULL 
+              AND r.resposta_aluno != '' 
+              AND r.resposta_aluno NOT LIKE '%,%'
+              AND r.acertou = 1 
+              THEN 1 
+              ELSE 0 
+            END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
+            2
+          ) as media
         FROM disciplinas d
         INNER JOIN questoes q ON d.id = q.disciplina_id
         INNER JOIN gabaritos g ON q.gabarito_id = g.id
-        INNER JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
+        LEFT JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
         WHERE g.etapa = $1
         GROUP BY d.id, d.nome
         HAVING COUNT(DISTINCT q.id) > 0
+        ORDER BY media DESC
+      `;
+    } else {
+      // Modo Geral: calcular MÉDIA DE ACERTOS e TAXA DE ERRO por Disciplina
+      // IMPORTANTE: Usar COUNT(*) (não COUNT DISTINCT) para contar TODAS as respostas válidas
+      // Similar ao cálculo de "Acertos Totais": COUNT(*) WHERE acertou = 1
+      // media = Média de Acertos = (Acertos / Total de respostas válidas) * 100 (para RelatorioGeral.html)
+      // taxa_erro = Taxa de Erro = (Erros / Total de respostas válidas) * 100 (para home.html)
+      mediaPorDisciplinaQuery = `
+        SELECT 
+          d.id,
+          d.nome,
+          COUNT(DISTINCT q.id) as total_questoes,
+          COUNT(CASE 
+            WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            THEN 1
+            ELSE NULL
+          END) as total_respostas,
+          SUM(CASE 
+            WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            AND r.acertou = 1 
+            THEN 1 
+            ELSE 0 
+          END) as acertos,
+          SUM(CASE 
+            WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            AND r.acertou = 0 
+            THEN 1 
+            ELSE 0 
+          END) as erros,
+          -- Média de Acertos (para RelatorioGeral.html)
+          ROUND(
+            (SUM(CASE 
+              WHEN r.resposta_aluno IS NOT NULL 
+              AND r.resposta_aluno != '' 
+              AND r.resposta_aluno NOT LIKE '%,%'
+              AND r.acertou = 1 
+              THEN 1 
+              ELSE 0 
+            END) * 100.0) / NULLIF(COUNT(CASE 
+              WHEN r.resposta_aluno IS NOT NULL 
+              AND r.resposta_aluno != '' 
+              AND r.resposta_aluno NOT LIKE '%,%'
+              THEN 1
+              ELSE NULL
+            END), 0),
+            2
+          ) as media,
+          -- Taxa de Erro (para home.html)
+          ROUND(
+            (SUM(CASE 
+              WHEN r.resposta_aluno IS NOT NULL 
+              AND r.resposta_aluno != '' 
+              AND r.resposta_aluno NOT LIKE '%,%'
+              AND r.acertou = 0 
+              THEN 1 
+              ELSE 0 
+            END) * 100.0) / NULLIF(COUNT(CASE 
+              WHEN r.resposta_aluno IS NOT NULL 
+              AND r.resposta_aluno != '' 
+              AND r.resposta_aluno NOT LIKE '%,%'
+              THEN 1
+              ELSE NULL
+            END), 0),
+            2
+          ) as taxa_erro
+        FROM disciplinas d
+        INNER JOIN questoes q ON d.id = q.disciplina_id
+        INNER JOIN gabaritos g ON q.gabarito_id = g.id
+        LEFT JOIN respostas r ON q.id = r.questao_id 
+          AND r.gabarito_id = g.id
+        WHERE EXISTS (
+          SELECT 1 FROM respostas r2 
+          WHERE r2.gabarito_id = g.id 
+          AND r2.resposta_aluno IS NOT NULL 
+          AND r2.resposta_aluno != '' 
+          AND r2.resposta_aluno NOT LIKE '%,%'
+        )
+        GROUP BY d.id, d.nome
+        HAVING COUNT(CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
+          THEN 1
+          ELSE NULL
+        END) > 0
         ORDER BY media DESC
       `;
     }
@@ -173,10 +276,12 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
         media_por_disciplina: mediaPorDisciplina.rows.map(row => ({
           id: row.id,
           nome: row.nome,
-          media: Number(row.media) || 0,
+          media: Number(row.media) || 0, // Média de Acertos (para RelatorioGeral.html)
+          taxa_erro: Number(row.taxa_erro) || 0, // Taxa de Erro (para home.html)
           total_questoes: Number(row.total_questoes) || 0,
           total_respostas: Number(row.total_respostas) || 0,
-          acertos: Number(row.acertos) || 0
+          acertos: Number(row.acertos) || 0,
+          erros: Number(row.erros) || 0
         })),
         por_etapa: estatisticasPorEtapa.rows.map(row => ({
           etapa: row.etapa,
@@ -233,19 +338,56 @@ router.get('/estatisticas-individual/:aluno_id', authenticateToken, async (req, 
       FROM respostas WHERE aluno_id = $1
     `, [aluno_id]);
 
-    // 4. Média por disciplina (garantir contagem correta sem duplicação)
+    // 4. Média por disciplina - modo Geral para aluno individual
+    // IMPORTANTE: Contar TODAS as questões dos gabaritos que o aluno respondeu
+    // Mas contar como acerto apenas respostas válidas (não vazias e sem dupla marcação)
     const mediaPorDisciplina = await db.query(`
       SELECT 
         d.id,
         d.nome,
-        COUNT(DISTINCT r.id) as total_respostas,
-        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
-        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+        COUNT(DISTINCT q.id) as total_questoes,
+        COUNT(DISTINCT CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
+          THEN r.id
+          ELSE NULL
+        END) as total_respostas,
+        SUM(CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
+          AND r.acertou = 1 
+          THEN 1 
+          ELSE 0 
+        END) as acertos,
+        ROUND(
+          (SUM(CASE 
+            WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            AND r.acertou = 1 
+            THEN 1 
+            ELSE 0 
+          END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
+          2
+        ) as media
       FROM disciplinas d
       INNER JOIN questoes q ON d.id = q.disciplina_id
-      INNER JOIN respostas r ON q.id = r.questao_id AND r.aluno_id = $1
+      INNER JOIN gabaritos g ON q.gabarito_id = g.id
+      LEFT JOIN respostas r ON q.id = r.questao_id 
+        AND r.gabarito_id = g.id
+        AND r.aluno_id = $1
+      WHERE EXISTS (
+        SELECT 1 FROM respostas r2 
+        WHERE r2.gabarito_id = g.id 
+        AND r2.aluno_id = $1
+        AND r2.resposta_aluno IS NOT NULL 
+        AND r2.resposta_aluno != '' 
+        AND r2.resposta_aluno NOT LIKE '%,%'
+      )
       GROUP BY d.id, d.nome
-      HAVING COUNT(DISTINCT r.id) > 0
+      HAVING COUNT(DISTINCT q.id) > 0
       ORDER BY media DESC
     `, [aluno_id]);
 
@@ -337,6 +479,7 @@ router.get('/estatisticas-individual/:aluno_id', authenticateToken, async (req, 
           id: row.id,
           nome: row.nome,
           media: Number(row.media) || 0,
+          total_questoes: Number(row.total_questoes) || 0,
           total_respostas: Number(row.total_respostas) || 0,
           acertos: Number(row.acertos) || 0
         })),
@@ -443,28 +586,48 @@ router.get('/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id', authen
     });
 
     // Média por disciplina filtrado por gabarito e aluno
-    // Buscar apenas disciplinas que têm questões neste gabarito e respostas válidas do aluno
-    // Filtrar apenas respostas válidas (não vazias e sem dupla marcação)
-    // IMPORTANTE: Usar COUNT(DISTINCT r.id) para evitar duplicação
+    // IMPORTANTE: Contar TODAS as questões da disciplina no gabarito (incluindo não respondidas/inválidas)
+    // Mas contar como acerto apenas respostas válidas (não vazias e sem dupla marcação) que foram acertadas
+    // Média = (acertos válidos / total de questões da disciplina) * 100
     const mediaPorDisciplina = await db.query(`
       SELECT 
         d.id,
         d.nome,
         COUNT(DISTINCT q.id) as total_questoes,
-        COUNT(DISTINCT r.id) as total_respostas,
-        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
-        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100.0 ELSE 0.0 END), 2) as media
+        COUNT(DISTINCT CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
+          THEN r.id
+          ELSE NULL
+        END) as total_respostas,
+        SUM(CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
+          AND r.acertou = 1 
+          THEN 1 
+          ELSE 0 
+        END) as acertos,
+        ROUND(
+          (SUM(CASE 
+            WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            AND r.acertou = 1 
+            THEN 1 
+            ELSE 0 
+          END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
+          2
+        ) as media
       FROM disciplinas d
       INNER JOIN questoes q ON d.id = q.disciplina_id
-      INNER JOIN respostas r ON q.id = r.questao_id
-      WHERE q.gabarito_id = $2
+      LEFT JOIN respostas r ON q.id = r.questao_id 
         AND r.aluno_id = $1
         AND r.gabarito_id = $2
-        AND r.resposta_aluno IS NOT NULL 
-        AND r.resposta_aluno != '' 
-        AND r.resposta_aluno NOT LIKE '%,%'
+      WHERE q.gabarito_id = $2
       GROUP BY d.id, d.nome
-      HAVING COUNT(DISTINCT r.id) > 0
+      HAVING COUNT(DISTINCT q.id) > 0
       ORDER BY media DESC
     `, [aluno_id, gabarito_id]);
 
