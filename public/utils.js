@@ -410,111 +410,64 @@ function updateUserProfile(usuario) {
       profileImg.onerror = null;
       
       if (usuario.foto_perfil && usuario.id) {
-        // Normalizar a URL da foto
-        let fotoUrl = usuario.foto_perfil.trim();
+        // SEMPRE usar endpoint da API para carregar fotos
+        // Isso evita completamente o erro 431 ao usar base64 diretamente como URL
+        const userId = usuario.id;
+        const token = localStorage.getItem('token');
         
-        // Verificar se é base64 (com ou sem prefixo data:)
-        const isBase64 = fotoUrl.startsWith('data:image/') || 
-                        (fotoUrl.length > 1000 && 
-                         !fotoUrl.includes('/') && 
-                         !fotoUrl.includes('http') && 
-                         !fotoUrl.startsWith('/'));
-        
-        if (isBase64) {
-          // SEMPRE usar endpoint da API para fotos base64 via fetch com autenticação
-          // Isso evita completamente o erro 431 ao usar base64 diretamente como URL
-          const userId = usuario.id;
-          const token = localStorage.getItem('token');
+        if (token) {
+          // Limpar blob URL anterior se existir
+          if (profileImg.src && profileImg.src.startsWith('blob:')) {
+            URL.revokeObjectURL(profileImg.src);
+          }
           
-          if (token) {
-            // Limpar blob URL anterior se existir
-            if (profileImg.src && profileImg.src.startsWith('blob:')) {
-              URL.revokeObjectURL(profileImg.src);
+          // Usar endpoint da API para carregar a foto
+          fetch(`/api/usuarios/${userId}/foto?t=${Date.now()}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
             }
-            
-            fetch(`/api/usuarios/${userId}/foto?t=${Date.now()}`, {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            })
-            .then(response => {
-              if (response.ok) {
-                return response.blob();
-              }
-              // Se retornar 404, a foto pode não estar salva ainda ou foi deletada
-              if (response.status === 404) {
-                console.warn('[DEBUG] Foto não encontrada no servidor (404)');
-                return null;
-              }
-              throw new Error(`Erro ao carregar foto: ${response.status}`);
-            })
-            .then(blob => {
-              if (blob) {
-                // Criar blob URL para exibir a imagem
-                const blobUrl = URL.createObjectURL(blob);
-                profileImg.src = blobUrl;
-                profileImg.alt = usuario.nome || 'Perfil';
-                
-                // Limpar blob URL quando a imagem for removida
-                profileImg.onload = function() {
-                  // Manter o blob URL enquanto a imagem estiver visível
-                };
-                
-                profileImg.onerror = function() {
-                  URL.revokeObjectURL(blobUrl);
-                  this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-                  this.alt = 'Perfil';
-                  this.onerror = null;
-                };
-              } else {
-                // Se blob for null (404), manter imagem padrão
-                profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-                profileImg.alt = 'Perfil';
-              }
-            })
-            .catch(error => {
-              console.warn('[DEBUG] Erro ao carregar foto via API:', error);
+          })
+          .then(response => {
+            if (response.ok) {
+              return response.blob();
+            }
+            // Se retornar 404, a foto não está disponível
+            if (response.status === 404) {
+              console.warn('[DEBUG] Foto não encontrada no servidor (404)');
+              return null;
+            }
+            throw new Error(`Erro ao carregar foto: ${response.status}`);
+          })
+          .then(blob => {
+            if (blob) {
+              // Criar blob URL para exibir a imagem
+              const blobUrl = URL.createObjectURL(blob);
+              profileImg.src = blobUrl;
+              profileImg.alt = usuario.nome || 'Perfil';
+              
+              profileImg.onerror = function() {
+                URL.revokeObjectURL(blobUrl);
+                this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+                this.alt = 'Perfil';
+                this.onerror = null;
+              };
+            } else {
+              // Se blob for null (404), manter imagem padrão
               profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
               profileImg.alt = 'Perfil';
-              profileImg.onerror = null;
-            });
-          } else {
-            console.warn('[DEBUG] Token não disponível, usando imagem padrão');
-          }
-        } 
-        // Se não é base64, tratar como URL de arquivo
-        else {
-          // Se é uma URL completa (http:// ou https://), usar diretamente
-          if (fotoUrl.startsWith('http://') || fotoUrl.startsWith('https://')) {
-            profileImg.src = fotoUrl;
-          } 
-          // Se começa com /uploads, usar como está
-          else if (fotoUrl.startsWith('/uploads/')) {
-            profileImg.src = fotoUrl;
-          }
-          // Se começa com uploads/ (sem barra), adicionar /
-          else if (fotoUrl.startsWith('uploads/')) {
-            profileImg.src = '/' + fotoUrl;
-          }
-          // Se começa com /, usar como está
-          else if (fotoUrl.startsWith('/')) {
-            profileImg.src = fotoUrl;
-          }
-          // Caso contrário, assumir que está em /uploads/
-          else {
-            profileImg.src = '/uploads/' + fotoUrl;
-          }
+            }
+          })
+          .catch(error => {
+            console.warn('[DEBUG] Erro ao carregar foto via API:', error);
+            profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+            profileImg.alt = 'Perfil';
+            profileImg.onerror = null;
+          });
+        } else {
+          console.warn('[DEBUG] Token não disponível, usando imagem padrão');
+          profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+          profileImg.alt = 'Perfil';
         }
-        
-        profileImg.alt = usuario.nome;
-        
-        // Tratamento de erro: se a imagem falhar ao carregar, usar a imagem padrão
-        profileImg.onerror = function() {
-          console.warn('Erro ao carregar foto de perfil. Usando imagem padrão.');
-          this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-          this.alt = 'Perfil';
-          this.onerror = null; // Evitar loop infinito
-        };
       } else {
         // Se não houver foto, manter a imagem padrão
         profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
@@ -548,6 +501,32 @@ function updateUserProfile(usuario) {
   if (welcomeTitle) {
     const firstName = usuario.nome.split(' ')[0];
     welcomeTitle.textContent = `Bem-vindo de volta, ${firstName}!`;
+    // Marcar como carregado e mostrar com animação suave
+    welcomeTitle.style.opacity = '0';
+    welcomeTitle.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => {
+      welcomeTitle.style.opacity = '1';
+    }, 10);
+    
+    // Marcar dashboard-header como carregado
+    const dashboardHeader = document.getElementById('dashboard-header') || document.querySelector('.dashboard-header');
+    if (dashboardHeader) {
+      dashboardHeader.setAttribute('data-loaded', 'true');
+    }
+    
+    // Atualizar subtítulo se existir e estiver no dashboard-header
+    const subtitle = document.querySelector('.dashboard-header .dashboard-subtitle');
+    if (subtitle) {
+      // Se o subtítulo contém placeholder, atualizar com texto padrão
+      if (subtitle.textContent.includes('Carregando') || subtitle.textContent.trim() === '') {
+        subtitle.textContent = 'Aqui está um resumo do seu desempenho';
+      }
+      subtitle.style.opacity = '0';
+      subtitle.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => {
+        subtitle.style.opacity = '1';
+      }, 10);
+    }
   }
 }
 

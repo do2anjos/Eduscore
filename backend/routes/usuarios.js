@@ -321,35 +321,103 @@ router.get('/:id/foto', async (req, res) => {
       });
     }
 
-    const fotoPerfil = rows[0].foto_perfil.trim();
-    console.log(`[DEBUG] Foto encontrada. Tamanho: ${fotoPerfil.length} caracteres. Tipo: ${fotoPerfil.startsWith('data:') ? 'data URL' : fotoPerfil.length > 1000 ? 'base64 sem prefixo' : 'URL'}`);
+    const fotoPerfil = rows[0].foto_perfil.toString().trim();
+    console.log(`[DEBUG] Foto encontrada. Tamanho: ${fotoPerfil.length} caracteres`);
+    console.log(`[DEBUG] Primeiros 50 caracteres: ${fotoPerfil.substring(0, 50)}`);
     
-    // Se for base64, converter para buffer e servir como imagem
-    if (fotoPerfil.startsWith('data:image/')) {
+    // Verificar se é base64 (com ou sem prefixo data:)
+    // Base64 de imagem JPEG geralmente começa com:
+    // - "data:image/" (data URL completo)
+    // - "/9j/4AA" ou "9j/4AA" ou similar (início de JPEG em base64)
+    // - String muito longa (>1000 chars) que parece base64 válido
+    
+    // Padrão para validar se é base64 válido (A-Z, a-z, 0-9, +, /, =)
+    // Base64 pode ter espaços e quebras de linha, mas vamos ignorá-los na validação
+    const cleanedFoto = fotoPerfil.replace(/\s/g, ''); // Remover espaços para validação
+    const base64Pattern = /^[A-Za-z0-9+/=]+$/;
+    
+    // Indicadores fortes de que é base64 de imagem
+    const startsWithDataUrl = fotoPerfil.startsWith('data:image/');
+    
+    // JPEG em base64 geralmente começa com "/9j/4AA" (que é o início de FF D8 FF E0 em hex)
+    // Ou pode começar sem a barra inicial
+    const startsWithJpegBase64 = cleanedFoto.startsWith('/9j/') || 
+                                 cleanedFoto.startsWith('9j/') ||
+                                 cleanedFoto.startsWith('/9j') ||
+                                 cleanedFoto.startsWith('9j');
+    
+    // PNG em base64 começa com "iVBORw0KGgo" (89 50 4E 47 em hex)
+    const startsWithPngBase64 = cleanedFoto.startsWith('iVBOR');
+    
+    // GIF em base64 começa com "R0lGOD" (47 49 46 38 em hex)
+    const startsWithGifBase64 = cleanedFoto.startsWith('R0lGOD');
+    
+    // Indicadores de que é caminho de arquivo
+    const looksLikeFilePath = (fotoPerfil.includes('\\') || 
+                               fotoPerfil.startsWith('uploads/') ||
+                               fotoPerfil.startsWith('/uploads/') ||
+                               (fotoPerfil.includes('http://') && !startsWithDataUrl) ||
+                               (fotoPerfil.includes('https://') && !startsWithDataUrl)) &&
+                               fotoPerfil.length < 500; // Arquivos de caminho são geralmente curtos
+    
+    // Se for muito longa (>500 chars) e parecer base64 válido, é provavelmente base64
+    // Ou se começar com indicadores de tipos de imagem em base64
+    const isLongBase64 = fotoPerfil.length > 500 && base64Pattern.test(cleanedFoto);
+    
+    const isBase64 = startsWithDataUrl || 
+                    startsWithJpegBase64 || 
+                    startsWithPngBase64 || 
+                    startsWithGifBase64 ||
+                    (isLongBase64 && !looksLikeFilePath);
+    
+    console.log(`[DEBUG] É base64? ${isBase64}`);
+    console.log(`[DEBUG] - startsWithDataUrl: ${startsWithDataUrl}`);
+    console.log(`[DEBUG] - startsWithJpegBase64: ${startsWithJpegBase64}`);
+    console.log(`[DEBUG] - startsWithPngBase64: ${startsWithPngBase64}`);
+    console.log(`[DEBUG] - isLongBase64: ${isLongBase64}`);
+    console.log(`[DEBUG] - looksLikeFilePath: ${looksLikeFilePath}`);
+    
+    if (isBase64) {
       try {
-        const base64Data = fotoPerfil.split(',')[1];
-        if (!base64Data) {
-          console.log('[DEBUG] Erro: base64Data vazio após split');
-          return res.status(500).json({
-            sucesso: false,
-            erro: 'Erro ao processar foto'
-          });
+        let base64Data = fotoPerfil;
+        
+        // Se começa com data:image/, extrair apenas a parte base64
+        if (fotoPerfil.startsWith('data:image/')) {
+          const commaIndex = fotoPerfil.indexOf(',');
+          if (commaIndex === -1) {
+            console.error('[DEBUG] Erro: formato data URL inválido (sem vírgula)');
+            return res.status(500).json({
+              sucesso: false,
+              erro: 'Erro ao processar foto'
+            });
+          }
+          base64Data = fotoPerfil.substring(commaIndex + 1);
         }
+        
+        // Remover espaços e quebras de linha que possam ter sido adicionados
+        base64Data = base64Data.replace(/\s/g, '');
+        
+        // Converter base64 para buffer
         const buffer = Buffer.from(base64Data, 'base64');
         
         // Detectar tipo MIME
-        let contentType = 'image/jpeg';
-        if (fotoPerfil.includes('image/png')) {
-          contentType = 'image/png';
-        } else if (fotoPerfil.includes('image/gif')) {
+        let contentType = 'image/jpeg'; // padrão
+        if (fotoPerfil.startsWith('data:image/png') || fotoPerfil.match(/^[A-Za-z0-9+/]{100,}=*$/)) {
+          // Tentar detectar PNG pelo formato base64 (pode ser impreciso)
+          // Melhor verificar pelo prefixo data: se existir
+          if (fotoPerfil.startsWith('data:image/png')) {
+            contentType = 'image/png';
+          }
+        } else if (fotoPerfil.startsWith('data:image/gif')) {
           contentType = 'image/gif';
-        } else if (fotoPerfil.includes('image/webp')) {
+        } else if (fotoPerfil.startsWith('data:image/webp')) {
           contentType = 'image/webp';
         }
         
         console.log(`[DEBUG] Servindo foto como ${contentType}. Tamanho do buffer: ${buffer.length} bytes`);
         res.setHeader('Content-Type', contentType);
         res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache por 1 hora
+        res.setHeader('Content-Length', buffer.length);
         return res.send(buffer);
       } catch (err) {
         console.error('[DEBUG] Erro ao processar base64:', err);
@@ -358,36 +426,32 @@ router.get('/:id/foto', async (req, res) => {
           erro: 'Erro ao processar foto'
         });
       }
-    } 
-    // Se for base64 sem prefixo, assumir JPEG
-    else if (fotoPerfil.length > 1000 && !fotoPerfil.includes('/') && !fotoPerfil.includes('http') && !fotoPerfil.startsWith('/')) {
-      try {
-        const buffer = Buffer.from(fotoPerfil, 'base64');
-        console.log(`[DEBUG] Servindo foto como JPEG (base64 sem prefixo). Tamanho do buffer: ${buffer.length} bytes`);
-        res.setHeader('Content-Type', 'image/jpeg');
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        return res.send(buffer);
-      } catch (err) {
-        console.error('[DEBUG] Erro ao processar base64 sem prefixo:', err);
-        return res.status(500).json({
-          sucesso: false,
-          erro: 'Erro ao processar foto'
-        });
-      }
     }
-    // Se for URL de arquivo, redirecionar ou servir arquivo
+    // Se for URL de arquivo, servir arquivo
     else {
-      // Se começa com /uploads, servir como arquivo estático
+      const path = require('path');
+      const fs = require('fs');
+      let filePath = null;
+      
+      // Se começa com /uploads ou uploads/, servir como arquivo estático
       if (fotoPerfil.startsWith('/uploads/') || fotoPerfil.startsWith('uploads/')) {
-        const path = require('path');
-        const fs = require('fs');
-        const filePath = path.join(__dirname, '../../uploads', fotoPerfil.replace(/^\/?uploads\//, ''));
-        
-        if (fs.existsSync(filePath)) {
-          return res.sendFile(filePath);
-        }
+        filePath = path.join(__dirname, '../../uploads', fotoPerfil.replace(/^\/?uploads\//, ''));
+      }
+      // Se começa com /, assumir que é um caminho relativo
+      else if (fotoPerfil.startsWith('/')) {
+        filePath = path.join(__dirname, '../..', fotoPerfil);
+      }
+      // Caso contrário, assumir que está em /uploads/
+      else {
+        filePath = path.join(__dirname, '../../uploads', fotoPerfil);
       }
       
+      if (filePath && fs.existsSync(filePath)) {
+        console.log(`[DEBUG] Servindo arquivo: ${filePath}`);
+        return res.sendFile(path.resolve(filePath));
+      }
+      
+      console.log(`[DEBUG] Arquivo não encontrado: ${filePath || fotoPerfil}`);
       return res.status(404).json({
         sucesso: false,
         erro: 'Foto não encontrada'
@@ -396,6 +460,7 @@ router.get('/:id/foto', async (req, res) => {
 
   } catch (err) {
     console.error('Erro ao buscar foto de perfil:', err);
+    console.error('Stack:', err.stack);
     return res.status(500).json({
       sucesso: false,
       erro: 'Erro interno ao buscar foto de perfil'
@@ -613,10 +678,10 @@ router.put('/:id', async (req, res) => {
     }
 
     if (foto_perfil !== undefined) {
-      // Validar tamanho da foto base64 (máximo 300KB para evitar erro 431)
-      const MAX_BASE64_SIZE = 300 * 1024; // 300KB
+      // Validar tamanho da foto base64 (máximo 250KB para evitar erro 431)
+      const MAX_BASE64_SIZE = 250 * 1024; // 250KB
       
-      // Se for base64 (começa com data: ou é string muito longa)
+      // Se for base64 (string muito longa sem http ou /)
       if (typeof foto_perfil === 'string') {
         let base64Data = foto_perfil;
         
@@ -632,8 +697,14 @@ router.put('/:id', async (req, res) => {
         if (base64Data.length > MAX_BASE64_SIZE) {
           return res.status(400).json({
             sucesso: false,
-            erro: 'A imagem é muito grande. Por favor, selecione uma imagem menor que 300KB.'
+            erro: 'A imagem é muito grande. Por favor, selecione uma imagem menor que 250KB.'
           });
+        }
+        
+        // Se veio com prefixo data:, remover para armazenar apenas base64
+        // Isso economiza espaço no banco e evita problemas
+        if (foto_perfil.startsWith('data:image/')) {
+          foto_perfil = base64Data;
         }
       }
       
