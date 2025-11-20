@@ -42,8 +42,8 @@
     </aside>
 
     <main class="content">
-      <!-- Breadcrumb e User Profile na mesma linha -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <!-- Breadcrumb e User Profile -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -66,14 +66,15 @@
         </div>
       </div>
 
+      <!-- Header -->
       <div class="dashboard-header">
         <div>
           <h2>Desempenho Geral das Turmas</h2>
           <p class="dashboard-subtitle">Visão consolidada do desempenho por disciplina e turma</p>
         </div>
         <div>
-          <label for="filtroTurma" style="margin-right: 8px; font-weight: 600; color: #003b54;">Etapa:</label>
-          <select id="filtroTurma" onchange="atualizarGrafico()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd; background: white; font-size: 14px; cursor: pointer;">
+          <label for="filtroTurma" style="margin-right: var(--spacing-sm); font-weight: 600; color: var(--color-primary-darker);">Etapa:</label>
+          <select id="filtroTurma" onchange="atualizarGrafico()" style="padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-surface); font-size: var(--font-size-sm); cursor: pointer;">
             <option value="Geral" selected>Geral</option>
           </select>
         </div>
@@ -86,7 +87,7 @@
             <h3>Questões Aplicadas</h3>
             <span class="metric-icon">📊</span>
           </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
             <div class="metric-value">
               <span class="value-number" id="qtdQuestoes">0</span>
               <span class="value-label">questões respondidas<br><small>(total da soma de cada simulado)</small></span>
@@ -99,7 +100,7 @@
             <h3>Acertos Totais</h3>
             <span class="metric-icon">✅</span>
           </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
             <div class="metric-value">
               <span class="value-number" id="acertosTotais">0</span>
               <span class="value-label">acertos registrados<br><small>(soma de todos os acertos dos simulados feitos pelos alunos)</small></span>
@@ -112,7 +113,7 @@
             <h3>Média Geral</h3>
             <span class="metric-icon">📈</span>
           </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
             <div class="metric-value">
               <span class="value-number" id="mediaAluno">0%</span>
               <span class="value-label">média de acertos<br><small>(percentual médio de acertos)</small></span>
@@ -125,7 +126,7 @@
             <h3>Maior Média</h3>
             <span class="metric-icon">🏆</span>
           </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
             <div class="metric-value">
               <span class="value-number" id="maiorMediaDisciplina">-</span>
               <span class="value-label">disciplina com melhor desempenho</span>
@@ -138,7 +139,7 @@
             <h3>Menor Média</h3>
             <span class="metric-icon">📉</span>
           </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px;">
+          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
             <div class="metric-value">
               <span class="value-number" id="menorMediaDisciplina">-</span>
               <span class="value-label">disciplina que precisa de atenção</span>
@@ -148,12 +149,12 @@
       </div>
 
       <!-- Gráfico de Média por Disciplina -->
-      <div class="metric-card-modern full-width" style="margin-top: 24px;">
-        <div class="metric-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div class="metric-card-modern full-width" style="margin-top: var(--spacing-xl);">
+        <div class="metric-card-header">
           <h3>Média de Acertos por Disciplina</h3>
         </div>
-        <div class="metric-card-content" style="min-height: 400px; padding: 20px;">
-          <canvas id="graficoGeralTurmas"></canvas>
+        <div class="metric-card-content" style="min-height: 350px;">
+          <canvas id="graficoGeralTurmas" style="max-width: 100%; height: 320px !important;"></canvas>
         </div>
       </div>
     </main>
@@ -306,87 +307,60 @@
             label: 'Média de Acertos (%)',
             data: medias.length > 0 ? medias : [0],
             backgroundColor: '#008cc4',
-            borderColor: '#006a9a',
-            borderWidth: 2,
-            borderRadius: 6
+            borderRadius: 8,
+            barThickness: 28,
           }]
         },
         options: {
+          indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: true,
-              position: 'top',
-              labels: {
-                font: {
-                  size: 14,
-                  weight: 'bold'
-                },
-                color: '#003b54',
-                padding: 15
-              }
+              display: false
             },
             tooltip: {
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              backgroundColor: '#003b54',
+              padding: 12,
               titleFont: {
                 size: 14,
-                weight: 'bold'
+                weight: '600'
               },
               bodyFont: {
                 size: 13
               },
-              padding: 12,
-              displayColors: false,
+              cornerRadius: 8,
               callbacks: {
-                label: function(context) {
-                  return `Média: ${context.parsed.y.toFixed(1)}%`;
-                }
+                label: context => `Média: ${context.raw.toFixed(1)}%`
               }
             }
           },
           scales: {
             x: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                callback: value => `${value}%`,
+                font: {
+                  size: 12
+                },
+                color: '#666'
+              },
+              grid: {
+                color: '#f0f0f0'
+              }
+            },
+            y: {
               ticks: {
                 font: {
-                  size: 11,
-                  weight: 'bold'
+                  size: 13,
+                  weight: '500'
                 },
-                color: '#003b54',
-                maxRotation: 45,
-                minRotation: 45,
-                autoSkip: false
+                color: '#333'
               },
               grid: {
                 display: false
               }
-            },
-            y: {
-              beginAtZero: true,
-              max: 100,
-              ticks: {
-                stepSize: 10,
-                font: {
-                  size: 12,
-                  weight: 'bold'
-                },
-                color: '#003b54',
-                callback: function(value) {
-                  return value + '%';
-                }
-              },
-              grid: {
-                color: 'rgba(0, 0, 0, 0.1)',
-                lineWidth: 1
-              }
-            }
-          },
-          layout: {
-            padding: {
-              top: 10,
-              right: 20,
-              bottom: 10,
-              left: 20
             }
           }
         }

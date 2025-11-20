@@ -37,7 +37,7 @@
 
     <main class="content">
       <!-- Breadcrumb e User Profile na mesma linha -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -60,10 +60,10 @@
         </div>
       </div>
 
-      <div class="dashboard-header">
+      <div class="dashboard-header" id="dashboard-header">
         <div>
-          <h2>Bem-vindo de volta, João!</h2>
-          <p class="dashboard-subtitle">Aqui está um resumo do seu desempenho</p>
+          <h2 style="opacity: 0;"><!-- Carregando... --></h2>
+          <p class="dashboard-subtitle" style="opacity: 0;"><!-- Carregando... --></p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@
 
         <div class="metric-card-modern">
           <div class="metric-card-header">
-            <h3>Progresso Mensal<br><small style="font-size: 11px; font-weight: 400; color: #666;">média mensal da % de acertos ao longo do tempo</small></h3>
+            <h3>Progresso Mensal<br><small>média mensal da % de acertos ao longo do tempo</small></h3>
             <span class="metric-icon">📈</span>
           </div>
           <div class="metric-card-content" style="min-height: 200px;">
