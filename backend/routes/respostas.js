@@ -326,11 +326,93 @@ router.delete('/:id', async (req, res) => {
 });
 
 /**
+ * Função auxiliar para detectar o tipo de imagem (processada ou original)
+ */
+async function detectarTipoImagem(imagemPath) {
+  const scriptDetecao = path.join(__dirname, '../scripts/detectar_tipo_imagem.py');
+  
+  if (!fs.existsSync(scriptDetecao)) {
+    console.log('[PROCESSAR-IMAGEM] Script de detecção não encontrado, usando script original por padrão');
+    return 'original'; // Fallback: assume que precisa de processamento
+  }
+
+  try {
+    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+    const scriptPathNormalizado = path.resolve(scriptDetecao).replace(/\\/g, '/');
+    const imagemPathNormalizado = path.resolve(imagemPath).replace(/\\/g, '/');
+    
+    const comando = `${pythonCommand} "${scriptPathNormalizado}" "${imagemPathNormalizado}"`;
+    
+    const { stdout, stderr } = await execAsync(comando, {
+      maxBuffer: 10 * 1024 * 1024,
+      encoding: 'utf8'
+    });
+
+    if (stderr && stderr.trim()) {
+      console.log('[PROCESSAR-IMAGEM] Stderr da detecção:', stderr);
+    }
+
+    // Parsear JSON retornado
+    const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const resultado = JSON.parse(jsonMatch[0]);
+      if (resultado.sucesso && resultado.tipo) {
+        console.log(`[PROCESSAR-IMAGEM] Imagem detectada como: ${resultado.tipo}`);
+        return resultado.tipo;
+      }
+    }
+    
+    console.log('[PROCESSAR-IMAGEM] Detecção falhou, usando script original por padrão');
+    return 'original'; // Fallback
+  } catch (error) {
+    console.error('[PROCESSAR-IMAGEM] Erro ao detectar tipo de imagem:', error.message);
+    console.log('[PROCESSAR-IMAGEM] Usando script original por padrão');
+    return 'original'; // Fallback: em caso de erro, usa o script completo
+  }
+}
+
+/**
+ * Função auxiliar para executar o script de processamento
+ */
+async function executarScriptProcessamento(scriptPath, imagemPath) {
+  const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+  const scriptPathNormalizado = path.resolve(scriptPath).replace(/\\/g, '/');
+  const imagemPathNormalizado = path.resolve(imagemPath).replace(/\\/g, '/');
+  
+  const comando = `${pythonCommand} "${scriptPathNormalizado}" "${imagemPathNormalizado}"`;
+  
+  const { stdout, stderr } = await execAsync(comando, {
+    maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+    encoding: 'utf8'
+  });
+  
+  // Processar stderr
+  if (stderr && stderr.trim()) {
+    console.log('[PROCESSAR-IMAGEM] Stderr do Python:', stderr);
+  }
+
+  // Parsear JSON retornado pelo script
+  const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('Resposta do Python não contém JSON válido');
+  }
+  
+  const resultadoPython = JSON.parse(jsonMatch[0]);
+  
+  if (!resultadoPython.sucesso) {
+    throw new Error(resultadoPython.erro || 'Erro no processamento Python');
+  }
+  
+  return resultadoPython;
+}
+
+/**
  * Rota POST /api/respostas/processar-imagem
  * Processa uma imagem de folha de resposta e extrai as marcações
  * 
- * TODO: Integrar com o algoritmo Python (mapear 2.py) quando estiver finalizado
- * Por enquanto retorna estrutura preparada para receber os dados processados
+ * A detecção automática decide qual script usar:
+ * - processar_respostas_Imagem_original.py: para imagens que precisam de correção de perspectiva
+ * - processar_respostas_imagem_processadas.py: para imagens já processadas
  */
 router.post('/processar-imagem', uploadImagem.single('imagem'), async (req, res) => {
   try {
@@ -344,66 +426,33 @@ router.post('/processar-imagem', uploadImagem.single('imagem'), async (req, res)
     const imagemPath = req.file.path;
     const imagemFilename = req.file.filename;
 
-    // Caminho do script Python
-    const scriptPath = path.join(__dirname, '../scripts/processar_respostas.py');
-    
-    // Verificar se o script existe
+    // 1. Detectar o tipo de imagem (processada ou original)
+    console.log('[PROCESSAR-IMAGEM] Detectando tipo de imagem...');
+    const tipoImagem = await detectarTipoImagem(imagemPath);
+
+    // 2. Escolher o script apropriado baseado na detecção
+    let scriptPath;
+    if (tipoImagem === 'processada') {
+      scriptPath = path.join(__dirname, '../scripts/processar_respostas_imagem_processadas.py');
+      console.log('[PROCESSAR-IMAGEM] Usando script para imagens processadas');
+    } else {
+      scriptPath = path.join(__dirname, '../scripts/processar_respostas_Imagem_original.py');
+      console.log('[PROCESSAR-IMAGEM] Usando script para imagens originais (com correção de perspectiva)');
+    }
+
+    // 3. Verificar se o script existe
     if (!fs.existsSync(scriptPath)) {
       throw new Error(`Script de processamento Python não encontrado em: ${scriptPath}`);
     }
-
-    // Normalizar caminhos para o sistema operacional
-    const scriptPathNormalizado = path.resolve(scriptPath).replace(/\\/g, '/');
-    const imagemPathNormalizado = path.resolve(imagemPath).replace(/\\/g, '/');
-    
-    // Determinar comando Python (Windows usa 'python', Linux/Mac usa 'python3')
-    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
-    
-    // Comando para executar o script Python
-    // No Windows, usar aspas duplas; no Linux/Mac, manter aspas simples
-    const comando = process.platform === 'win32'
-      ? `${pythonCommand} "${scriptPathNormalizado}" "${imagemPathNormalizado}"`
-      : `${pythonCommand} "${scriptPathNormalizado}" "${imagemPathNormalizado}"`;
 
     let respostasExtraidas = [];
     let detalhesProcessamento = {};
 
     try {
-      // Executar script Python
-      const { stdout, stderr } = await execAsync(comando, {
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-        encoding: 'utf8'
-      });
-      
-      // Processar stderr (aviso de questões inválidas pode vir aqui)
-      if (stderr && stderr.trim()) {
-        console.log('[PROCESSAR-IMAGEM] Stderr do Python:', stderr);
-      }
+      // 4. Executar o script de processamento apropriado
+      const resultadoPython = await executarScriptProcessamento(scriptPath, imagemPath);
 
-      // Parsear JSON retornado pelo script
-      let resultadoPython;
-      try {
-        // Extrair apenas JSON do stdout (pode haver outros prints antes)
-        const jsonMatch = stdout.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          resultadoPython = JSON.parse(jsonMatch[0]);
-        } else {
-          console.error('[PROCESSAR-IMAGEM] JSON não encontrado no stdout');
-          throw new Error('Resposta do Python não contém JSON válido');
-        }
-      } catch (parseError) {
-        console.error('[PROCESSAR-IMAGEM] Erro ao parsear JSON do Python:', parseError);
-        console.error('[PROCESSAR-IMAGEM] Stdout completo:', stdout.substring(0, 500));
-        throw new Error(`Erro ao processar resposta do algoritmo Python: ${parseError.message}`);
-      }
-
-      // Verificar se o processamento foi bem-sucedido
-      if (!resultadoPython.sucesso) {
-        console.error('[PROCESSAR-IMAGEM] Processamento falhou:', resultadoPython.erro);
-        throw new Error(resultadoPython.erro || 'Erro no processamento Python');
-      }
-
-      // Extrair respostas do formato retornado
+      // 5. Extrair respostas do formato retornado
       respostasExtraidas = resultadoPython.respostas || [];
       detalhesProcessamento = {
         total_bolhas_detectadas: resultadoPython.total_bolhas_detectadas || 0,
@@ -411,11 +460,13 @@ router.post('/processar-imagem', uploadImagem.single('imagem'), async (req, res)
         questoes_sem_marcacao: resultadoPython.questoes_sem_marcacao || 0,
         questoes_validas: resultadoPython.questoes_validas || 0,
         questoes_invalidas_detalhes: resultadoPython.questoes_invalidas_detalhes || [],
-        avisos: resultadoPython.avisos || []
+        avisos: resultadoPython.avisos || [],
+        tipo_imagem_detectado: tipoImagem,
+        script_utilizado: tipoImagem === 'processada' ? 'processar_respostas_imagem_processadas.py' : 'processar_respostas_Imagem_original.py'
       };
 
     } catch (execError) {
-      console.error('Erro ao executar script Python:', execError);
+      console.error('[PROCESSAR-IMAGEM] Erro ao executar script Python:', execError);
       
       // Se for erro de execução (Python não encontrado, etc.)
       if (execError.code === 'ENOENT' || execError.message.includes('python')) {
