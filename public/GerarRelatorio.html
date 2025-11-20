@@ -1059,9 +1059,11 @@
               callbacks: {
                 label: context => {
                   const disciplina = dados[context.dataIndex];
-                  const total = disciplina ? Number(disciplina.total_respostas || 0) : 0;
+                  const totalQuestoes = disciplina ? Number(disciplina.total_questoes || 0) : 0;
                   const acertos = disciplina ? Number(disciplina.acertos || 0) : 0;
-                  return `Taxa de acertos: ${context.raw.toFixed(1)}% (${acertos.toLocaleString('pt-BR')} de ${total.toLocaleString('pt-BR')} questões)`;
+                  // Mostrar total de questões da disciplina (não apenas as respondidas válidamente)
+                  // Isso reflete corretamente o cálculo da média na barra
+                  return `Taxa de acertos: ${context.raw.toFixed(1)}% (${acertos.toLocaleString('pt-BR')} de ${totalQuestoes.toLocaleString('pt-BR')} questões)`;
                 }
               }
             }
