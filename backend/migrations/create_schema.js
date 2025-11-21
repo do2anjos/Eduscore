@@ -1,20 +1,20 @@
 /**
- * Script de criação do schema do banco de dados SQLite
+ * Script de criação do schema do banco de dados SQLite/Turso
  * Execute: node backend/migrations/create_schema.js
  */
 
 const db = require('../db').db; // Acesso direto ao banco para DDL
 
-function createSchema() {
-  console.log('🔧 Criando schema do banco de dados SQLite...\n');
+async function createSchema() {
+  console.log('🔧 Criando schema do banco de dados...\n');
 
   try {
     // Habilitar foreign keys
-    db.pragma('foreign_keys = ON');
+    await db.pragma('foreign_keys = ON');
 
     // 1. Tabela de usuários (professores, coordenadores, admins)
     console.log('1. Criando tabela usuarios...');
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id TEXT PRIMARY KEY,
         nome TEXT NOT NULL,
@@ -33,7 +33,7 @@ function createSchema() {
 
     // 2. Tabela de alunos
     console.log('2. Criando tabela alunos...');
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS alunos (
         id TEXT PRIMARY KEY,
         nome_completo TEXT NOT NULL,
@@ -48,7 +48,7 @@ function createSchema() {
 
     // 3. Tabela de disciplinas
     console.log('3. Criando tabela disciplinas...');
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS disciplinas (
         id TEXT PRIMARY KEY,
         nome TEXT NOT NULL UNIQUE
@@ -58,7 +58,7 @@ function createSchema() {
 
     // 4. Tabela de gabaritos
     console.log('4. Criando tabela gabaritos...');
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS gabaritos (
         id TEXT PRIMARY KEY,
         nome TEXT NOT NULL,
@@ -70,7 +70,7 @@ function createSchema() {
 
     // 5. Tabela de questões
     console.log('5. Criando tabela questoes...');
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS questoes (
         id TEXT PRIMARY KEY,
         gabarito_id TEXT NOT NULL,
@@ -86,7 +86,7 @@ function createSchema() {
 
     // 6. Tabela de respostas
     console.log('6. Criando tabela respostas...');
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS respostas (
         id TEXT PRIMARY KEY,
         aluno_id TEXT NOT NULL,
@@ -104,7 +104,7 @@ function createSchema() {
 
     // 7. Tabela de sessões
     console.log('7. Criando tabela sessoes...');
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS sessoes (
         id TEXT PRIMARY KEY,
         etapa TEXT NOT NULL,
@@ -122,7 +122,7 @@ function createSchema() {
 
     // 8. Tabela de relatórios
     console.log('8. Criando tabela relatorios...');
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS relatorios (
         id TEXT PRIMARY KEY,
         sessao_id TEXT NOT NULL,
@@ -138,7 +138,7 @@ function createSchema() {
 
     // Criar índices para melhor performance
     console.log('9. Criando índices...');
-    db.exec(`
+    await db.exec(`
       CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
       CREATE INDEX IF NOT EXISTS idx_usuarios_matricula ON usuarios(matricula);
       CREATE INDEX IF NOT EXISTS idx_alunos_matricula ON alunos(matricula);
@@ -149,24 +149,24 @@ function createSchema() {
       CREATE INDEX IF NOT EXISTS idx_sessoes_data ON sessoes(data);
       CREATE INDEX IF NOT EXISTS idx_relatorios_sessao ON relatorios(sessao_id);
     `);
-           console.log('   ✅ Índices criados\n');
+    console.log('   ✅ Índices criados\n');
 
-           // Adicionar coluna configuracoes se não existir
-           console.log('10. Verificando coluna configuracoes...');
-           try {
-             db.exec(`
-               ALTER TABLE usuarios ADD COLUMN configuracoes TEXT;
-             `);
-             console.log('   ✅ Coluna configuracoes adicionada\n');
-           } catch (error) {
-             if (error.message.includes('duplicate column')) {
-               console.log('   ℹ️  Coluna configuracoes já existe\n');
-             } else {
-               console.log('   ⚠️  Aviso ao adicionar coluna configuracoes:', error.message, '\n');
-             }
-           }
+    // Adicionar coluna configuracoes se não existir
+    console.log('10. Verificando coluna configuracoes...');
+    try {
+      await db.exec(`
+        ALTER TABLE usuarios ADD COLUMN configuracoes TEXT;
+      `);
+      console.log('   ✅ Coluna configuracoes adicionada\n');
+    } catch (error) {
+      if (error.message && error.message.includes('duplicate column')) {
+        console.log('   ℹ️  Coluna configuracoes já existe\n');
+      } else {
+        console.log('   ⚠️  Aviso ao adicionar coluna configuracoes:', error.message, '\n');
+      }
+    }
 
-           console.log('✅ Schema criado com sucesso!\n');
+    console.log('✅ Schema criado com sucesso!\n');
     console.log('📊 Tabelas criadas:');
     console.log('   - usuarios');
     console.log('   - alunos');
@@ -186,9 +186,12 @@ function createSchema() {
 
 // Executar se chamado diretamente
 if (require.main === module) {
-  createSchema();
-  process.exit(0);
+  createSchema().then(() => {
+    process.exit(0);
+  }).catch(err => {
+    console.error('Erro:', err);
+    process.exit(1);
+  });
 }
 
 module.exports = { createSchema };
-

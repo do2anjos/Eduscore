@@ -1,22 +1,151 @@
-const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-// Caminho do banco de dados
-const dbPath = process.env.DB_PATH || path.join(__dirname, '../database.sqlite');
+// Detectar se está usando Turso (produção) ou SQLite local (desenvolvimento)
+const isTurso = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
 
-// Garantir que o diretório existe
-const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+let db;
+let dbClient; // Para Turso (LibSQL client)
+let localDbForQueries; // Para SQLite local (referência original sem wrappers)
+
+if (isTurso) {
+  // Configuração para Turso (produção) - usando @libsql/client
+  const { createClient } = require('@libsql/client');
+  dbClient = createClient({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
+  
+  // Wrapper para Turso que simula a interface do better-sqlite3
+  db = {
+    // Executar SQL sem retorno (para DDL)
+    exec: async (sql) => {
+      // Dividir múltiplas statements por ponto e vírgula
+      const statements = sql.split(';').filter(s => s.trim());
+      for (const stmt of statements) {
+        if (stmt.trim()) {
+          await dbClient.execute(stmt.trim());
+        }
+      }
+    },
+    
+    // Executar PRAGMA
+    pragma: async (pragma) => {
+      // Turso/LibSQL não suporta todos os PRAGMAs do SQLite
+      // Foreign keys são habilitados por padrão no Turso
+      if (pragma === 'foreign_keys = ON') {
+        // Turso já tem foreign keys habilitadas por padrão
+        return;
+      }
+      // Para outros PRAGMAs, tentar executar como SQL
+      await dbClient.execute(`PRAGMA ${pragma}`);
+    },
+    
+    // Preparar statement (para queries complexas nas migrações)
+    prepare: (sql) => {
+      return {
+        run: async (...params) => {
+          const result = await dbClient.execute({
+            sql,
+            args: params.length > 0 ? params : undefined
+          });
+          return {
+            changes: result.rowsAffected,
+            lastInsertRowid: result.lastInsertRowid ? BigInt(result.lastInsertRowid).toString() : null
+          };
+        },
+        all: async (...params) => {
+          const result = await dbClient.execute({
+            sql,
+            args: params.length > 0 ? params : undefined
+          });
+          // Converter rows do formato LibSQL para objeto JavaScript
+          return result.rows.map(row => {
+            const obj = {};
+            for (const [key, value] of Object.entries(row)) {
+              obj[key] = value;
+            }
+            return obj;
+          });
+        }
+      };
+    }
+  };
+  
+  console.log('✅ Conectado ao Turso (produção)');
+} else {
+  // Configuração para SQLite local (desenvolvimento)
+  const Database = require('better-sqlite3');
+  const dbPath = process.env.DB_PATH || path.join(__dirname, '../database.sqlite');
+  
+  // Garantir que o diretório existe
+  const dbDir = path.dirname(dbPath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+  
+  // Criar conexão com o banco
+  localDbForQueries = new Database(dbPath);
+  db = localDbForQueries;
+  
+  // Habilitar foreign keys
+  db.pragma('foreign_keys = ON');
+  
+  // Wrappers async para manter compatibilidade (para migrações)
+  const originalExec = db.exec.bind(db);
+  const originalPragma = db.pragma.bind(db);
+  
+  db.exec = (sql) => {
+    return new Promise((resolve, reject) => {
+      try {
+        originalExec(sql);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+  
+  db.pragma = (pragma) => {
+    return new Promise((resolve, reject) => {
+      try {
+        originalPragma(pragma);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+  
+  // Wrapper para prepare que mantém interface síncrona mas retorna promessas
+  const originalPrepare = db.prepare.bind(db);
+  db.prepare = (sql) => {
+    const stmt = originalPrepare(sql);
+    return {
+      run: (...params) => {
+        return new Promise((resolve, reject) => {
+          try {
+            resolve(stmt.run(...params));
+          } catch (err) {
+            reject(err);
+          }
+        });
+      },
+      all: (...params) => {
+        return new Promise((resolve, reject) => {
+          try {
+            resolve(stmt.all(...params));
+          } catch (err) {
+            reject(err);
+          }
+        });
+      }
+    };
+  };
+  
+  console.log('✅ Conectado ao SQLite local (desenvolvimento)');
 }
-
-// Criar conexão com o banco
-const db = new Database(dbPath);
-
-// Habilitar foreign keys
-db.pragma('foreign_keys = ON');
 
 // Função para converter SQL PostgreSQL para SQLite
 function convertPostgresToSQLite(sql) {
@@ -26,11 +155,7 @@ function convertPostgresToSQLite(sql) {
   converted = converted.replace(/NOW\(\)/gi, "datetime('now')");
   
   // Converter ILIKE para LIKE com UPPER (case-insensitive)
-  // SQLite não tem ILIKE, então precisamos usar UPPER() em ambos os lados
-  // Padrão: campo ILIKE valor -> UPPER(campo) LIKE UPPER(valor)
-  // Suporta múltiplos padrões: campo ILIKE $1, campo ILIKE ?, etc.
   converted = converted.replace(/(\w+(?:\.\w+)?)\s+ILIKE\s+(\$?\d+|\?|'[^']*')/gi, (match, field, value) => {
-    // Se o valor já é uma string literal, não precisa de parâmetro
     if (value.startsWith("'")) {
       return `UPPER(${field}) LIKE UPPER(${value})`;
     }
@@ -56,60 +181,42 @@ function convertPostgresToSQLite(sql) {
 
 // Wrapper para compatibilidade com código existente (async/await)
 const dbWrapper = {
-  query: (sql, params = []) => {
-    return new Promise((resolve, reject) => {
-      try {
-        // Converter SQL PostgreSQL para SQLite
-        const { sql: sqliteSql, paramMap } = convertPostgresToSQLite(sql);
-        
-        // Reordenar parâmetros se necessário (PostgreSQL usa $1, $2, SQLite usa ? sequencial)
-        // Quando o mesmo parâmetro é usado múltiplas vezes, precisamos duplicar os valores
-        let reorderedParams = params;
-        if (Object.keys(paramMap).length > 0) {
-          // Contar quantas vezes cada parâmetro aparece na query convertida
-          const paramCounts = {};
-          const matches = sqliteSql.match(/\?/g);
-          const totalParams = matches ? matches.length : 0;
-          
-          // Criar array de parâmetros baseado na ordem de uso
-          const sortedKeys = Object.keys(paramMap)
-            .sort((a, b) => parseInt(a) - parseInt(b));
-          
-          // Mapear cada ? para o parâmetro correspondente na ordem que aparecem
-          reorderedParams = [];
-          const placeholderMatches = sqliteSql.match(/\$/g);
-          
-          // Para cada placeholder na query original, adicionar o parâmetro correspondente
-          if (totalParams > 0) {
-            // Extrair a ordem dos parâmetros da query original
-            const originalMatches = sql.match(/\$(\d+)/g);
-            if (originalMatches) {
-              reorderedParams = originalMatches.map(match => {
-                const paramNum = parseInt(match.replace('$', ''));
-                return params[paramNum - 1];
-              });
-            } else {
-              // Fallback: usar método original
-              reorderedParams = sortedKeys.map(key => params[parseInt(key) - 1]);
-            }
-          } else {
-            reorderedParams = sortedKeys.map(key => params[parseInt(key) - 1]);
-          }
+  query: async (sql, params = []) => {
+    try {
+      // Converter SQL PostgreSQL para SQLite
+      const { sql: sqliteSql, paramMap } = convertPostgresToSQLite(sql);
+      
+      // Reordenar parâmetros se necessário
+      let reorderedParams = params;
+      if (Object.keys(paramMap).length > 0) {
+        const originalMatches = sql.match(/\$(\d+)/g);
+        if (originalMatches) {
+          reorderedParams = originalMatches.map(match => {
+            const paramNum = parseInt(match.replace('$', ''));
+            return params[paramNum - 1];
+          });
         }
+      }
 
-        // Determinar tipo de query
-        const trimmedSql = sqliteSql.trim().toUpperCase();
-        
+      // Determinar tipo de query
+      const trimmedSql = sqliteSql.trim().toUpperCase();
+      
+      if (isTurso) {
+        // Execução no Turso (async nativo)
         if (trimmedSql.startsWith('SELECT')) {
-          const stmt = db.prepare(sqliteSql);
-          const rows = stmt.all(reorderedParams);
+          const result = await dbClient.execute({
+            sql: sqliteSql,
+            args: reorderedParams.length > 0 ? reorderedParams : undefined
+          });
           
-          // Normalizar nomes de colunas COUNT(*) para 'count' (minúsculo)
-          // SQLite retorna COUNT(*) como 'COUNT(*)' mas o código espera 'count'
+          // Converter rows do formato LibSQL para objeto JavaScript
+          // LibSQL retorna rows como array de objetos já prontos
+          const rows = result.rows || [];
+          
+          // Normalizar COUNT(*)
           const normalizedRows = rows.map(row => {
             const normalized = { ...row };
             Object.keys(normalized).forEach(key => {
-              // SQLite pode retornar COUNT(*) de diferentes formas
               if (key === 'COUNT(*)' || key === 'count(*)') {
                 normalized.count = normalized[key];
                 delete normalized[key];
@@ -118,7 +225,7 @@ const dbWrapper = {
             return normalized;
           });
           
-          resolve({ rows: normalizedRows });
+          return { rows: normalizedRows };
         } else if (trimmedSql.startsWith('INSERT')) {
           // Helper para gerar UUID
           const generateUUID = () => {
@@ -141,7 +248,6 @@ const dbWrapper = {
           if (tableMatch && columnsMatch) {
             const columns = columnsMatch[1].split(',').map(c => c.trim());
             if (!columns.includes('id')) {
-              // Adicionar id no início
               generatedId = generateUUID();
               insertSqlFinal = insertSqlFinal.replace(
                 /INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
@@ -160,8 +266,10 @@ const dbWrapper = {
             insertSqlFinal = insertSqlFinal.replace(/RETURNING.*$/i, '').trim();
           }
           
-          const stmt = db.prepare(insertSqlFinal);
-          const info = stmt.run(finalParams);
+          const result = await dbClient.execute({
+            sql: insertSqlFinal,
+            args: finalParams.length > 0 ? finalParams : undefined
+          });
           
           // Se tinha RETURNING, buscar o registro inserido
           if (sql.includes('RETURNING') && tableMatch) {
@@ -169,16 +277,23 @@ const dbWrapper = {
             const returningMatch = sql.match(/RETURNING\s+(.+)$/i);
             const columns = returningMatch ? returningMatch[1].trim() : '*';
             
-            // Usar o ID gerado ou rowid
-            const idToUse = generatedId || finalParams[0] || info.lastInsertRowid;
-            const selectStmt = db.prepare(`SELECT ${columns} FROM ${tableName} WHERE id = ? OR rowid = ?`);
-            const rows = selectStmt.all([idToUse, info.lastInsertRowid]);
-            resolve({ rows, rowCount: info.changes });
+            // Buscar usando o ID gerado ou lastInsertRowid
+            const idToUse = generatedId || finalParams[0];
+            let rows = [];
+            if (idToUse) {
+              const selectResult = await dbClient.execute({
+                sql: `SELECT ${columns} FROM ${tableName} WHERE id = ?`,
+                args: [idToUse]
+              });
+              rows = selectResult.rows || [];
+            }
+            
+            return { rows, rowCount: result.rowsAffected };
           } else {
-            resolve({ rows: [], rowCount: info.changes });
+            return { rows: [], rowCount: result.rowsAffected };
           }
         } else {
-          // UPDATE ou DELETE com possível RETURNING
+          // UPDATE ou DELETE
           let finalSql = sqliteSql;
           let hasReturning = false;
           let returningColumns = '*';
@@ -188,17 +303,16 @@ const dbWrapper = {
           if (returningMatch) {
             hasReturning = true;
             returningColumns = returningMatch[1].trim();
-            // Remover RETURNING do SQL para executar o UPDATE/DELETE
             finalSql = sqliteSql.replace(/RETURNING.*$/i, '').trim();
           }
           
-          const stmt = db.prepare(finalSql);
-          const info = stmt.run(reorderedParams);
+          const result = await dbClient.execute({
+            sql: finalSql,
+            args: reorderedParams.length > 0 ? reorderedParams : undefined
+          });
           
-          // Se tinha RETURNING, buscar o registro atualizado/deletado
-          if (hasReturning && info.changes > 0) {
-            // Para UPDATE, precisamos identificar qual registro foi atualizado
-            // Extrair a condição WHERE e o nome da tabela do SQL convertido
+          // Se tinha RETURNING, buscar o registro
+          if (hasReturning && result.rowsAffected > 0) {
             const tableMatch = sqliteSql.match(/UPDATE\s+(\w+)/i);
             const whereMatch = finalSql.match(/WHERE\s+(.+)$/i);
             
@@ -206,40 +320,169 @@ const dbWrapper = {
               const tableName = tableMatch[1];
               const whereClause = whereMatch[1].trim();
               
-              // Contar quantos parâmetros SET existem (antes do WHERE)
-              // O padrão é: UPDATE table SET col1 = ?, col2 = ? WHERE col = ?
               const setMatch = finalSql.match(/SET\s+(.+?)\s+WHERE/i);
               if (setMatch) {
                 const setClause = setMatch[1];
                 const setParamCount = (setClause.match(/\?/g) || []).length;
-                
-                // Os parâmetros WHERE são os que vêm depois dos parâmetros SET
                 const whereParamCount = (whereClause.match(/\?/g) || []).length;
                 const whereParams = reorderedParams.slice(setParamCount, setParamCount + whereParamCount);
                 
-                // Buscar o registro usando a condição WHERE (já está convertida para ?)
-                const selectStmt = db.prepare(`SELECT ${returningColumns} FROM ${tableName} WHERE ${whereClause}`);
-                const rows = selectStmt.all(whereParams);
-                resolve({ 
-                  rows: rows.length > 0 ? rows : [], 
-                  rowCount: info.changes,
-                  lastInsertRowid: info.lastInsertRowid 
+                const selectResult = await dbClient.execute({
+                  sql: `SELECT ${returningColumns} FROM ${tableName} WHERE ${whereClause}`,
+                  args: whereParams.length > 0 ? whereParams : undefined
                 });
-                return;
+                
+                const rows = selectResult.rows.map(row => {
+                  const obj = {};
+                  for (const [key, value] of Object.entries(row)) {
+                    obj[key] = value;
+                  }
+                  return obj;
+                });
+                
+                return { 
+                  rows: rows.length > 0 ? rows : [], 
+                  rowCount: result.rowsAffected
+                };
               }
             }
           }
           
-          resolve({ 
+          return { 
+            rows: [], 
+            rowCount: result.rowsAffected
+          };
+        }
+      } else {
+        // Execução no SQLite local (síncrono, usar Database original sem wrappers async)
+        // Usar a conexão já criada no início
+        if (trimmedSql.startsWith('SELECT')) {
+          const stmt = localDbForQueries.prepare(sqliteSql);
+          const rows = stmt.all(...reorderedParams);
+          
+          // Normalizar COUNT(*)
+          const normalizedRows = rows.map(row => {
+            const normalized = { ...row };
+            Object.keys(normalized).forEach(key => {
+              if (key === 'COUNT(*)' || key === 'count(*)') {
+                normalized.count = normalized[key];
+                delete normalized[key];
+              }
+            });
+            return normalized;
+          });
+          
+          return { rows: normalizedRows };
+        } else if (trimmedSql.startsWith('INSERT')) {
+          // Helper para gerar UUID
+          const generateUUID = () => {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+              const r = Math.random() * 16 | 0;
+              const v = c === 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+            });
+          };
+          
+          // Verificar se precisa gerar ID automaticamente
+          const tableMatch = sql.match(/INTO\s+(\w+)/i);
+          const columnsMatch = sql.match(/INSERT\s+INTO\s+\w+\s*\(([^)]+)\)/i);
+          
+          let finalParams = reorderedParams;
+          let insertSqlFinal = sqliteSql;
+          let generatedId = null;
+          
+          // Se a tabela tem coluna 'id' mas não está sendo inserida, gerar UUID
+          if (tableMatch && columnsMatch) {
+            const columns = columnsMatch[1].split(',').map(c => c.trim());
+            if (!columns.includes('id')) {
+              generatedId = generateUUID();
+              insertSqlFinal = insertSqlFinal.replace(
+                /INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)/i,
+                `INSERT INTO $1 (id, $2)`
+              );
+              insertSqlFinal = insertSqlFinal.replace(
+                /VALUES\s*\(/i,
+                `VALUES (?, `
+              );
+              finalParams = [generatedId, ...reorderedParams];
+            }
+          }
+          
+          // Remover RETURNING se existir
+          if (insertSqlFinal.includes('RETURNING')) {
+            insertSqlFinal = insertSqlFinal.replace(/RETURNING.*$/i, '').trim();
+          }
+          
+          const stmt = localDbForQueries.prepare(insertSqlFinal);
+          const info = stmt.run(...finalParams);
+          
+          // Se tinha RETURNING, buscar o registro inserido
+          if (sql.includes('RETURNING') && tableMatch) {
+            const tableName = tableMatch[1];
+            const returningMatch = sql.match(/RETURNING\s+(.+)$/i);
+            const columns = returningMatch ? returningMatch[1].trim() : '*';
+            
+            const idToUse = generatedId || finalParams[0] || info.lastInsertRowid;
+            const selectStmt = localDbForQueries.prepare(`SELECT ${columns} FROM ${tableName} WHERE id = ? OR rowid = ?`);
+            const rows = selectStmt.all(idToUse, info.lastInsertRowid);
+            return { rows, rowCount: info.changes };
+          } else {
+            return { rows: [], rowCount: info.changes };
+          }
+        } else {
+          // UPDATE ou DELETE
+          let finalSql = sqliteSql;
+          let hasReturning = false;
+          let returningColumns = '*';
+          
+          // Verificar se tem RETURNING
+          const returningMatch = sql.match(/RETURNING\s+(.+)$/i);
+          if (returningMatch) {
+            hasReturning = true;
+            returningColumns = returningMatch[1].trim();
+            finalSql = sqliteSql.replace(/RETURNING.*$/i, '').trim();
+          }
+          
+          const stmt = localDbForQueries.prepare(finalSql);
+          const info = stmt.run(...reorderedParams);
+          
+          // Se tinha RETURNING, buscar o registro atualizado/deletado
+          if (hasReturning && info.changes > 0) {
+            const tableMatch = sqliteSql.match(/UPDATE\s+(\w+)/i);
+            const whereMatch = finalSql.match(/WHERE\s+(.+)$/i);
+            
+            if (tableMatch && whereMatch) {
+              const tableName = tableMatch[1];
+              const whereClause = whereMatch[1].trim();
+              
+              const setMatch = finalSql.match(/SET\s+(.+?)\s+WHERE/i);
+              if (setMatch) {
+                const setClause = setMatch[1];
+                const setParamCount = (setClause.match(/\?/g) || []).length;
+                const whereParamCount = (whereClause.match(/\?/g) || []).length;
+                const whereParams = reorderedParams.slice(setParamCount, setParamCount + whereParamCount);
+                
+                const selectStmt = localDbForQueries.prepare(`SELECT ${returningColumns} FROM ${tableName} WHERE ${whereClause}`);
+                const rows = selectStmt.all(...whereParams);
+                return { 
+                  rows: rows.length > 0 ? rows : [], 
+                  rowCount: info.changes,
+                  lastInsertRowid: info.lastInsertRowid 
+                };
+              }
+            }
+          }
+          
+          return { 
             rows: [], 
             rowCount: info.changes,
             lastInsertRowid: info.lastInsertRowid 
-          });
+          };
         }
-      } catch (err) {
-        reject(err);
       }
-    });
+    } catch (err) {
+      throw err;
+    }
   }
 };
 
@@ -252,7 +495,7 @@ function generateUUID() {
   });
 }
 
-// Exportar wrapper e db direto (para casos especiais)
+// Exportar wrapper e db direto (para casos especiais como migrações)
 module.exports = dbWrapper;
 module.exports.db = db;
 module.exports.generateUUID = generateUUID;

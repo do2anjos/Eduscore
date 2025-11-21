@@ -11,10 +11,10 @@ async function addImagensCartoesTable() {
 
   try {
     // Habilitar foreign keys
-    db.pragma('foreign_keys = ON');
+    await db.pragma('foreign_keys = ON');
 
     // Criar tabela imagens_cartoes
-    db.exec(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS imagens_cartoes (
         id TEXT PRIMARY KEY,
         aluno_id TEXT NOT NULL,
@@ -30,7 +30,7 @@ async function addImagensCartoesTable() {
     console.log('   ✅ Tabela imagens_cartoes criada\n');
 
     // Criar índice para melhor performance
-    db.exec(`
+    await db.exec(`
       CREATE INDEX IF NOT EXISTS idx_imagens_cartoes_aluno_gabarito 
       ON imagens_cartoes(aluno_id, gabarito_id);
     `);
@@ -56,4 +56,3 @@ if (require.main === module) {
 }
 
 module.exports = { addImagensCartoesTable };
-

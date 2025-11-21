@@ -2348,6 +2348,13 @@ a {
   color: var(--color-primary);
 }
 
+/* Exceção: botões e links primários sempre brancos */
+a.btn-primary,
+a.btn-secondary,
+a.landing-nav-link-primary {
+  color: var(--color-surface) !important;
+}
+
 a:visited {
   color: var(--color-primary-dark);
 }
@@ -2358,16 +2365,29 @@ a:focus {
   text-decoration: underline;
 }
 
+/* Manter branco em hover para botões */
+a.btn-primary:hover,
+a.btn-primary:focus,
+a.btn-secondary:hover,
+a.btn-secondary:focus,
+a.landing-nav-link-primary:hover,
+a.landing-nav-link-primary:focus {
+  color: var(--color-surface) !important;
+  text-decoration: none;
+}
+
 /* Garantir contraste em botões */
-.btn-primary {
+.btn-primary,
+a.btn-primary {
   background-color: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-surface) !important;
   /* #008cc4 sobre #ffffff = 4.5:1 (WCAG AA) */
 }
 
-.btn-secondary {
+.btn-secondary,
+a.btn-secondary {
   background-color: var(--color-secondary);
-  color: var(--color-surface);
+  color: var(--color-surface) !important;
   /* #10B981 sobre #ffffff = 4.6:1 (WCAG AA) */
 }
 
@@ -2822,13 +2842,13 @@ button:active {
 
 .landing-nav-link-primary {
   background-color: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-surface) !important;
   padding: var(--spacing-sm) var(--spacing-lg);
 }
 
 .landing-nav-link-primary:hover {
   background-color: var(--color-primary-dark);
-  color: var(--color-surface);
+  color: var(--color-surface) !important;
 }
 
 /* Section Container */
@@ -2960,24 +2980,30 @@ button:active {
   white-space: nowrap;
 }
 
-.btn-primary {
+.btn-primary,
+a.btn-primary {
   background-color: var(--color-primary);
-  color: var(--color-surface);
+  color: var(--color-surface) !important;
 }
 
-.btn-primary:hover {
+.btn-primary:hover,
+a.btn-primary:hover {
   background-color: var(--color-primary-dark);
+  color: var(--color-surface) !important;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-.btn-secondary {
+.btn-secondary,
+a.btn-secondary {
   background-color: var(--color-secondary);
-  color: var(--color-surface);
+  color: var(--color-surface) !important;
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover,
+a.btn-secondary:hover {
   background-color: var(--color-secondary-dark);
+  color: var(--color-surface) !important;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -3267,6 +3293,16 @@ button:active {
   .btn-primary,
   .btn-secondary {
     width: 100%;
+  }
+
+  /* Layout de login responsivo */
+  .login-layout-container {
+    grid-template-columns: 1fr !important;
+    gap: var(--spacing-xl) !important;
+  }
+
+  .login-layout-container .card[style*="min-height: 400px"] {
+    min-height: auto !important;
   }
 }
 

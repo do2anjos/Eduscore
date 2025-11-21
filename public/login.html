@@ -26,18 +26,19 @@
   <!-- Login Section -->
   <section class="features-section" style="min-height: calc(100vh - 200px); display: flex; align-items: center; padding: var(--spacing-4xl) 0;">
     <div class="section-container">
-      <div style="max-width: 500px; margin: 0 auto;">
-        <!-- Logo e Título -->
-        <div style="text-align: center; margin-bottom: var(--spacing-3xl);">
-            <h1 class="section-title" style="font-size: var(--font-size-3xl); margin-bottom: var(--spacing-sm);">Faça seu login</h1>
-          <p class="section-subtitle" style="font-size: var(--font-size-base); margin-bottom: 0;">
-            É necessário seu <strong>email institucional</strong>
-          </p>
-        </div>
+      <!-- Logo e Título -->
+      <div style="text-align: center; margin-bottom: var(--spacing-3xl);">
+        <h1 class="section-title" style="font-size: var(--font-size-3xl); margin-bottom: var(--spacing-sm);">Faça seu login</h1>
+        <p class="section-subtitle" style="font-size: var(--font-size-base); margin-bottom: 0;">
+          É necessário seu <strong>email institucional</strong>
+        </p>
+      </div>
 
+      <!-- Container lado a lado: Formulário + Citação -->
+      <div class="login-layout-container" style="display: grid; grid-template-columns: 1fr 1.3fr; gap: var(--spacing-3xl); align-items: stretch; max-width: 1200px; margin: 0 auto;">
         <!-- Formulário de Login -->
-        <div class="card" style="padding: var(--spacing-3xl);">
-          <form id="loginForm" onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+        <div class="card" style="padding: var(--spacing-3xl); display: flex; flex-direction: column; height: 100%;">
+          <form id="loginForm" onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: var(--spacing-lg); flex: 1;">
             <div class="input-group">
               <label for="email">Email institucional</label>
               <input 
@@ -80,11 +81,11 @@
         </div>
 
         <!-- Quote Card -->
-        <div class="card" style="margin-top: var(--spacing-xl); padding: var(--spacing-xl); background: linear-gradient(135deg, var(--color-primary-darker) 0%, var(--color-primary) 100%); color: var(--color-surface); text-align: center;">
-          <div style="font-size: var(--font-size-xl); line-height: var(--line-height-relaxed); margin-bottom: var(--spacing-md);">
+        <div class="card" style="padding: var(--spacing-3xl); background: linear-gradient(135deg, var(--color-primary-darker) 0%, var(--color-primary) 100%); color: var(--color-surface); display: flex; flex-direction: column; justify-content: center; height: 100%;">
+          <div style="font-size: var(--font-size-2xl); line-height: var(--line-height-relaxed); margin-bottom: var(--spacing-lg); font-weight: 500;">
             "Educar não é ensinar respostas, é ensinar a pensar."
           </div>
-          <div style="font-size: var(--font-size-sm); opacity: 0.9;">
+          <div style="font-size: var(--font-size-base); opacity: 0.95; font-weight: 500;">
             Jean Piaget
           </div>
         </div>
