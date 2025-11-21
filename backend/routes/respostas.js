@@ -98,37 +98,68 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Rota GET /api/respostas/imagem-cartao - Busca imagem do cartão para um gabarito/aluno
-router.get('/imagem-cartao', async (req, res) => {
+// Rota GET /api/respostas/imagem/:aluno_id/:gabarito_id - Busca a imagem do cartão do aluno para um gabarito
+router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
   try {
-    const { aluno_id, gabarito_id } = req.query;
-    
-    if (!aluno_id || !gabarito_id) {
-      return res.status(400).json({
-        sucesso: false,
-        erro: 'aluno_id e gabarito_id são obrigatórios'
-      });
+    const { aluno_id, gabarito_id } = req.params;
+
+    // Buscar a imagem associada na tabela imagens_cartoes
+    const imagemQuery = await db.query(
+      `SELECT caminho_imagem, nome_imagem, criado_em
+       FROM imagens_cartoes 
+       WHERE aluno_id = $1 AND gabarito_id = $2 
+       ORDER BY criado_em DESC 
+       LIMIT 1`,
+      [aluno_id, gabarito_id]
+    );
+
+    if (imagemQuery.rows.length > 0) {
+      const imagem = imagemQuery.rows[0];
+      
+      // Verificar se o arquivo ainda existe
+      const caminhoCompleto = path.join(__dirname, '../../', imagem.caminho_imagem);
+      if (fs.existsSync(caminhoCompleto)) {
+        // Retornar o caminho relativo da imagem
+        const imagemPath = imagem.caminho_imagem.startsWith('/') 
+          ? imagem.caminho_imagem 
+          : `/uploads/imagens/${imagem.nome_imagem}`;
+        
+        return res.json({
+          sucesso: true,
+          imagem: imagemPath,
+          nome: imagem.nome_imagem,
+          criado_em: imagem.criado_em
+        });
+      } else {
+        console.warn(`[IMAGEM] Arquivo não encontrado: ${caminhoCompleto}`);
+      }
     }
 
-    // Buscar a data mais recente das respostas deste gabarito/aluno
-    const respostaQuery = await db.query(`
-      SELECT MAX(data_resposta) as data_mais_recente
-      FROM respostas
-      WHERE aluno_id = $1 AND gabarito_id = $2
-    `, [aluno_id, gabarito_id]);
+    // Fallback: Buscar a resposta mais recente e tentar encontrar imagem pelo timestamp
+    const respostaQuery = await db.query(
+      `SELECT data_resposta 
+       FROM respostas 
+       WHERE aluno_id = $1 AND gabarito_id = $2 
+       ORDER BY data_resposta DESC 
+       LIMIT 1`,
+      [aluno_id, gabarito_id]
+    );
 
-    if (respostaQuery.rows.length === 0 || !respostaQuery.rows[0].data_mais_recente) {
+    if (respostaQuery.rows.length === 0) {
       return res.status(404).json({
         sucesso: false,
-        erro: 'Nenhuma resposta encontrada para este gabarito/aluno'
+        erro: 'Nenhuma resposta ou imagem encontrada para este aluno e gabarito'
       });
     }
 
-    const dataMaisRecente = new Date(respostaQuery.rows[0].data_mais_recente);
-    const timestamp = dataMaisRecente.getTime();
-
-    // Buscar imagens no diretório que possam corresponder
+    const dataResposta = respostaQuery.rows[0].data_resposta;
+    
+    // Converter data para timestamp para buscar imagem próxima
+    const timestamp = new Date(dataResposta).getTime();
+    
+    // Buscar imagens no diretório que foram processadas próximo ao timestamp da resposta
     const imagensDir = path.join(uploadsDir, 'imagens');
+    
     if (!fs.existsSync(imagensDir)) {
       return res.status(404).json({
         sucesso: false,
@@ -138,48 +169,50 @@ router.get('/imagem-cartao', async (req, res) => {
 
     // Listar todas as imagens e encontrar a mais próxima do timestamp
     const arquivos = fs.readdirSync(imagensDir);
-    const imagens = arquivos.filter(f => 
-      f.startsWith('resposta_') && 
-      (f.endsWith('.jpg') || f.endsWith('.jpeg') || f.endsWith('.png'))
+    const imagens = arquivos.filter(arquivo => 
+      arquivo.startsWith('resposta_') && 
+      /\.(jpg|jpeg|png|gif|webp)$/i.test(arquivo)
     );
 
-    // Tentar encontrar imagem com timestamp próximo (dentro de 10 minutos)
-    const margemTempo = 10 * 60 * 1000; // 10 minutos
-    let imagemEncontrada = null;
+    if (imagens.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Nenhuma imagem encontrada no diretório'
+      });
+    }
+
+    // Encontrar a imagem mais próxima do timestamp da resposta
+    let imagemMaisProxima = null;
     let menorDiferenca = Infinity;
 
     imagens.forEach(imagem => {
-      // Extrair timestamp do nome do arquivo: resposta_${timestamp}.ext
-      const match = imagem.match(/resposta_(\d+)\./);
+      const match = imagem.match(/resposta_(\d+)/);
       if (match) {
         const timestampImagem = parseInt(match[1]);
         const diferenca = Math.abs(timestampImagem - timestamp);
         
-        if (diferenca <= margemTempo && diferenca < menorDiferenca) {
+        // Considerar imagens processadas até 1 hora antes ou depois da resposta
+        if (diferenca < 3600000 && diferenca < menorDiferenca) {
           menorDiferenca = diferenca;
-          imagemEncontrada = imagem;
+          imagemMaisProxima = imagem;
         }
       }
     });
 
-    if (!imagemEncontrada) {
+    if (!imagemMaisProxima) {
       return res.status(404).json({
         sucesso: false,
-        erro: 'Imagem do cartão não encontrada',
-        detalhes: 'Nenhuma imagem encontrada próxima à data das respostas'
+        erro: 'Nenhuma imagem encontrada próxima à data da resposta'
       });
     }
 
-    // Retornar URL da imagem
-    const imagemUrl = `/uploads/imagens/${imagemEncontrada}`;
+    // Retornar o caminho relativo da imagem
+    const imagemPath = `/uploads/imagens/${imagemMaisProxima}`;
     
-    res.status(200).json({
+    res.json({
       sucesso: true,
-      imagem: {
-        nome: imagemEncontrada,
-        url: imagemUrl,
-        caminho: path.join(imagensDir, imagemEncontrada)
-      }
+      imagem: imagemPath,
+      nome: imagemMaisProxima
     });
 
   } catch (err) {
@@ -194,7 +227,7 @@ router.get('/imagem-cartao', async (req, res) => {
 
 // Rota POST /api/respostas - Cria uma nova resposta
 router.post('/', async (req, res) => {
-  const { aluno_id, questao_id, gabarito_id, resposta_aluno, acertou } = req.body;
+  const { aluno_id, questao_id, gabarito_id, resposta_aluno, acertou, imagem_caminho, imagem_nome } = req.body;
 
   // Validação dos campos obrigatórios
   // resposta_aluno pode ser string vazia (indica não marcado)
@@ -284,6 +317,42 @@ router.post('/', async (req, res) => {
          RETURNING id, aluno_id, questao_id, gabarito_id, resposta_aluno, acertou, data_resposta`,
         [respostaId, aluno_id, questao_id, gabarito_id, respostaNormalizada, acertouInt]
       );
+    }
+
+    // Se foi fornecida uma imagem, salvar a associação na tabela imagens_cartoes
+    // Apenas salvar na primeira resposta (evitar duplicatas)
+    if (imagem_caminho && imagem_nome && aluno_id && gabarito_id) {
+      try {
+        // Verificar se já existe uma imagem para este aluno/gabarito
+        const imagemExistente = await db.query(
+          `SELECT id, caminho_imagem FROM imagens_cartoes 
+           WHERE aluno_id = $1 AND gabarito_id = $2 
+           ORDER BY criado_em DESC LIMIT 1`,
+          [aluno_id, gabarito_id]
+        );
+
+        // Se não existe ou se a imagem é diferente, criar nova entrada
+        if (imagemExistente.rows.length === 0 || 
+            !imagemExistente.rows[0].caminho_imagem || 
+            imagemExistente.rows[0].caminho_imagem !== imagem_caminho) {
+          const imagemId = generateUUID();
+          await db.query(
+            `INSERT INTO imagens_cartoes 
+             (id, aluno_id, gabarito_id, caminho_imagem, nome_imagem, criado_em)
+             VALUES ($1, $2, $3, $4, $5, datetime('now'))`,
+            [imagemId, aluno_id, gabarito_id, imagem_caminho, imagem_nome]
+          );
+          console.log(`[RESPOSTAS] Imagem associada: ${imagem_nome} para aluno ${aluno_id} e gabarito ${gabarito_id}`);
+        }
+      } catch (imgErr) {
+        // Não falhar a criação da resposta se houver erro ao salvar a imagem
+        // Pode ser que a tabela ainda não exista (em desenvolvimento)
+        if (imgErr.message.includes('no such table')) {
+          console.warn('[RESPOSTAS] Aviso: Tabela imagens_cartoes não existe. Execute a migration: node backend/migrations/add_imagens_cartoes.js');
+        } else {
+          console.warn('[RESPOSTAS] Aviso: Erro ao salvar associação de imagem:', imgErr.message);
+        }
+      }
     }
 
     res.status(201).json({
