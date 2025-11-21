@@ -201,7 +201,7 @@
           url += `?etapa=${encodeURIComponent(etapaFiltro)}`;
         }
         
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
