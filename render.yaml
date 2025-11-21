@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: eduscore
+    env: node
+    buildCommand: |
+      npm install &&
+      (python3 -m pip install --user --upgrade pip && python3 -m pip install --user -r requirements.txt || 
+       python -m pip install --user --upgrade pip && python -m pip install --user -r requirements.txt || 
+       echo "⚠️  Python não encontrado. Instalando dependências via sistema...") &&
+      python3 -m pip install --user opencv-python numpy || python -m pip install --user opencv-python numpy || echo "⚠️  Falha ao instalar dependências Python"
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+
