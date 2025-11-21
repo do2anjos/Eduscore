@@ -61,11 +61,11 @@ Desenvolvido para coordenadores e professores acompanharem o progresso dos aluno
 
 ## 🔧 Requisitos
 
-- Node.js 14+ 
-- SQLite 3 (incluído no Node.js via better-sqlite3)
-- npm ou yarn
+- **Node.js 14+** 
+- **SQLite 3** (incluído no Node.js via better-sqlite3)
+- **npm** ou **yarn**
 - **Python 3.7+** (para processamento de imagens de folhas de resposta)
-- **OpenCV (cv2)** e **NumPy** instalados via pip
+- **OpenCV (cv2)** e **NumPy** (instalados via pip)
 
 ## 📦 Instalação
 
@@ -89,7 +89,12 @@ pip install -r backend/scripts/requirements.txt
 pip3 install -r backend/scripts/requirements.txt
 ```
 
-**Nota**: Certifique-se de que o Python está instalado e no PATH do sistema.
+**Dependências Python necessárias:**
+- `opencv-python` (cv2)
+- `numpy`
+- `Pillow` (processamento de imagens)
+
+**Nota**: Certifique-se de que o Python está instalado e no PATH do sistema. O Python é usado para processar imagens de folhas de resposta e detectar marcações em bolhas usando OCR e visão computacional.
 
 4. Configure o arquivo `.env` em `backend/` (veja [Configuração](#configuração))
 
@@ -155,7 +160,11 @@ classy-main/
 │   │   ├── sessoes.js       # Gestão de sessões
 │   │   └── usuarios.js      # Gestão de usuários
 │   ├── migrations/      # Migrações do banco de dados
-│   ├── utils/           # Utilitários (transactions)
+│   │   ├── create_schema.js  # Script de criação do schema
+│   │   └── schema.sql        # Schema SQL do banco de dados
+│   ├── utils/           # Utilitários (transactions, classificadores)
+│   │   ├── transaction.js    # Utilitários de transação
+│   │   └── disciplinaClassifier.js  # Classificação automática de disciplinas
 │   ├── db.js            # Configuração do banco SQLite
 │   └── .env             # Variáveis de ambiente (não versionado)
 ├── public/              # Frontend - Arquivos estáticos
@@ -194,8 +203,10 @@ classy-main/
 - **Banco de Dados**: SQLite (better-sqlite3)
 - **Autenticação**: JWT (jsonwebtoken) + bcrypt
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla) + Chart.js
+- **Processamento de Imagens**: Python 3.7+ com OpenCV (cv2) e NumPy
 - **Upload**: Multer (processamento de arquivos CSV)
 - **Segurança**: express-rate-limit, CORS, validação de dados
+- **Linguagens**: JavaScript, Python, SQL, HTML, CSS, JSON, Markdown
 
 ## 🔐 Autenticação
 
@@ -243,7 +254,7 @@ Consulte o arquivo [API.md](./doc/API.md) para documentação completa da API.
 
 ## 📚 Documentação
 
-**Última atualização**: 2025-11-16 17:41:12
+**Última atualização**: 2025-01-21 16:00:00
 
 - **[API Documentation](doc/API.md)** - Documentação completa da API REST com exemplos
 - **[Cálculo de Métricas](doc/CALCULO_METRICAS.md)** - Como métricas e gráficos são calculados
@@ -251,6 +262,34 @@ Consulte o arquivo [API.md](./doc/API.md) para documentação completa da API.
 - **[Diagnóstico do Projeto](doc/DIAGNOSTICO_PROJETO.md)** - Análise inicial do projeto
 - **[Migração SQLite](doc/MIGRACAO_SQLITE.md)** - Detalhes da migração de PostgreSQL para SQLite
 - **[Heurísticas de Nielsen](doc/HEURISTICAS_NIELSEN.md)** - Implementação das 10 heurísticas de usabilidade
+
+## 🛠️ Tecnologias Utilizadas
+
+### Backend
+- **Node.js** - Runtime JavaScript
+- **Express.js** - Framework web
+- **SQLite** - Banco de dados relacional (better-sqlite3)
+- **JWT** - Autenticação (jsonwebtoken)
+- **bcrypt** - Hash de senhas
+- **Multer** - Upload de arquivos
+- **express-rate-limit** - Rate limiting
+- **csv-parser** - Processamento de CSV
+
+### Frontend
+- **HTML5** - Estrutura
+- **CSS3** - Estilização
+- **JavaScript (Vanilla)** - Interatividade
+- **Chart.js** - Gráficos interativos
+
+### Processamento de Imagens
+- **Python 3.7+** - Linguagem de processamento
+- **OpenCV (cv2)** - Visão computacional e OCR
+- **NumPy** - Computação numérica
+- **Pillow** - Processamento de imagens
+
+### Banco de Dados
+- **SQLite** - Banco de dados embutido
+- **SQL** - Linguagem de consulta
 
 ## 🎨 Design System e Usabilidade
 
