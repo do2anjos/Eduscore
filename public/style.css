@@ -2262,6 +2262,8 @@ form button:hover {
 }
 
 /* Skip links - navegação por teclado */
+/* Skip Links para acessibilidade - melhorado */
+/* Permite que usuários de leitores de tela e navegação por teclado pulem conteúdo repetitivo */
 .skip-link {
   position: absolute;
   top: -40px;
@@ -2273,10 +2275,14 @@ form button:hover {
   z-index: 10000;
   border-radius: 0 0 var(--radius-sm) 0;
   font-weight: 600;
+  font-size: var(--font-size-base);
   transition: top var(--transition-base);
+  /* Garantir contraste WCAG AAA: #ffffff sobre #003b54 = 12.6:1 */
 }
 
-.skip-link:focus {
+/* Exibir skip link quando recebe foco (navegação por teclado) */
+.skip-link:focus,
+.skip-link:focus-visible {
   top: 0;
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
