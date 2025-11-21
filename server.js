@@ -72,8 +72,17 @@ app.use(cors({
 // =============================================
 // RATE LIMITING
 // =============================================
+// Configuração comum para rate limiters no Render
+const rateLimitConfig = {
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Desabilitar validação de trust proxy (Render usa proxy reverso)
+  validate: false
+};
+
 // Rate limiting geral
 const generalLimiter = rateLimit({
+  ...rateLimitConfig,
   windowMs: 1 * 60 * 1000, // 1 minuto
   max: 100, // 100 requisições por minuto
   message: {
@@ -84,15 +93,14 @@ const generalLimiter = rateLimit({
 
 // Rate limiting para login (mais restritivo)
 const loginLimiter = rateLimit({
+  ...rateLimitConfig,
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 5, // 5 tentativas por 15 minutos
   message: {
     sucesso: false,
     erro: 'Muitas tentativas de login. Tente novamente em 15 minutos.'
   },
-  skipSuccessfulRequests: true,
-  standardHeaders: true,
-  legacyHeaders: false
+  skipSuccessfulRequests: true
 });
 
 // Rate limiting para uploads
