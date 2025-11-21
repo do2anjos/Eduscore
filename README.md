@@ -4,7 +4,7 @@
 
 Plataforma educacional integrada que combina digitalização de folhas de resposta, análise de desempenho e predição de resultados utilizando machine learning, desenvolvida especificamente para o contexto de exames vestibulares no Amazonas.
 
-**Última atualização**: 2025-01-21 16:00:00
+**Última atualização**: 2025-11-20 20:08:00
 
 ## 🎯 Sobre o Projeto
 
