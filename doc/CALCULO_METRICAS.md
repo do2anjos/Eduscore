@@ -1,6 +1,7 @@
 # Documentação de Cálculo de Métricas e Gráficos
 
-**Última atualização**: 2025-11-16 17:41:12
+**Última atualização**: 2025-01-XX  
+**Versão**: 2.0.0
 
 Esta documentação descreve como os principais cards e gráficos do sistema são calculados e alimentados pelos endpoints do backend, e como são exibidos no frontend.
 
@@ -20,6 +21,15 @@ Esta documentação descreve como os principais cards e gráficos do sistema sã
   - Desempenho por disciplina do aluno
   - **Filtro por Simulado no Gráfico de Disciplinas** (NOVO - 2025-11-16)
   - **Card de Previsão** (NOVO - 2025-11-16)
+- **Endpoints de Disciplinas** (NOVO - 2025-01-XX)
+  - Estatísticas gerais de disciplinas
+  - Relatório por disciplina específica
+- **Critérios de Validação de Respostas** (NOVO - 2025-01-XX)
+  - Definição de resposta válida
+  - Impacto nos cálculos
+- **Modos de Cálculo: Geral vs. Por Etapa** (NOVO - 2025-01-XX)
+  - Diferenças fundamentais
+  - Quando usar cada modo
 
 ---
 
@@ -174,6 +184,288 @@ Esta documentação descreve como os principais cards e gráficos do sistema sã
 
 ---
 
+## Endpoints de Disciplinas
+
+### Endpoint: `GET /api/disciplinas/estatisticas`
+- **Backend**: `backend/routes/disciplinas.js`
+- **Descrição**: Retorna estatísticas gerais sobre todas as disciplinas
+- **Campos calculados**:
+  - `total`: `COUNT(*)` de todas as disciplinas cadastradas
+  - `mais_ativas` (array): Top 5 disciplinas com mais questões
+    - `id`: ID da disciplina
+    - `nome`: Nome da disciplina
+    - `total_questoes`: `COUNT(q.id)` - Total de questões da disciplina
+- **Query SQL**:
+  ```sql
+  -- Total de disciplinas
+  SELECT COUNT(*) FROM disciplinas
+  
+  -- Disciplinas mais ativas (Top 5)
+  SELECT d.id, d.nome, COUNT(q.id) as total_questoes
+  FROM disciplinas d
+  LEFT JOIN questoes q ON d.id = q.disciplina_id
+  GROUP BY d.id
+  ORDER BY total_questoes DESC
+  LIMIT 5
+  ```
+- **Observações**:
+  - Usa `LEFT JOIN` para incluir disciplinas sem questões (com `total_questoes = 0`)
+  - Ordena por `total_questoes` em ordem decrescente
+  - Limita a 5 resultados
+
+### Endpoint: `GET /api/disciplinas/:id/relatorio`
+- **Backend**: `backend/routes/disciplinas.js`
+- **Descrição**: Retorna métricas detalhadas de uma disciplina específica
+- **Parâmetros**:
+  - `id`: ID da disciplina
+- **Campos calculados**:
+  - `total_questoes`: `COUNT(q.id)` - Total de questões da disciplina
+  - `total_respostas`: `COUNT(DISTINCT r.id)` - Total de respostas únicas
+  - `percentual_acertos`: `ROUND(AVG(CASE WHEN r.acertou THEN 1 ELSE 0 END) * 100, 2)`
+    - **Fórmula**: Média de acertos convertida para percentual (0-100%)
+    - **Observação**: Usa `AVG(...) * 100` ao invés de `AVG(CASE WHEN ... THEN 100 ELSE 0 END)`
+- **Query SQL**:
+  ```sql
+  SELECT
+    COUNT(q.id) AS total_questoes,
+    COUNT(DISTINCT r.id) AS total_respostas,
+    ROUND(
+      AVG(CASE WHEN r.acertou THEN 1 ELSE 0 END) * 100, 2
+    ) AS percentual_acertos
+  FROM questoes q
+  LEFT JOIN respostas r ON q.id = r.questao_id
+  WHERE q.disciplina_id = $1
+  ```
+- **Observações**:
+  - Usa `LEFT JOIN` para incluir questões sem respostas
+  - `COUNT(DISTINCT r.id)` evita contar a mesma resposta múltiplas vezes
+  - O percentual é calculado sobre todas as respostas da disciplina, não apenas respostas válidas
+
+---
+
+## Critérios de Validação de Respostas
+
+### Definição de Resposta Válida
+
+Uma resposta é considerada **válida** quando atende **TODOS** os seguintes critérios:
+
+1. **`resposta_aluno IS NOT NULL`**: A resposta não pode ser nula
+2. **`resposta_aluno != ''`**: A resposta não pode ser uma string vazia
+3. **`resposta_aluno NOT LIKE '%,%'`**: A resposta não pode conter vírgula (indica dupla marcação)
+
+### Impacto nos Cálculos
+
+Os critérios de validação são aplicados em **queries específicas** que precisam considerar apenas respostas válidas:
+
+#### Exemplo: Contagem de Respostas Válidas
+```sql
+COUNT(CASE 
+  WHEN r.resposta_aluno IS NOT NULL 
+    AND r.resposta_aluno != '' 
+    AND r.resposta_aluno NOT LIKE '%,%'
+  THEN 1
+  ELSE NULL
+END) as total_respostas
+```
+
+#### Exemplo: Contagem de Acertos Válidos
+```sql
+SUM(CASE 
+  WHEN r.resposta_aluno IS NOT NULL 
+    AND r.resposta_aluno != '' 
+    AND r.resposta_aluno NOT LIKE '%,%'
+    AND r.acertou = 1 
+  THEN 1 
+  ELSE 0 
+END) as acertos
+```
+
+#### Exemplo: Cálculo de Média com Respostas Válidas
+```sql
+ROUND(
+  (SUM(CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+      AND r.acertou = 1 
+    THEN 1 
+    ELSE 0 
+  END) * 100.0) / NULLIF(COUNT(CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+    THEN 1
+    ELSE NULL
+  END), 0),
+  2
+) as media
+```
+
+### Onde os Critérios São Aplicados
+
+- ✅ **Relatório Geral (Modo Geral)**: Usa respostas válidas para calcular `media` e `taxa_erro`
+- ✅ **Relatório Individual**: Usa respostas válidas para calcular médias por disciplina
+- ✅ **Relatório Individual por Simulado**: Usa respostas válidas para filtrar por gabarito
+- ❌ **Relatório por Disciplina** (`/api/disciplinas/:id/relatorio`): **NÃO** aplica critérios de validação (considera todas as respostas)
+
+### Observações Importantes
+
+- **Dupla Marcação**: Respostas com vírgula (ex: "A,B") são consideradas inválidas e **não** entram nos cálculos
+- **Respostas Vazias**: Respostas vazias ou nulas são **ignoradas** nos cálculos de média
+- **NULLIF**: Usado para evitar divisão por zero quando não há respostas válidas
+
+---
+
+## Modos de Cálculo: Geral vs. Por Etapa
+
+### Modo Geral
+
+**Quando usar**: Visualizar métricas consolidadas de todas as etapas/turmas
+
+**Características**:
+- **Contagem de Respostas**: `COUNT(CASE ...)` - Conta **TODAS** as respostas válidas
+- **Contagem de Questões**: `COUNT(DISTINCT q.id)` - Conta questões únicas
+- **Cálculo de Média**: `(Acertos / Total de respostas válidas) * 100`
+- **Filtro**: Não aplica filtro por etapa
+
+**Query Exemplo**:
+```sql
+SELECT 
+  d.id, d.nome,
+  COUNT(DISTINCT q.id) as total_questoes,
+  COUNT(CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+    THEN 1
+    ELSE NULL
+  END) as total_respostas,
+  SUM(CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+      AND r.acertou = 1 
+    THEN 1 
+    ELSE 0 
+  END) as acertos,
+  ROUND(
+    (SUM(CASE 
+      WHEN r.resposta_aluno IS NOT NULL 
+        AND r.resposta_aluno != '' 
+        AND r.resposta_aluno NOT LIKE '%,%'
+        AND r.acertou = 1 
+      THEN 1 
+      ELSE 0 
+    END) * 100.0) / NULLIF(COUNT(CASE 
+      WHEN r.resposta_aluno IS NOT NULL 
+        AND r.resposta_aluno != '' 
+        AND r.resposta_aluno NOT LIKE '%,%'
+      THEN 1
+      ELSE NULL
+    END), 0),
+    2
+  ) as media
+FROM disciplinas d
+INNER JOIN questoes q ON d.id = q.disciplina_id
+INNER JOIN gabaritos g ON q.gabarito_id = g.id
+LEFT JOIN respostas r ON q.id = r.questao_id 
+  AND r.gabarito_id = g.id
+WHERE EXISTS (
+  SELECT 1 FROM respostas r2 
+  WHERE r2.gabarito_id = g.id 
+  AND r2.resposta_aluno IS NOT NULL 
+  AND r2.resposta_aluno != '' 
+  AND r2.resposta_aluno NOT LIKE '%,%'
+)
+GROUP BY d.id, d.nome
+HAVING COUNT(CASE 
+  WHEN r.resposta_aluno IS NOT NULL 
+    AND r.resposta_aluno != '' 
+    AND r.resposta_aluno NOT LIKE '%,%'
+  THEN 1
+  ELSE NULL
+END) > 0
+ORDER BY media DESC
+```
+
+**Resultado**: Média de acertos considerando **todas as respostas válidas** de todas as etapas
+
+### Modo Por Etapa
+
+**Quando usar**: Visualizar métricas específicas de uma etapa/turma
+
+**Características**:
+- **Contagem de Respostas**: `COUNT(DISTINCT CASE ...)` - Conta respostas **únicas** válidas
+- **Contagem de Questões**: `COUNT(DISTINCT q.id)` - Conta questões únicas da etapa
+- **Cálculo de Média**: `(Acertos / Total de questões da disciplina na etapa) * 100`
+- **Filtro**: `WHERE g.etapa = $1` - Aplica filtro por etapa
+
+**Query Exemplo**:
+```sql
+SELECT 
+  d.id, d.nome,
+  COUNT(DISTINCT q.id) as total_questoes,
+  COUNT(DISTINCT CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+    THEN r.id
+    ELSE NULL
+  END) as total_respostas,
+  SUM(CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+      AND r.acertou = 1 
+    THEN 1 
+    ELSE 0 
+  END) as acertos,
+  ROUND(
+    (SUM(CASE 
+      WHEN r.resposta_aluno IS NOT NULL 
+        AND r.resposta_aluno != '' 
+        AND r.resposta_aluno NOT LIKE '%,%'
+        AND r.acertou = 1 
+      THEN 1 
+      ELSE 0 
+    END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
+    2
+  ) as media
+FROM disciplinas d
+INNER JOIN questoes q ON d.id = q.disciplina_id
+INNER JOIN gabaritos g ON q.gabarito_id = g.id
+LEFT JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
+WHERE g.etapa = $1
+GROUP BY d.id, d.nome
+HAVING COUNT(DISTINCT q.id) > 0
+ORDER BY media DESC
+```
+
+**Resultado**: Média de acertos considerando **questões únicas** da disciplina na etapa específica
+
+### Diferenças Fundamentais
+
+| Aspecto | Modo Geral | Modo Por Etapa |
+|---------|------------|----------------|
+| **Base de Cálculo** | Total de respostas válidas | Total de questões únicas |
+| **Denominador** | `COUNT(CASE ...)` (respostas válidas) | `COUNT(DISTINCT q.id)` (questões) |
+| **Filtro** | Nenhum | `WHERE g.etapa = $1` |
+| **Interpretação** | Taxa de acertos sobre respostas | Taxa de acertos sobre questões |
+| **Uso** | Dashboard geral, comparação entre disciplinas | Análise específica por turma/etapa |
+
+### Exemplo Prático
+
+**Cenário**: Disciplina "Matemática" com 60 questões, 50 respostas válidas, 40 acertos
+
+- **Modo Geral**: `media = (40 / 50) * 100 = 80%` (taxa de acertos sobre respostas)
+- **Modo Por Etapa**: `media = (40 / 60) * 100 = 66.67%` (taxa de acertos sobre questões)
+
+**Por que a diferença?**
+- Modo Geral considera apenas alunos que responderam (50 respostas)
+- Modo Por Etapa considera todas as questões do simulado (60 questões), incluindo não respondidas
+
+---
+
 ## Decisões e Padrões
 - Percentuais sempre calculados sobre respostas: `AVG(CASE WHEN acertou = 1 THEN 100 ELSE 0 END)`.
 - Contagem de "Questões Aplicadas" no geral usa `COUNT(DISTINCT q.id)` para não multiplicar pelo número de alunos.
@@ -197,11 +489,188 @@ Esta documentação descreve como os principais cards e gráficos do sistema sã
 ---
 
 ## Endpoints Envolvidos
+
+### Endpoints de Relatórios
 - `GET /api/alunos` – base para contagem de alunos.
 - `GET /api/relatorios/estatisticas-gerais` – dashboard e Relatório Geral.
 - `GET /api/relatorios/estatisticas-mensal` – série mensal agregada (home).
 - `GET /api/relatorios/estatisticas-individual/:aluno_id` – Relatório Individual.
 - `GET /api/relatorios/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id` – Desempenho por disciplina filtrado por simulado (NOVO - 2025-11-16 17:41:12).
 
-Se precisar de mais detalhes (ex.: trechos SQL específicos por tabela), posso anexar consultas comentadas por seção.
+### Endpoints de Disciplinas
+- `GET /api/disciplinas/estatisticas` – Estatísticas gerais de disciplinas (NOVO - 2025-01-XX).
+- `GET /api/disciplinas/:id/relatorio` – Relatório detalhado de uma disciplina específica (NOVO - 2025-01-XX).
+
+---
+
+## Exemplos de Queries SQL Completas
+
+### Query: Estatísticas Gerais (Modo Geral)
+```sql
+-- Total de questões aplicadas
+SELECT COUNT(DISTINCT q.id) as total 
+FROM questoes q
+INNER JOIN gabaritos g ON q.gabarito_id = g.id
+WHERE g.id IN (
+  SELECT DISTINCT gabarito_id 
+  FROM respostas
+)
+
+-- Total de acertos
+SELECT COUNT(*) as total 
+FROM respostas r 
+WHERE r.acertou = 1
+
+-- Média geral de acertos
+SELECT ROUND(AVG(CASE WHEN acertou = 1 THEN 100 ELSE 0 END), 2) as media
+FROM respostas
+
+-- Média por disciplina (Modo Geral)
+SELECT 
+  d.id, d.nome,
+  COUNT(DISTINCT q.id) as total_questoes,
+  COUNT(CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+    THEN 1
+    ELSE NULL
+  END) as total_respostas,
+  SUM(CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+      AND r.acertou = 1 
+    THEN 1 
+    ELSE 0 
+  END) as acertos,
+  ROUND(
+    (SUM(CASE 
+      WHEN r.resposta_aluno IS NOT NULL 
+        AND r.resposta_aluno != '' 
+        AND r.resposta_aluno NOT LIKE '%,%'
+        AND r.acertou = 1 
+      THEN 1 
+      ELSE 0 
+    END) * 100.0) / NULLIF(COUNT(CASE 
+      WHEN r.resposta_aluno IS NOT NULL 
+        AND r.resposta_aluno != '' 
+        AND r.resposta_aluno NOT LIKE '%,%'
+      THEN 1
+      ELSE NULL
+    END), 0),
+    2
+  ) as media
+FROM disciplinas d
+INNER JOIN questoes q ON d.id = q.disciplina_id
+INNER JOIN gabaritos g ON q.gabarito_id = g.id
+LEFT JOIN respostas r ON q.id = r.questao_id 
+  AND r.gabarito_id = g.id
+WHERE EXISTS (
+  SELECT 1 FROM respostas r2 
+  WHERE r2.gabarito_id = g.id 
+  AND r2.resposta_aluno IS NOT NULL 
+  AND r2.resposta_aluno != '' 
+  AND r2.resposta_aluno NOT LIKE '%,%'
+)
+GROUP BY d.id, d.nome
+HAVING COUNT(CASE 
+  WHEN r.resposta_aluno IS NOT NULL 
+    AND r.resposta_aluno != '' 
+    AND r.resposta_aluno NOT LIKE '%,%'
+  THEN 1
+  ELSE NULL
+END) > 0
+ORDER BY media DESC
+```
+
+### Query: Estatísticas Individuais
+```sql
+-- Total de questões respondidas pelo aluno
+SELECT COUNT(*) as total 
+FROM respostas 
+WHERE aluno_id = $1
+
+-- Total de acertos do aluno
+SELECT COUNT(*) as total 
+FROM respostas 
+WHERE aluno_id = $1 AND acertou = 1
+
+-- Taxa de acertos geral do aluno
+SELECT ROUND(AVG(CASE WHEN acertou = 1 THEN 100 ELSE 0 END), 2) as taxa
+FROM respostas 
+WHERE aluno_id = $1
+
+-- Média por disciplina do aluno
+SELECT 
+  d.id, d.nome,
+  COUNT(DISTINCT q.id) as total_questoes,
+  COUNT(DISTINCT CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+    THEN r.id
+    ELSE NULL
+  END) as total_respostas,
+  SUM(CASE 
+    WHEN r.resposta_aluno IS NOT NULL 
+      AND r.resposta_aluno != '' 
+      AND r.resposta_aluno NOT LIKE '%,%'
+      AND r.acertou = 1 
+    THEN 1 
+    ELSE 0 
+  END) as acertos,
+  ROUND(
+    (SUM(CASE 
+      WHEN r.resposta_aluno IS NOT NULL 
+        AND r.resposta_aluno != '' 
+        AND r.resposta_aluno NOT LIKE '%,%'
+        AND r.acertou = 1 
+      THEN 1 
+      ELSE 0 
+    END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
+    2
+  ) as media
+FROM disciplinas d
+INNER JOIN questoes q ON d.id = q.disciplina_id
+INNER JOIN gabaritos g ON q.gabarito_id = g.id
+LEFT JOIN respostas r ON q.id = r.questao_id 
+  AND r.gabarito_id = g.id
+  AND r.aluno_id = $1
+WHERE EXISTS (
+  SELECT 1 FROM respostas r2 
+  WHERE r2.gabarito_id = g.id 
+  AND r2.aluno_id = $1
+  AND r2.resposta_aluno IS NOT NULL 
+  AND r2.resposta_aluno != '' 
+  AND r2.resposta_aluno NOT LIKE '%,%'
+)
+GROUP BY d.id, d.nome
+HAVING COUNT(DISTINCT q.id) > 0
+ORDER BY media DESC
+```
+
+### Query: Evolução Mensal
+```sql
+SELECT 
+  strftime('%Y-%m', g.criado_em) AS mes,
+  ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) AS media
+FROM gabaritos g
+LEFT JOIN respostas r ON r.gabarito_id = g.id
+WHERE g.criado_em IS NOT NULL
+  AND EXISTS (
+    SELECT 1 FROM respostas r2 
+    WHERE r2.gabarito_id = g.id
+  )
+GROUP BY strftime('%Y-%m', g.criado_em)
+HAVING COUNT(r.id) > 0
+ORDER BY mes ASC
+```
+
+---
+
+**Última atualização**: 2025-01-XX  
+**Versão**: 2.0.0
+
+Se precisar de mais detalhes (ex.: trechos SQL específicos por tabela), consulte as seções acima ou o código-fonte em `backend/routes/relatorios.js` e `backend/routes/disciplinas.js`.
 
