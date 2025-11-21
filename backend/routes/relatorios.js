@@ -39,41 +39,95 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
     // Se 3 simulados foram aplicados, cada um com 60 questões = 180 questões totais
     // Não multiplica por número de alunos, apenas conta questões dos simulados aplicados
     // Conta questões únicas de gabaritos que têm pelo menos uma resposta
-    const totalQuestoesQuery = `
-      SELECT COUNT(DISTINCT q.id) as total 
-      FROM questoes q
-      INNER JOIN gabaritos g ON q.gabarito_id = g.id
-      WHERE g.id IN (
-        SELECT DISTINCT gabarito_id 
-        FROM respostas
-      )
-      ${filtroEtapa}
-    `;
+    let totalQuestoesQuery;
+    if (etapa && etapa !== 'Geral') {
+      // Modo por etapa: contar questões de gabaritos que têm respostas da etapa específica
+      totalQuestoesQuery = `
+        SELECT COUNT(DISTINCT q.id) as total 
+        FROM questoes q
+        INNER JOIN gabaritos g ON q.gabarito_id = g.id
+        WHERE g.etapa = $1
+          AND g.id IN (
+            SELECT DISTINCT r.gabarito_id 
+            FROM respostas r
+            INNER JOIN gabaritos g2 ON r.gabarito_id = g2.id
+            WHERE g2.etapa = $1
+          )
+      `;
+    } else {
+      // Modo Geral: contar questões de todos os gabaritos que têm respostas
+      totalQuestoesQuery = `
+        SELECT COUNT(DISTINCT q.id) as total 
+        FROM questoes q
+        INNER JOIN gabaritos g ON q.gabarito_id = g.id
+        WHERE g.id IN (
+          SELECT DISTINCT gabarito_id 
+          FROM respostas
+        )
+      `;
+    }
     const totalQuestoes = await db.query(totalQuestoesQuery, paramsEtapa);
 
     // 2. Total de acertos (com filtro de etapa se aplicável)
-    let totalAcertosQuery = 'SELECT COUNT(*) as total FROM respostas r WHERE r.acertou = 1';
+    // IMPORTANTE: Considerar apenas respostas válidas (não vazias e sem dupla marcação)
+    let totalAcertosQuery;
     if (etapa && etapa !== 'Geral') {
       totalAcertosQuery = `
         SELECT COUNT(*) as total 
         FROM respostas r
         INNER JOIN gabaritos g ON r.gabarito_id = g.id
-        WHERE r.acertou = 1 AND g.etapa = $1
+        WHERE r.acertou = 1 
+          AND g.etapa = $1
+          AND r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
+      `;
+    } else {
+      totalAcertosQuery = `
+        SELECT COUNT(*) as total 
+        FROM respostas r 
+        WHERE r.acertou = 1
+          AND r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
       `;
     }
     const totalAcertos = await db.query(totalAcertosQuery, paramsEtapa);
 
     // 3. Média geral de acertos (com filtro de etapa se aplicável)
-    let mediaGeralQuery = `
-      SELECT ROUND(AVG(CASE WHEN acertou = 1 THEN 100 ELSE 0 END), 2) as media
-      FROM respostas
-    `;
+    // IMPORTANTE: Considerar apenas respostas válidas (não vazias e sem dupla marcação)
+    let mediaGeralQuery;
     if (etapa && etapa !== 'Geral') {
       mediaGeralQuery = `
-        SELECT ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+        SELECT ROUND(AVG(CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            AND r.acertou = 1 
+          THEN 100 
+          ELSE 0 
+        END), 2) as media
         FROM respostas r
         INNER JOIN gabaritos g ON r.gabarito_id = g.id
         WHERE g.etapa = $1
+          AND r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
+      `;
+    } else {
+      mediaGeralQuery = `
+        SELECT ROUND(AVG(CASE 
+          WHEN resposta_aluno IS NOT NULL 
+            AND resposta_aluno != '' 
+            AND resposta_aluno NOT LIKE '%,%'
+            AND acertou = 1 
+          THEN 100 
+          ELSE 0 
+        END), 2) as media
+        FROM respostas
+        WHERE resposta_aluno IS NOT NULL 
+          AND resposta_aluno != '' 
+          AND resposta_aluno NOT LIKE '%,%'
       `;
     }
     const mediaGeral = await db.query(mediaGeralQuery, paramsEtapa);
@@ -114,7 +168,13 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
               AND r.acertou = 1 
               THEN 1 
               ELSE 0 
-            END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
+            END) * 100.0) / NULLIF(COUNT(DISTINCT CASE 
+              WHEN r.resposta_aluno IS NOT NULL 
+              AND r.resposta_aluno != '' 
+              AND r.resposta_aluno NOT LIKE '%,%'
+              THEN r.id
+              ELSE NULL
+            END), 0),
             2
           ) as media
         FROM disciplinas d
@@ -122,8 +182,21 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
         INNER JOIN gabaritos g ON q.gabarito_id = g.id
         LEFT JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
         WHERE g.etapa = $1
+          AND EXISTS (
+            SELECT 1 FROM respostas r2 
+            WHERE r2.gabarito_id = g.id 
+              AND r2.resposta_aluno IS NOT NULL 
+              AND r2.resposta_aluno != '' 
+              AND r2.resposta_aluno NOT LIKE '%,%'
+          )
         GROUP BY d.id, d.nome
-        HAVING COUNT(DISTINCT q.id) > 0
+        HAVING COUNT(DISTINCT CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+          AND r.resposta_aluno != '' 
+          AND r.resposta_aluno NOT LIKE '%,%'
+          THEN r.id
+          ELSE NULL
+        END) > 0
         ORDER BY media DESC
       `;
     } else {
@@ -223,34 +296,84 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
     const mediaPorDisciplina = await db.query(mediaPorDisciplinaQuery, paramsEtapa);
 
     // 5. Disciplina com maior e menor média (garantir contagem correta sem duplicação)
-    const disciplinasOrdenadas = await db.query(`
-      SELECT 
-        d.id,
-        d.nome,
-        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
-      FROM disciplinas d
-      INNER JOIN questoes q ON d.id = q.disciplina_id
-      INNER JOIN respostas r ON q.id = r.questao_id
-      GROUP BY d.id, d.nome
-      HAVING COUNT(DISTINCT r.id) > 0
-      ORDER BY media DESC
-    `);
+    let disciplinasOrdenadasQuery;
+    if (etapa && etapa !== 'Geral') {
+      // Modo por etapa: filtrar por etapa
+      disciplinasOrdenadasQuery = `
+        SELECT 
+          d.id,
+          d.nome,
+          ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+        FROM disciplinas d
+        INNER JOIN questoes q ON d.id = q.disciplina_id
+        INNER JOIN gabaritos g ON q.gabarito_id = g.id
+        INNER JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
+        WHERE g.etapa = $1
+        GROUP BY d.id, d.nome
+        HAVING COUNT(DISTINCT r.id) > 0
+        ORDER BY media DESC
+      `;
+    } else {
+      // Modo Geral: todas as disciplinas
+      disciplinasOrdenadasQuery = `
+        SELECT 
+          d.id,
+          d.nome,
+          ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+        FROM disciplinas d
+        INNER JOIN questoes q ON d.id = q.disciplina_id
+        INNER JOIN respostas r ON q.id = r.questao_id
+        GROUP BY d.id, d.nome
+        HAVING COUNT(DISTINCT r.id) > 0
+        ORDER BY media DESC
+      `;
+    }
+    const disciplinasOrdenadas = await db.query(disciplinasOrdenadasQuery, paramsEtapa);
 
     const maiorMedia = disciplinasOrdenadas.rows[0] || { nome: 'N/A', media: 0 };
     const menorMedia = disciplinasOrdenadas.rows[disciplinasOrdenadas.rows.length - 1] || { nome: 'N/A', media: 0 };
 
     // 6. Estatísticas por etapa (turma) - contar questões únicas por gabarito
+    // IMPORTANTE: Considerar apenas gabaritos que têm respostas válidas
     const estatisticasPorEtapa = await db.query(`
       SELECT 
         g.etapa,
         COUNT(DISTINCT q.id) as total_questoes,
-        COUNT(DISTINCT r.id) as total_respostas,
-        SUM(CASE WHEN r.acertou = 1 THEN 1 ELSE 0 END) as acertos,
-        ROUND(AVG(CASE WHEN r.acertou = 1 THEN 100 ELSE 0 END), 2) as media
+        COUNT(DISTINCT CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+          THEN r.id
+          ELSE NULL
+        END) as total_respostas,
+        SUM(CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            AND r.acertou = 1 
+          THEN 1 
+          ELSE 0 
+        END) as acertos,
+        ROUND(AVG(CASE 
+          WHEN r.resposta_aluno IS NOT NULL 
+            AND r.resposta_aluno != '' 
+            AND r.resposta_aluno NOT LIKE '%,%'
+            AND r.acertou = 1 
+          THEN 100 
+          ELSE 0 
+        END), 2) as media
       FROM gabaritos g
       LEFT JOIN questoes q ON g.id = q.gabarito_id
       LEFT JOIN respostas r ON q.id = r.questao_id AND r.gabarito_id = g.id
-      WHERE g.etapa IS NOT NULL AND g.etapa != ''
+      WHERE g.etapa IS NOT NULL 
+        AND g.etapa != ''
+        AND EXISTS (
+          SELECT 1 FROM respostas r2 
+          WHERE r2.gabarito_id = g.id 
+            AND r2.resposta_aluno IS NOT NULL 
+            AND r2.resposta_aluno != '' 
+            AND r2.resposta_aluno NOT LIKE '%,%'
+        )
       GROUP BY g.etapa
       HAVING COUNT(DISTINCT q.id) > 0
     `);
