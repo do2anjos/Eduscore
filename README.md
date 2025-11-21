@@ -4,7 +4,7 @@
 
 Plataforma educacional integrada que combina digitalização de folhas de resposta, análise de desempenho e predição de resultados utilizando machine learning, desenvolvida especificamente para o contexto de exames vestibulares no Amazonas.
 
-**Última atualização**: 2025-11-16 17:41:12
+**Última atualização**: 2025-01-21 16:00:00
 
 ## 🎯 Sobre o Projeto
 
@@ -188,13 +188,14 @@ classy-main/
 | Módulo | Descrição | Tecnologias |
 |--------|-----------|-------------|
 | **Autenticação e Usuários** | Sistema JWT, gestão de professores/coordenadores | Node.js, Express.js, JWT, bcrypt |
-| **Gestão de Alunos** | CRUD completo de alunos | Node.js, Express.js, SQLite |
-| **Gestão de Disciplinas** | Gerenciamento de disciplinas e cursos | Node.js, Express.js, SQLite |
-| **Digitalização e Gabaritos** | Upload CSV, processamento de questões, correção automática | Node.js, Express.js, Multer, csv-parser |
-| **Gestão de Sessões** | Agendamento e controle de simulados | Node.js, Express.js, SQLite |
-| **Respostas e Correção** | Processamento e correção automática | Node.js, Express.js, SQLite |
-| **Analytics e Relatórios** | Métricas, gráficos, estatísticas | Node.js, Express.js, Chart.js |
-| **Predição de Desempenho** | Modelo ML para previsão (em desenvolvimento) | - |
+| **Gestão de Alunos** | CRUD completo de alunos | Node.js, Express.js, SQLite, SQL |
+| **Gestão de Disciplinas** | Gerenciamento de disciplinas e cursos | Node.js, Express.js, SQLite, SQL |
+| **Digitalização e Gabaritos** | Upload CSV, processamento de questões, correção automática | Node.js, Express.js, Multer, csv-parser, SQL |
+| **Processamento de Imagens** | OCR e detecção de marcações em bolhas | Python 3.7+, OpenCV, NumPy |
+| **Gestão de Sessões** | Agendamento e controle de simulados | Node.js, Express.js, SQLite, SQL |
+| **Respostas e Correção** | Processamento e correção automática | Node.js, Express.js, SQLite, SQL |
+| **Analytics e Relatórios** | Métricas, gráficos, estatísticas | Node.js, Express.js, Chart.js, SQL |
+| **Predição de Desempenho** | Modelo ML para previsão (em desenvolvimento) | Python, Machine Learning |
 | **Interface Web** | Frontend responsivo e acessível | HTML5, CSS3, JavaScript (Vanilla) |
 | **Segurança** | Middlewares de autenticação, rate limiting, validação | Express.js, JWT, express-rate-limit |
 
