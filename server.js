@@ -20,6 +20,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =============================================
+// CONFIGURAÇÃO DE TRUST PROXY (NECESSÁRIO PARA RENDER)
+// =============================================
+// Render usa proxy reverso, então precisamos confiar no proxy
+// Isso permite que express-rate-limit identifique corretamente os IPs
+app.set('trust proxy', true);
+
+// =============================================
 // CONFIGURAÇÕES CRUCIAIS PARA PAYLOAD GRANDE
 // =============================================
 app.use(express.json({ limit: '10mb' }));
