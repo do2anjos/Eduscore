@@ -541,10 +541,11 @@
         
         showUploadProgress(100);
 
-        // Armazenar a imagem anexada
+        // Armazenar a imagem anexada (caminho relativo para salvar no banco)
         imagemAnexada = {
           nome: data.imagem?.nome,
           caminho: data.imagem?.caminho,
+          caminhoRelativo: `/uploads/imagens/${data.imagem?.nome}`, // Caminho relativo para acesso via web
           tamanho: data.imagem?.tamanho
         };
 
@@ -767,7 +768,12 @@
                 questao_id: questao.id,
                 gabarito_id: gabaritoSelecionado,
                 resposta_aluno: respostaAluno,
-                acertou: acertou
+                acertou: acertou,
+                // Incluir informações da imagem apenas na primeira resposta (para evitar duplicatas)
+                ...(questao.numero === questoesCapturadas[0].numero && imagemAnexada ? {
+                  imagem_caminho: imagemAnexada.caminhoRelativo,
+                  imagem_nome: imagemAnexada.nome
+                } : {})
               })
             });
 
