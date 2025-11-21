@@ -28,17 +28,49 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configuração do multer para upload de imagens
+// Diretório temporário para imagens (antes de finalizar correção)
+const imagensTempDir = path.join(uploadsDir, 'imagens', 'temp');
+if (!fs.existsSync(imagensTempDir)) {
+  fs.mkdirSync(imagensTempDir, { recursive: true });
+}
+
+// Diretório permanente para imagens (após finalizar correção)
+const imagensPermanenteDir = path.join(uploadsDir, 'imagens');
+if (!fs.existsSync(imagensPermanenteDir)) {
+  fs.mkdirSync(imagensPermanenteDir, { recursive: true });
+}
+
+// Configuração do multer para upload de imagens TEMPORÁRIAS
+const storageImagensTemp = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, imagensTempDir);
+  },
+  filename: (req, file, cb) => {
+    // Adicionar prefixo "temp_" e timestamp para identificar facilmente
+    cb(null, `temp_resposta_${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+// Configuração do multer para upload de imagens PERMANENTES (caso precise)
 const storageImagens = multer.diskStorage({
   destination: (req, file, cb) => {
-    const imagensDir = path.join(uploadsDir, 'imagens');
-    if (!fs.existsSync(imagensDir)) {
-      fs.mkdirSync(imagensDir, { recursive: true });
-    }
-    cb(null, imagensDir);
+    cb(null, imagensPermanenteDir);
   },
   filename: (req, file, cb) => {
     cb(null, `resposta_${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+const uploadImagemTemp = multer({ 
+  storage: storageImagensTemp,
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Apenas arquivos de imagem são permitidos'), false);
+    }
+    cb(null, true);
+  },
+  limits: {
+    fileSize: 10 * 1024 * 1024 // Limite de 10MB para imagens
   }
 });
 
@@ -99,11 +131,13 @@ router.get('/', async (req, res) => {
 });
 
 // Rota GET /api/respostas/imagem/:aluno_id/:gabarito_id - Busca a imagem do cartão do aluno para um gabarito
+// IMPORTANTE: Retorna APENAS imagens confirmadas (permanentes). 
+// Imagens temporárias não são retornadas até que a correção seja finalizada.
 router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
   try {
     const { aluno_id, gabarito_id } = req.params;
 
-    // Buscar a imagem associada na tabela imagens_cartoes
+    // 1. Buscar a imagem confirmada na tabela imagens_cartoes (apenas imagens de correções finalizadas)
     const imagemQuery = await db.query(
       `SELECT caminho_imagem, nome_imagem, criado_em
        FROM imagens_cartoes 
@@ -116,7 +150,7 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
     if (imagemQuery.rows.length > 0) {
       const imagem = imagemQuery.rows[0];
       
-      // Verificar se o arquivo ainda existe
+      // Verificar se o arquivo permanente ainda existe
       const caminhoCompleto = path.join(__dirname, '../../', imagem.caminho_imagem);
       if (fs.existsSync(caminhoCompleto)) {
         // Retornar o caminho relativo da imagem
@@ -128,14 +162,16 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
           sucesso: true,
           imagem: imagemPath,
           nome: imagem.nome_imagem,
-          criado_em: imagem.criado_em
+          criado_em: imagem.criado_em,
+          confirmada: true // Imagem confirmada (correção finalizada)
         });
       } else {
-        console.warn(`[IMAGEM] Arquivo não encontrado: ${caminhoCompleto}`);
+        console.warn(`[IMAGEM] Arquivo permanente não encontrado: ${caminhoCompleto}`);
       }
     }
 
-    // Fallback: Buscar a resposta mais recente e tentar encontrar imagem pelo timestamp
+    // 2. Fallback: Buscar resposta mais recente e tentar encontrar imagem permanente pelo timestamp
+    // Isso ajuda em casos onde a imagem foi movida mas não está na tabela ainda
     const respostaQuery = await db.query(
       `SELECT data_resposta 
        FROM respostas 
@@ -148,16 +184,15 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
     if (respostaQuery.rows.length === 0) {
       return res.status(404).json({
         sucesso: false,
-        erro: 'Nenhuma resposta ou imagem encontrada para este aluno e gabarito'
+        erro: 'Nenhuma resposta encontrada para este aluno e gabarito'
       });
     }
 
     const dataResposta = respostaQuery.rows[0].data_resposta;
-    
-    // Converter data para timestamp para buscar imagem próxima
     const timestamp = new Date(dataResposta).getTime();
     
-    // Buscar imagens no diretório que foram processadas próximo ao timestamp da resposta
+    // Buscar APENAS no diretório permanente (não no temporário)
+    // Imagens temporárias NÃO devem aparecer até que a correção seja finalizada
     const imagensDir = path.join(uploadsDir, 'imagens');
     
     if (!fs.existsSync(imagensDir)) {
@@ -167,21 +202,22 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
       });
     }
 
-    // Listar todas as imagens e encontrar a mais próxima do timestamp
+    // Listar apenas imagens permanentes (sem prefixo temp_)
     const arquivos = fs.readdirSync(imagensDir);
     const imagens = arquivos.filter(arquivo => 
-      arquivo.startsWith('resposta_') && 
+      arquivo.startsWith('resposta_') && // Sem prefixo temp_
+      !arquivo.startsWith('temp_') && // Garantir que não é temporária
       /\.(jpg|jpeg|png|gif|webp)$/i.test(arquivo)
     );
 
     if (imagens.length === 0) {
       return res.status(404).json({
         sucesso: false,
-        erro: 'Nenhuma imagem encontrada no diretório'
+        erro: 'Nenhuma imagem confirmada encontrada. A correção pode não ter sido finalizada ainda.'
       });
     }
 
-    // Encontrar a imagem mais próxima do timestamp da resposta
+    // Encontrar a imagem permanente mais próxima do timestamp da resposta
     let imagemMaisProxima = null;
     let menorDiferenca = Infinity;
 
@@ -202,17 +238,18 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
     if (!imagemMaisProxima) {
       return res.status(404).json({
         sucesso: false,
-        erro: 'Nenhuma imagem encontrada próxima à data da resposta'
+        erro: 'Nenhuma imagem confirmada encontrada próxima à data da resposta. A correção pode não ter sido finalizada ainda.'
       });
     }
 
-    // Retornar o caminho relativo da imagem
+    // Retornar o caminho relativo da imagem permanente
     const imagemPath = `/uploads/imagens/${imagemMaisProxima}`;
     
     res.json({
       sucesso: true,
       imagem: imagemPath,
-      nome: imagemMaisProxima
+      nome: imagemMaisProxima,
+      confirmada: true // Imagem confirmada (permanente)
     });
 
   } catch (err) {
@@ -573,11 +610,12 @@ async function executarScriptProcessamento(scriptPath, imagemPath) {
  * Rota POST /api/respostas/processar-imagem
  * Processa uma imagem de folha de resposta e extrai as marcações
  * 
+ * A imagem é salva TEMPORARIAMENTE até que a correção seja finalizada.
  * A detecção automática decide qual script usar:
  * - processar_respostas_Imagem_original.py: para imagens que precisam de correção de perspectiva
  * - processar_respostas_imagem_processadas.py: para imagens já processadas
  */
-router.post('/processar-imagem', uploadImagem.single('imagem'), async (req, res) => {
+router.post('/processar-imagem', uploadImagemTemp.single('imagem'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ 
@@ -659,13 +697,15 @@ router.post('/processar-imagem', uploadImagem.single('imagem'), async (req, res)
     }
 
     // Retornar resposta com as respostas extraídas
+    // A imagem está salva temporariamente e será movida para permanente apenas ao finalizar correção
     res.status(200).json({
       sucesso: true,
       mensagem: mensagem,
       imagem: {
-        nome: imagemFilename,
-        caminho: imagemPath,
-        tamanho: req.file.size
+        nome: imagemFilename, // Nome temporário: temp_resposta_...
+        caminho: imagemPath,  // Caminho temporário: .../temp/temp_resposta_...
+        tamanho: req.file.size,
+        temporaria: true // Flag indicando que é temporária
       },
       respostas: respostasExtraidas,
       total_respostas: respostasExtraidas.length,
@@ -675,18 +715,129 @@ router.post('/processar-imagem', uploadImagem.single('imagem'), async (req, res)
   } catch (err) {
     console.error('Erro ao processar imagem:', err);
     
-    // Limpar arquivo se houver erro
+    // Limpar arquivo temporário se houver erro
     if (req.file && fs.existsSync(req.file.path)) {
       try {
         fs.unlinkSync(req.file.path);
+        console.log('[PROCESSAR-IMAGEM] Arquivo temporário removido após erro');
       } catch (unlinkErr) {
-        console.error('Erro ao remover arquivo:', unlinkErr);
+        console.error('Erro ao remover arquivo temporário:', unlinkErr);
       }
     }
 
     res.status(500).json({
       sucesso: false,
       erro: 'Erro ao processar imagem',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
+/**
+ * Rota POST /api/respostas/confirmar-imagem
+ * Confirma e move imagem de temporária para permanente após finalizar correção
+ * Salva a associação na tabela imagens_cartoes
+ */
+router.post('/confirmar-imagem', async (req, res) => {
+  try {
+    const { caminho_imagem_temp, aluno_id, gabarito_id } = req.body;
+
+    if (!caminho_imagem_temp || !aluno_id || !gabarito_id) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'caminho_imagem_temp, aluno_id e gabarito_id são obrigatórios'
+      });
+    }
+
+    // Verificar se a imagem temporária existe
+    const caminhoCompleto = path.resolve(caminho_imagem_temp);
+    const caminhoDir = path.dirname(caminhoCompleto);
+    
+    // Garantir que está no diretório temporário (segurança)
+    if (!caminhoDir.includes('temp') || !fs.existsSync(caminhoCompleto)) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Imagem temporária não encontrada'
+      });
+    }
+
+    // Nome do arquivo temporário
+    const nomeTemp = path.basename(caminhoCompleto);
+    
+    // Novo nome permanente (remover prefixo "temp_")
+    const nomePermanente = nomeTemp.replace(/^temp_/, '');
+    const caminhoPermanente = path.join(imagensPermanenteDir, nomePermanente);
+
+    // Mover arquivo de temporário para permanente
+    fs.renameSync(caminhoCompleto, caminhoPermanente);
+    console.log(`[CONFIRMAR-IMAGEM] Imagem movida de ${nomeTemp} para ${nomePermanente}`);
+
+    const caminhoRelativo = `/uploads/imagens/${nomePermanente}`;
+
+    // Salvar na tabela imagens_cartoes
+    try {
+      // Verificar se já existe uma imagem para este aluno/gabarito
+      const imagemExistente = await db.query(
+        `SELECT id, caminho_imagem FROM imagens_cartoes 
+         WHERE aluno_id = $1 AND gabarito_id = $2 
+         ORDER BY criado_em DESC LIMIT 1`,
+        [aluno_id, gabarito_id]
+      );
+
+      // Se não existe ou se a imagem é diferente, criar nova entrada
+      if (imagemExistente.rows.length === 0 || 
+          !imagemExistente.rows[0].caminho_imagem || 
+          imagemExistente.rows[0].caminho_imagem !== caminhoRelativo) {
+        const imagemId = generateUUID();
+        await db.query(
+          `INSERT INTO imagens_cartoes 
+           (id, aluno_id, gabarito_id, caminho_imagem, nome_imagem, criado_em)
+           VALUES ($1, $2, $3, $4, $5, datetime('now'))`,
+          [imagemId, aluno_id, gabarito_id, caminhoRelativo, nomePermanente]
+        );
+        console.log(`[CONFIRMAR-IMAGEM] Imagem associada: ${nomePermanente} para aluno ${aluno_id} e gabarito ${gabarito_id}`);
+      }
+      
+      res.status(200).json({
+        sucesso: true,
+        imagem: {
+          nome: nomePermanente,
+          caminho: caminhoRelativo
+        },
+        mensagem: 'Imagem confirmada e salva com sucesso'
+      });
+    } catch (dbErr) {
+      // Se falhar ao salvar no banco, tentar reverter o movimento do arquivo
+      if (fs.existsSync(caminhoPermanente)) {
+        try {
+          fs.renameSync(caminhoPermanente, caminhoCompleto);
+          console.log('[CONFIRMAR-IMAGEM] Movimento da imagem revertido devido a erro no banco');
+        } catch (revertErr) {
+          console.error('Erro ao reverter movimento da imagem:', revertErr);
+        }
+      }
+      
+      if (dbErr.message.includes('no such table')) {
+        console.warn('[CONFIRMAR-IMAGEM] Tabela imagens_cartoes não existe');
+        // Mesmo assim retorna sucesso, pois a imagem foi movida
+        return res.status(200).json({
+          sucesso: true,
+          imagem: {
+            nome: nomePermanente,
+            caminho: caminhoRelativo
+          },
+          aviso: 'Imagem salva, mas tabela imagens_cartoes não existe'
+        });
+      }
+      
+      throw dbErr;
+    }
+
+  } catch (err) {
+    console.error('Erro ao confirmar imagem:', err);
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro ao confirmar imagem',
       detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }

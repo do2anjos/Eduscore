@@ -541,12 +541,13 @@
         
         showUploadProgress(100);
 
-        // Armazenar a imagem anexada (caminho relativo para salvar no banco)
+        // Armazenar a imagem anexada (caminho temporário até finalizar correção)
         imagemAnexada = {
-          nome: data.imagem?.nome,
-          caminho: data.imagem?.caminho,
-          caminhoRelativo: `/uploads/imagens/${data.imagem?.nome}`, // Caminho relativo para acesso via web
-          tamanho: data.imagem?.tamanho
+          nome: data.imagem?.nome, // Nome temporário: temp_resposta_...
+          caminho: data.imagem?.caminho, // Caminho completo temporário
+          caminhoRelativo: `/uploads/imagens/temp/${data.imagem?.nome}`, // Caminho relativo temporário
+          tamanho: data.imagem?.tamanho,
+          temporaria: data.imagem?.temporaria || true // Flag indicando que é temporária
         };
 
         // Processar respostas extraídas
@@ -768,12 +769,8 @@
                 questao_id: questao.id,
                 gabarito_id: gabaritoSelecionado,
                 resposta_aluno: respostaAluno,
-                acertou: acertou,
-                // Incluir informações da imagem apenas na primeira resposta (para evitar duplicatas)
-                ...(questao.numero === questoesCapturadas[0].numero && imagemAnexada ? {
-                  imagem_caminho: imagemAnexada.caminhoRelativo,
-                  imagem_nome: imagemAnexada.nome
-                } : {})
+                acertou: acertou
+                // Não incluir imagem aqui - será confirmada apenas ao finalizar todas as respostas
               })
             });
 
@@ -788,6 +785,40 @@
         }
 
         if (respostasSalvas > 0) {
+          // Confirmar e salvar a imagem permanentemente apenas após salvar todas as respostas
+          if (imagemAnexada && imagemAnexada.temporaria) {
+            try {
+              const confirmResponse = await apiFetch('/api/respostas/confirmar-imagem', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  caminho_imagem_temp: imagemAnexada.caminho,
+                  aluno_id: alunoSelecionado.id,
+                  gabarito_id: gabaritoSelecionado
+                })
+              });
+
+              const confirmData = await confirmResponse.json();
+              if (confirmData.sucesso) {
+                // Atualizar referência da imagem para o caminho permanente
+                imagemAnexada.caminho = confirmData.imagem.caminho;
+                imagemAnexada.nome = confirmData.imagem.nome;
+                imagemAnexada.caminhoRelativo = confirmData.imagem.caminho;
+                imagemAnexada.temporaria = false;
+                console.log('[FINALIZAR] Imagem confirmada e movida para permanente:', confirmData.imagem.caminho);
+              } else {
+                console.warn('[FINALIZAR] Aviso ao confirmar imagem:', confirmData.erro || confirmData.aviso);
+              }
+            } catch (confirmErr) {
+              console.error('Erro ao confirmar imagem:', confirmErr);
+              // Não falhar toda a operação se apenas a confirmação da imagem falhar
+              showToast('Respostas salvas, mas houve um problema ao salvar a imagem. Verifique manualmente.', 'warning');
+            }
+          }
+
           let mensagem = `Simulado corrigido! ${respostasSalvas} questões processadas.`;
           mensagem += `\n✓ Acertos: ${acertos}`;
           mensagem += `\n✗ Erros: ${erros}`;
