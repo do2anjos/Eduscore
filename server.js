@@ -137,10 +137,47 @@ const { errorHandler } = require('./backend/middleware/errorHandler');
 app.use(errorHandler);
 
 // =============================================
-// INICIALIZAÇÃO DO SERVIDOR
+// INICIALIZAÇÃO DO SERVIDOR E MIGRAÇÕES
 // =============================================
-app.listen(PORT, () => {
-  console.log(`
+const { createSchema } = require('./backend/migrations/create_schema');
+const db = require('./backend/db');
+
+// Função para verificar se as tabelas já existem
+async function verificarTabelasExistem() {
+  try {
+    const result = await db.query(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'"
+    );
+    return result.rows.length > 0;
+  } catch (err) {
+    // Se der erro, assumir que não existem
+    return false;
+  }
+}
+
+// Executar migrações automaticamente se necessário (apenas uma vez)
+async function inicializarBanco() {
+  try {
+    const tabelasExistem = await verificarTabelasExistem();
+    
+    if (!tabelasExistem) {
+      console.log('📦 Tabelas não encontradas. Executando migrações...');
+      await createSchema();
+      console.log('✅ Migrações executadas com sucesso!\n');
+    } else {
+      console.log('✅ Banco de dados já configurado\n');
+    }
+  } catch (err) {
+    console.error('⚠️  Aviso: Erro ao verificar/executar migrações:', err.message);
+    console.error('   Você pode executar manualmente: node backend/migrations/create_schema.js\n');
+    // Não bloquear o servidor se as migrações falharem
+  }
+}
+
+// Inicializar banco e depois iniciar servidor
+inicializarBanco().then(() => {
+  app.listen(PORT, () => {
+    console.log(`
   ============================================
   ✅ Servidor rodando em: http://localhost:${PORT}
   ============================================
@@ -150,4 +187,8 @@ app.listen(PORT, () => {
   - Modo: ${process.env.NODE_ENV || 'development'}
   - JWT_SECRET: ${process.env.JWT_SECRET ? '✅ Configurado' : '❌ Não configurado'}
   ============================================`);
+  });
+}).catch(err => {
+  console.error('❌ Erro crítico ao inicializar:', err);
+  process.exit(1);
 });
