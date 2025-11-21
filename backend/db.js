@@ -77,20 +77,20 @@ if (isTurso) {
 } else {
   // Configuração para SQLite local (desenvolvimento)
   const Database = require('better-sqlite3');
-  const dbPath = process.env.DB_PATH || path.join(__dirname, '../database.sqlite');
-  
-  // Garantir que o diretório existe
-  const dbDir = path.dirname(dbPath);
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
-  
-  // Criar conexão com o banco
+const dbPath = process.env.DB_PATH || path.join(__dirname, '../database.sqlite');
+
+// Garantir que o diretório existe
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+// Criar conexão com o banco
   localDbForQueries = new Database(dbPath);
   db = localDbForQueries;
-  
-  // Habilitar foreign keys
-  db.pragma('foreign_keys = ON');
+
+// Habilitar foreign keys
+db.pragma('foreign_keys = ON');
   
   // Wrappers async para manter compatibilidade (para migrações)
   const originalExec = db.exec.bind(db);
@@ -182,19 +182,19 @@ function convertPostgresToSQLite(sql) {
 // Wrapper para compatibilidade com código existente (async/await)
 const dbWrapper = {
   query: async (sql, params = []) => {
-    try {
-      // Converter SQL PostgreSQL para SQLite
-      const { sql: sqliteSql, paramMap } = convertPostgresToSQLite(sql);
-      
+      try {
+        // Converter SQL PostgreSQL para SQLite
+        const { sql: sqliteSql, paramMap } = convertPostgresToSQLite(sql);
+        
       // Reordenar parâmetros se necessário
-      let reorderedParams = params;
-      if (Object.keys(paramMap).length > 0) {
-        const originalMatches = sql.match(/\$(\d+)/g);
-        if (originalMatches) {
-          reorderedParams = originalMatches.map(match => {
-            const paramNum = parseInt(match.replace('$', ''));
-            return params[paramNum - 1];
-          });
+        let reorderedParams = params;
+        if (Object.keys(paramMap).length > 0) {
+            const originalMatches = sql.match(/\$(\d+)/g);
+            if (originalMatches) {
+              reorderedParams = originalMatches.map(match => {
+                const paramNum = parseInt(match.replace('$', ''));
+                return params[paramNum - 1];
+              });
         }
       }
 

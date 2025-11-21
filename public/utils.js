@@ -3,45 +3,70 @@
  * e melhorias de acessibilidade
  */
 
-// Detectar URL base da API automaticamente
+// =============================================
+// CONFIGURAÇÃO DE URL DA API - SEPARAÇÃO LOCAL/PRODUÇÃO
+// =============================================
+
+// Detectar ambiente e definir URL base da API
+const API_CONFIG = (function() {
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  const port = window.location.port;
+  
+  // Verificar se estamos em produção (Render)
+  const isProduction = hostname !== 'localhost' && 
+                       hostname !== '127.0.0.1' && 
+                       !hostname.startsWith('192.168.') &&
+                       !hostname.startsWith('10.') &&
+                       hostname.includes('.onrender.com');
+  
+  if (isProduction) {
+    // PRODUÇÃO: Usar URL absoluta do mesmo domínio (Render)
+    return {
+      baseUrl: window.location.origin, // https://eduscore-j49m.onrender.com
+      isProduction: true
+    };
+  } else {
+    // DESENVOLVIMENTO LOCAL: Usar localhost:3000
+    return {
+      baseUrl: 'http://localhost:3000',
+      isProduction: false
+    };
+  }
+})();
+
+// Função para obter URL completa da API
 function getApiUrl(path = '') {
-  // Se o path já começa com http, retornar como está (URL absoluta)
+  // Se o path já é uma URL absoluta, retornar como está
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
   
-  // Detectar ambiente automaticamente
-  const hostname = window.location.hostname;
-  const protocol = window.location.protocol;
-  const port = window.location.port;
-  const origin = window.location.origin;
-  
-  // Em produção (Render) - usar URL absoluta do mesmo domínio
-  if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-    // Produção: usar URL absoluta do mesmo domínio
-    // No Render, frontend e backend estão no mesmo servidor
-    return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
-  } else {
-    // Desenvolvimento local: localhost:3000
-    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+  // Garantir que o path começa com /
+  if (!path.startsWith('/')) {
+    path = '/' + path;
   }
+  
+  // Retornar URL completa baseada no ambiente
+  return `${API_CONFIG.baseUrl}${path}`;
 }
 
 // Helper para fazer requisições fetch com URL correta
-// Compatível com localhost e produção
+// SEMPRE usa a URL do ambiente correto (produção ou local)
 async function apiFetch(endpoint, options = {}) {
   // Se já é uma URL absoluta, usar diretamente
   if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
     return fetch(endpoint, options);
   }
   
-  // Garantir que o endpoint começa com /
-  if (!endpoint.startsWith('/')) {
-    endpoint = '/' + endpoint;
-  }
-  
   // Obter URL completa usando getApiUrl
   const url = getApiUrl(endpoint);
+  
+  // Log apenas em desenvolvimento para debug
+  if (!API_CONFIG.isProduction) {
+    console.log('[API] Requisição:', { endpoint, url, environment: API_CONFIG.isProduction ? 'PRODUÇÃO' : 'LOCAL' });
+  }
+  
   return fetch(url, options);
 }
 
