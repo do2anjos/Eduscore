@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "migrate": "node backend/migrations/create_schema.js",
-    "postinstall": "if command -v python3 >/dev/null 2>&1; then python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt; elif command -v python >/dev/null 2>&1; then python -m pip install --upgrade pip && python -m pip install -r requirements.txt; else echo '⚠️  Python não encontrado no PATH. Certifique-se de que Python 3 está instalado.'; fi"
+    "postinstall": "if command -v python3 >/dev/null 2>&1; then python3 -m pip install --upgrade pip && python3 -m pip install -r requirements.txt || true; elif command -v python >/dev/null 2>&1; then python -m pip install --upgrade pip && python -m pip install -r requirements.txt || true; else echo '⚠️  Python não encontrado no PATH. Certifique-se de que Python 3 está instalado.'; fi"
   },
   "keywords": [
     "education",

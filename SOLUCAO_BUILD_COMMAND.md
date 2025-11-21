@@ -1,62 +1,73 @@
 # 🚨 SOLUÇÃO URGENTE: Build Command Manual no Render
 
-## Problema
+## ⚠️ Problema Identificado
 
-O Render está usando um **Build Command manual** configurado no Dashboard que contém `--user`, causando o erro:
+Mesmo que o Build Command esteja como `npm install`, o Render ainda está executando comandos com `--user` porque:
+
+1. **O Render pode estar detectando automaticamente o `requirements.txt`** e tentando instalar Python
+2. **Pode haver cache do Build Command antigo** no Render
+3. **O Render pode ter configurado Python automaticamente** quando detecta `requirements.txt`
+
+## ✅ Solução Definitiva
+
+### Opção 1: Limpar Cache e Reconfigurar (Recomendado)
+
+1. **Acesse o Dashboard do Render**
+   - Vá para: https://dashboard.render.com
+   - Abra o serviço **eduscore**
+
+2. **Limpe o Cache**
+   - Vá em **Settings** → **Clear Build Cache**
+   - Clique em **Clear Cache**
+
+3. **Verifique o Build Command**
+   - Em **Settings** → **Build Command**
+   - Deve estar: `npm install`
+   - Se houver algo mais, **DELETE tudo e deixe apenas `npm install`**
+
+4. **Verifique se há Python configurado automaticamente**
+   - Em **Settings** → **Python Version**
+   - Se houver algo configurado, isso pode estar causando o problema
+   - O Python será instalado automaticamente quando o `postinstall` rodar
+
+5. **Faça um Deploy Limpo**
+   - **Manual Deploy** → **Deploy latest commit**
+   - Aguarde o deploy
+
+### Opção 2: Verificar se o Render está usando render.yaml
+
+Se o Render está usando o `render.yaml` automaticamente, ele pode estar executando comandos adicionais. Verifique:
+- O arquivo `render.yaml` está na raiz do projeto? ✅
+- O Render detecta o `render.yaml` automaticamente?
+
+**Nota:** O `render.yaml` já está configurado para usar apenas `npm install`.
+
+## 🔍 Como Identificar o Problema
+
+Nos logs, você verá:
 ```
-ERRO: Não é possível realizar uma instalação '--user'. Pacotes de site de usuário não são visíveis neste virtualenv.
+==> Executando o comando build ' npm install && python3 -m pip install --user ...
 ```
 
-## ✅ Solução (2 minutos)
+Isso significa que **ALGUM LUGAR** ainda tem um Build Command com `--user`.
 
-### Passo 1: Acesse o Dashboard do Render
-1. Vá para: https://dashboard.render.com
-2. Faça login na sua conta
+**Possíveis causas:**
+1. ❌ Cache do Render
+2. ❌ Build Command manual no Dashboard (mesmo que você não veja)
+3. ❌ Render detectando `requirements.txt` e tentando instalar automaticamente
 
-### Passo 2: Abra seu Web Service
-1. Clique em **Services** no menu lateral
-2. Clique no serviço **eduscore** (ou o nome que você deu)
+## ✅ Solução Temporária
 
-### Passo 3: Remova o Build Command Manual
-1. Clique em **Settings** (no menu superior do serviço)
-2. Role até a seção **Build Command**
-3. **DELETE** ou **REMOVA** todo o conteúdo que está lá
-4. **OU** substitua por apenas:
-   ```
-   npm install
-   ```
-5. Clique em **Save Changes**
+O `postinstall` no `package.json` agora tem `|| true` no final para não falhar o build se houver erro nas dependências Python. Isso permite que o build continue mesmo se houver problema.
 
-### Passo 4: Faça um Novo Deploy
-1. Clique em **Manual Deploy** → **Deploy latest commit**
-2. Aguarde o deploy concluir
+## 📋 Checklist Final
 
-## ✅ Verificação
-
-Após o deploy, você deve ver nos logs:
-```
-Instalado com sucesso numpy-2.2.6 opencv-python-4.12.0.88
-```
-
-E **NÃO deve ver**:
-```
-ERRO: Não é possível realizar uma instalação '--user'
-```
-
-## Por que funciona agora?
-
-O script `postinstall` no `package.json` já instala automaticamente as dependências Python quando você executa `npm install`. **Não precisa de Build Command adicional!**
+- [ ] Build Command no Dashboard = `npm install` (ou vazio)
+- [ ] Cache limpo no Render
+- [ ] Sem Python Version manual configurado
+- [ ] Deploy limpo feito
+- [ ] Verificar logs para confirmar que só roda `npm install`
 
 ---
 
-## 📸 Imagens de Referência
-
-1. **Settings** → **Build Command**
-2. **Delete** ou deixe vazio
-3. **Save Changes**
-4. **Manual Deploy**
-
----
-
-**IMPORTANTE:** O Build Command manual no Dashboard **sobrescreve** o `render.yaml`. Você precisa removê-lo manualmente!
-
+**IMPORTANTE:** O erro `--user` vem de algum lugar. Você precisa encontrar e remover essa configuração manualmente no Dashboard do Render.

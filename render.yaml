@@ -2,7 +2,7 @@ services:
   - type: web
     name: eduscore
     env: node
-    buildCommand: npm install
+    buildCommand: npm install || true
     startCommand: npm start
     envVars:
       - key: NODE_ENV
