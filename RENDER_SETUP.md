@@ -1,53 +1,57 @@
 # Configuração do Render para Processamento de Imagens
 
-## Problema
+## ✅ Problema Resolvido
 
-O processamento de imagens usa scripts Python que dependem do OpenCV (`cv2`). Essas dependências não estão sendo instaladas automaticamente no Render.
+O processamento de imagens agora instala automaticamente as dependências Python (`opencv-python` e `numpy`) através do script `postinstall` no `package.json`.
 
-## Solução
+## 🔧 Configuração no Render Dashboard
 
-### Opção 1: Usar Build Command no Render (Recomendado)
+**IMPORTANTE:** Remova ou atualize o Build Command no Render Dashboard.
 
-1. Acesse o Dashboard do Render
-2. Vá em **Settings** do seu Web Service
-3. Na seção **Build Command**, cole:
+### Passo 1: Acesse o Dashboard do Render
+1. Vá para https://dashboard.render.com
+2. Abra seu Web Service (EduScore)
+
+### Passo 2: Atualize o Build Command
+1. Vá em **Settings** → **Build Command**
+2. **Remova o Build Command antigo** ou substitua por:
    ```bash
-   npm install && python3 -m pip install --user --upgrade pip && python3 -m pip install --user -r requirements.txt
+   npm install
    ```
-4. Se `python3` não funcionar, use:
-   ```bash
-   npm install && python -m pip install --user --upgrade pip && python -m pip install --user -r requirements.txt
-   ```
+   
+   **OU simplesmente deixe vazio** para usar o padrão (que já funciona com o postinstall)
 
-### Opção 2: Usar render.yaml (Automático)
-
-O arquivo `render.yaml` já está configurado para instalar as dependências Python automaticamente.
-
-**Importante:** Certifique-se de que o Render detecta e usa o `render.yaml` na raiz do projeto.
-
-### Verificação
-
-Após o deploy, verifique nos logs se aparece:
-```
-✅ Dependências Python instaladas com sucesso
-```
-
-Se ainda houver erro, verifique se Python está disponível:
+### Passo 3: Verifique o Start Command
+Certifique-se de que o **Start Command** está configurado como:
 ```bash
-python3 --version
-# ou
-python --version
+npm start
 ```
 
-## Dependências Python Necessárias
+## 📋 O que está funcionando agora
 
-As dependências estão no arquivo `requirements.txt`:
-- `opencv-python>=4.8.0` - Processamento de imagens
-- `numpy>=1.24.0` - Operações numéricas
+1. ✅ Script `postinstall` no `package.json` instala automaticamente:
+   - `opencv-python>=4.8.0`
+   - `numpy>=1.24.0`
 
-## Notas
+2. ✅ Não usa mais `--user` (incompatível com virtualenv do Poetry)
 
-- O Render pode não ter Python instalado por padrão em Web Services Node.js
-- Se necessário, configure Python como dependência adicional no Render
-- Alternativamente, considere usar uma API externa para processamento de imagens se Python não estiver disponível
+3. ✅ Detecta automaticamente Python3 ou Python
 
+## 🚨 Problema Atual
+
+Se você ainda está vendo erro com `--user`, é porque:
+- O Build Command no Render Dashboard ainda contém comandos com `--user`
+- **Solução:** Remova ou atualize o Build Command conforme instruções acima
+
+## ✅ Verificação
+
+Após atualizar o Build Command, nos logs você deve ver:
+```
+Successfully installed numpy-2.2.6 opencv-python-4.12.0.88
+up to date, audited 159 packages in 32s
+```
+
+E **NÃO deve ver**:
+```
+ERROR: Can not perform a '--user' install
+```
