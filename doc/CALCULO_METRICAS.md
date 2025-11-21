@@ -91,6 +91,7 @@ Esta documentação descreve como os principais cards e gráficos do sistema sã
 ### Gráfico: Média de Acertos por Disciplina
 - Frontend: `public/RelatorioGeral.html`.
 - Dados: `estatisticas.media_por_disciplina`.
+- **IMPORTANTE (2025-01-XX)**: A média considera TODAS as questões dos gabaritos aplicados, não apenas as respondidas. Questões não respondidas (vazias/inválidas) contam como erro (0%) na média.
 - Lógica:
   - Ordena por `media` (descendente).
   - Trunca nomes longos para melhor leitura.
@@ -398,6 +399,7 @@ ORDER BY media DESC
 - **Contagem de Respostas**: `COUNT(DISTINCT CASE ...)` - Conta respostas **únicas** válidas
 - **Contagem de Questões**: `COUNT(DISTINCT q.id)` - Conta questões únicas da etapa
 - **Cálculo de Média**: `(Acertos / Total de questões da disciplina na etapa) * 100`
+  - **IMPORTANTE (2025-01-XX)**: O denominador é o total de questões, não apenas respostas válidas. Questões não respondidas (vazias/inválidas) contam como erro (0%) na média, garantindo que a taxa de acertos reflita corretamente o desempenho considerando todas as questões aplicadas.
 - **Filtro**: `WHERE g.etapa = $1` - Aplica filtro por etapa
 
 **Query Exemplo**:
@@ -526,6 +528,8 @@ SELECT ROUND(AVG(CASE WHEN acertou = 1 THEN 100 ELSE 0 END), 2) as media
 FROM respostas
 
 -- Média por disciplina (Modo Geral)
+-- IMPORTANTE (2025-01-XX): A média divide pelos total de questões (COUNT(DISTINCT q.id)),
+-- não apenas respostas válidas. Questões não respondidas contam como erro (0%) na média.
 SELECT 
   d.id, d.nome,
   COUNT(DISTINCT q.id) as total_questoes,
