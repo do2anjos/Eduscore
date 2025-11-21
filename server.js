@@ -83,7 +83,6 @@ const generalLimiter = rateLimit({
 });
 
 // Rate limiting para login (mais restritivo)
-// Configurar keyGenerator para usar X-Forwarded-For corretamente no Render
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 5, // 5 tentativas por 15 minutos
@@ -92,13 +91,8 @@ const loginLimiter = rateLimit({
     erro: 'Muitas tentativas de login. Tente novamente em 15 minutos.'
   },
   skipSuccessfulRequests: true,
-  // Usar IP do cliente corretamente no Render (através do proxy)
   standardHeaders: true,
-  legacyHeaders: false,
-  validate: {
-    trustProxy: true,
-    xForwardedForHeader: false // Não validar o header, apenas usar
-  }
+  legacyHeaders: false
 });
 
 // Rate limiting para uploads
