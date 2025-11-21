@@ -1279,12 +1279,48 @@
         // Ordenar questões por número
         const questoesOrdenadas = [...questoes].sort((a, b) => Number(a.numero) - Number(b.numero));
 
+        // Buscar imagem do cartão
+        let imagemCartao = null;
+        try {
+          const imagemRes = await fetch(`/api/respostas/imagem-cartao?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          if (imagemRes.ok) {
+            const imagemData = await imagemRes.json();
+            if (imagemData.sucesso && imagemData.imagem) {
+              imagemCartao = imagemData.imagem.caminho;
+            }
+          }
+        } catch (imgError) {
+          console.warn('Erro ao buscar imagem do cartão:', imgError);
+        }
+
         // Gerar HTML da tabela de detalhes
         let html = `
           <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h4 style="margin: 0 0 16px 0; color: #003b54; font-size: 16px; font-weight: 600;">
-              Detalhes do Gabarito
-            </h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h4 style="margin: 0; color: #003b54; font-size: 16px; font-weight: 600;">
+                Detalhes do Gabarito
+              </h4>
+              ${imagemCartao ? `
+                <button 
+                  onclick="abrirImagemCartao('${imagemCartao}')"
+                  style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; font-weight: 600; transition: background-color var(--transition-base);"
+                  onmouseover="this.style.background='var(--color-primary-darker)'"
+                  onmouseout="this.style.background='var(--color-primary)'"
+                  aria-label="Ver cartão enviado"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Ver Cartão
+                </button>
+              ` : ''}
+            </div>
             <div style="overflow-x: auto;">
               <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                 <thead>
@@ -1343,6 +1379,77 @@
             Erro ao carregar detalhes do simulado. Tente novamente.
           </div>
         `;
+      }
+    }
+
+    // Função para abrir imagem do cartão em modal
+    function abrirImagemCartao(caminhoImagem) {
+      // Criar modal
+      const modal = document.createElement('div');
+      modal.id = 'modalImagemCartao';
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-xl);
+        box-sizing: border-box;
+      `;
+      
+      modal.innerHTML = `
+        <div style="position: relative; max-width: 90%; max-height: 90%; background: white; border-radius: var(--radius-md); padding: var(--spacing-lg); box-shadow: var(--shadow-xl);">
+          <button 
+            onclick="fecharModalImagem()"
+            style="position: absolute; top: 10px; right: 10px; background: var(--color-primary); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: background-color var(--transition-base); z-index: 10001;"
+            onmouseover="this.style.background='var(--color-primary-darker)'"
+            onmouseout="this.style.background='var(--color-primary)'"
+            aria-label="Fechar"
+          >
+            ×
+          </button>
+          <div style="text-align: center; margin-bottom: var(--spacing-md);">
+            <h3 style="margin: 0; color: var(--color-primary-darker); font-size: var(--font-size-lg);">Cartão de Resposta</h3>
+          </div>
+          <div style="overflow: auto; max-height: calc(90vh - 120px);">
+            <img 
+              src="${caminhoImagem}" 
+              alt="Cartão de resposta do aluno"
+              style="max-width: 100%; height: auto; border-radius: var(--radius-sm); box-shadow: var(--shadow-md);"
+              onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px; color: #e74c3c;\\'>Erro ao carregar imagem. A imagem pode ter sido removida ou não está disponível.</div>'"
+            />
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Fechar ao clicar fora da imagem
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          fecharModalImagem();
+        }
+      });
+      
+      // Fechar com ESC
+      const fecharComEsc = function(e) {
+        if (e.key === 'Escape') {
+          fecharModalImagem();
+          document.removeEventListener('keydown', fecharComEsc);
+        }
+      };
+      document.addEventListener('keydown', fecharComEsc);
+    }
+    
+    function fecharModalImagem() {
+      const modal = document.getElementById('modalImagemCartao');
+      if (modal) {
+        modal.remove();
       }
     }
 

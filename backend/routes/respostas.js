@@ -98,6 +98,115 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Rota GET /api/respostas/imagem-cartao - Buscar imagem do cartão de resposta
+router.get('/imagem-cartao', async (req, res) => {
+  try {
+    const { aluno_id, gabarito_id } = req.query;
+    
+    if (!aluno_id || !gabarito_id) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Parâmetros aluno_id e gabarito_id são obrigatórios'
+      });
+    }
+
+    // Buscar a data da primeira resposta do aluno para este gabarito
+    const respostaQuery = await db.query(`
+      SELECT MIN(data_resposta) as primeira_data
+      FROM respostas
+      WHERE aluno_id = $1 AND gabarito_id = $2
+    `, [aluno_id, gabarito_id]);
+
+    if (respostaQuery.rows.length === 0 || !respostaQuery.rows[0].primeira_data) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Nenhuma resposta encontrada para este aluno e gabarito'
+      });
+    }
+
+    // Buscar imagens no diretório de uploads/imagens
+    const imagensDir = path.join(uploadsDir, 'imagens');
+    if (!fs.existsSync(imagensDir)) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Diretório de imagens não encontrado'
+      });
+    }
+
+    // Listar todas as imagens e encontrar a mais próxima da data da primeira resposta
+    const arquivos = fs.readdirSync(imagensDir).filter(arquivo => 
+      arquivo.startsWith('resposta_') && 
+      (arquivo.endsWith('.jpg') || arquivo.endsWith('.jpeg') || arquivo.endsWith('.png'))
+    );
+
+    if (arquivos.length === 0) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Nenhuma imagem encontrada'
+      });
+    }
+
+    // Converter data da primeira resposta para timestamp
+    const primeiraData = new Date(respostaQuery.rows[0].primeira_data).getTime();
+    
+    // Encontrar a imagem mais próxima da data da primeira resposta
+    let imagemMaisProxima = null;
+    let menorDiferenca = Infinity;
+
+    arquivos.forEach(arquivo => {
+      // Extrair timestamp do nome do arquivo (formato: resposta_TIMESTAMP.ext)
+      const match = arquivo.match(/resposta_(\d+)/);
+      if (match) {
+        const timestampArquivo = parseInt(match[1]);
+        const diferenca = Math.abs(timestampArquivo - primeiraData);
+        
+        // Considerar imagens processadas até 1 hora antes ou depois da primeira resposta
+        if (diferenca < menorDiferenca && diferenca < 3600000) { // 1 hora em ms
+          menorDiferenca = diferenca;
+          imagemMaisProxima = arquivo;
+        }
+      }
+    });
+
+    if (!imagemMaisProxima) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Nenhuma imagem encontrada para este cartão'
+      });
+    }
+
+    const caminhoImagem = path.join(imagensDir, imagemMaisProxima);
+    
+    // Verificar se o arquivo existe
+    if (!fs.existsSync(caminhoImagem)) {
+      return res.status(404).json({
+        sucesso: false,
+        erro: 'Imagem não encontrada no servidor'
+      });
+    }
+
+    // Retornar o caminho relativo para acesso via HTTP
+    const caminhoRelativo = `/uploads/imagens/${imagemMaisProxima}`;
+    
+    res.json({
+      sucesso: true,
+      imagem: {
+        nome: imagemMaisProxima,
+        caminho: caminhoRelativo,
+        caminho_completo: caminhoImagem
+      }
+    });
+
+  } catch (err) {
+    console.error('Erro ao buscar imagem do cartão:', err);
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro ao buscar imagem do cartão',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
 // Rota POST /api/respostas - Cria uma nova resposta
 router.post('/', async (req, res) => {
   const { aluno_id, questao_id, gabarito_id, resposta_aluno, acertou } = req.body;
