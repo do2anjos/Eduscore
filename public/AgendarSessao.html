@@ -225,7 +225,7 @@
       }
 
       try {
-        const response = await fetch('/api/usuarios/me', {
+        const response = await apiFetch('/api/usuarios/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -243,7 +243,7 @@
 
       try {
         showLoading('Carregando alunos...');
-        const response = await fetch('/api/alunos', {
+        const response = await apiFetch('/api/alunos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -262,7 +262,7 @@
     async function carregarDisciplinas() {
       try {
         showLoading('Carregando disciplinas...');
-        const response = await fetch('/api/disciplinas');
+        const response = await apiFetch('/api/disciplinas');
         const data = await response.json();
         if (data.sucesso || Array.isArray(data)) {
           disciplinas = data.disciplinas || data;
@@ -308,7 +308,7 @@
 
       try {
         showLoading('Carregando sessões...');
-        const response = await fetch('/api/sessoes', {
+        const response = await apiFetch('/api/sessoes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -379,7 +379,7 @@
       if (!token) return;
 
       try {
-        const response = await fetch(`/api/sessoes/${sessaoId}`, {
+        const response = await apiFetch(`/api/sessoes/${sessaoId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -436,7 +436,7 @@
         const url = sessaoEditandoId ? `/api/sessoes/${sessaoEditandoId}` : '/api/sessoes';
         const method = sessaoEditandoId ? 'PUT' : 'POST';
         
-        const response = await fetch(url, {
+        const response = await apiFetch(url, {
           method,
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -479,7 +479,7 @@
         async () => {
           try {
             showLoading('Excluindo sessão...');
-            const response = await fetch(`/api/sessoes/${sessaoId}`, {
+            const response = await apiFetch(`/api/sessoes/${sessaoId}`, {
               method: 'DELETE',
               headers: { 'Authorization': `Bearer ${token}` }
             });

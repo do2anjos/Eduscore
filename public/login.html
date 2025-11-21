@@ -7,57 +7,6 @@
   <title>Login - EduScore</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  <script>
-    // Configuração de API DEVE SER CARREGADA ANTES DE utils.js
-    // Detectar ambiente e definir URL base da API
-    window.API_CONFIG = (function() {
-      const hostname = window.location.hostname;
-      
-      // Verificar se estamos em produção (Render)
-      const isProduction = hostname !== 'localhost' && 
-                           hostname !== '127.0.0.1' && 
-                           !hostname.startsWith('192.168.') &&
-                           !hostname.startsWith('10.') &&
-                           hostname.includes('.onrender.com');
-      
-      if (isProduction) {
-        // PRODUÇÃO: URL absoluta do Render
-        return {
-          baseUrl: window.location.origin,
-          isProduction: true
-        };
-      } else {
-        // LOCAL: localhost:3000
-        return {
-          baseUrl: 'http://localhost:3000',
-          isProduction: false
-        };
-      }
-    })();
-    
-    // Função global para obter URL da API
-    window.getApiUrl = function(path = '') {
-      if (path.startsWith('http://') || path.startsWith('https://')) {
-        return path;
-      }
-      if (!path.startsWith('/')) {
-        path = '/' + path;
-      }
-      return `${window.API_CONFIG.baseUrl}${path}`;
-    };
-    
-    // Função global para fetch da API
-    window.apiFetch = async function(endpoint, options = {}) {
-      if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
-        return fetch(endpoint, options);
-      }
-      const url = window.getApiUrl(endpoint);
-      if (!window.API_CONFIG.isProduction) {
-        console.log('[API]', { endpoint, url, env: 'LOCAL' });
-      }
-      return fetch(url, options);
-    };
-  </script>
   <script src="utils.js" defer></script>
 </head>
 <body>

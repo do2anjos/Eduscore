@@ -226,7 +226,7 @@
 
       try {
         showLoading('Carregando alunos...');
-        const response = await fetch('/api/alunos', {
+        const response = await apiFetch('/api/alunos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -247,7 +247,7 @@
 
       try {
         showLoading('Carregando gabaritos...');
-        const response = await fetch('/api/gabaritos', {
+        const response = await apiFetch('/api/gabaritos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -372,7 +372,7 @@
           }
         });
 
-        const response = await fetch('/api/respostas', {
+        const response = await apiFetch('/api/respostas', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -470,7 +470,7 @@
       if (!token) return;
 
       try {
-        const response = await fetch(`/api/questoes/gabarito/${gabaritoId}`, {
+        const response = await apiFetch(`/api/questoes/gabarito/${gabaritoId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -518,7 +518,7 @@
         showUploadProgress(30);
         
         // Enviar imagem para o backend para processamento
-        const response = await fetch('/api/respostas/processar-imagem', {
+        const response = await apiFetch('/api/respostas/processar-imagem', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -757,7 +757,7 @@
           }
 
           try {
-            const response = await fetch('/api/respostas', {
+            const response = await apiFetch('/api/respostas', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,

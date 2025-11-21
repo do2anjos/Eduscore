@@ -241,7 +241,7 @@
       }
 
       try {
-        const response = await fetch('/api/usuarios/me/configuracoes', {
+        const response = await apiFetch('/api/usuarios/me/configuracoes', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -305,7 +305,7 @@
           doisFatores: document.getElementById('doisFatores').checked
         };
 
-        const response = await fetch('/api/usuarios/me/configuracoes', {
+        const response = await apiFetch('/api/usuarios/me/configuracoes', {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,

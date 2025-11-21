@@ -156,7 +156,7 @@
       showLoading('Redefinindo senha...');
       
       try {
-        const response = await fetch('/api/usuarios/redefinir-senha', {
+        const response = await apiFetch('/api/usuarios/redefinir-senha', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

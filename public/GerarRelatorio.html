@@ -336,7 +336,7 @@
 
       try {
         showLoading('Carregando lista de alunos...');
-        const response = await fetch('/api/alunos', {
+        const response = await apiFetch('/api/alunos', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -426,7 +426,7 @@
         document.getElementById('btnBuscarSpinner').style.display = 'inline-block';
         document.getElementById('btnBuscar').disabled = true;
 
-        const response = await fetch(`/api/relatorios/estatisticas-individual/${alunoSelecionado.id}`, {
+        const response = await apiFetch(`/api/relatorios/estatisticas-individual/${alunoSelecionado.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -781,7 +781,7 @@
       try {
         showLoading('Carregando desempenho por disciplina...');
         
-        const response = await fetch(`/api/relatorios/estatisticas-individual/${alunoSelecionado.id}/disciplinas/${gabaritoId}`, {
+        const response = await apiFetch(`/api/relatorios/estatisticas-individual/${alunoSelecionado.id}/disciplinas/${gabaritoId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -1258,13 +1258,13 @@
       try {
         // Buscar questões do gabarito e respostas do aluno em paralelo
         const [questoesRes, respostasRes] = await Promise.all([
-          fetch(`/api/questoes/gabarito/${gabaritoId}`, {
+          apiFetch(`/api/questoes/gabarito/${gabaritoId}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             }
           }),
-          fetch(`/api/respostas?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
+          apiFetch(`/api/respostas?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
@@ -1386,7 +1386,7 @@
         // Buscar informações sobre o gabarito e tentar encontrar a imagem mais recente
         // Como não há relação direta, vamos buscar todas as imagens e encontrar a mais recente
         // que foi processada para este aluno/gabarito
-        const response = await fetch(`/api/respostas?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
+        const response = await apiFetch(`/api/respostas?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -1407,7 +1407,7 @@
 
         // Buscar a imagem mais recente processada para este aluno/gabarito
         // Vamos listar as imagens no diretório e encontrar a mais recente
-        const imagemResponse = await fetch(`/api/respostas/imagem/${alunoId}/${gabaritoId}`, {
+        const imagemResponse = await apiFetch(`/api/respostas/imagem/${alunoId}/${gabaritoId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

@@ -366,7 +366,7 @@
         showLoading();
         showErrorMessage('');
         
-        const response = await fetch('/api/usuarios/registro', {
+        const response = await apiFetch('/api/usuarios/registro', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

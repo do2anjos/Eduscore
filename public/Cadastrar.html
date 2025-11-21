@@ -269,7 +269,7 @@
           throw new Error('Token não encontrado. Faça login novamente.');
         }
 
-        const response = await fetch('/api/alunos', {
+        const response = await apiFetch('/api/alunos', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

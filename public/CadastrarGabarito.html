@@ -206,7 +206,7 @@
 
       try {
         showLoading('Carregando gabaritos...');
-        const response = await fetch('/api/gabaritos', {
+        const response = await apiFetch('/api/gabaritos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -402,7 +402,7 @@
         showLoading('Cadastrando gabarito...');
 
         // Primeiro criar o gabarito
-        const response = await fetch('/api/gabaritos', {
+        const response = await apiFetch('/api/gabaritos', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -441,7 +441,7 @@
             formData.append('file', arquivoSelecionado);
             formData.append('gabarito_id', gabaritoId);
 
-            const uploadResponse = await fetch('/api/gabaritos/upload', {
+            const uploadResponse = await apiFetch('/api/gabaritos/upload', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -527,7 +527,7 @@
         async () => {
           try {
             showLoading('Excluindo gabarito...');
-            const response = await fetch(`/api/gabaritos/${gabaritoId}`, {
+            const response = await apiFetch(`/api/gabaritos/${gabaritoId}`, {
               method: 'DELETE',
               headers: { 'Authorization': `Bearer ${token}` }
             });

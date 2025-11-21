@@ -12,18 +12,18 @@ const API_CONFIG = (function() {
   const hostname = window.location.hostname;
   const protocol = window.location.protocol;
   const port = window.location.port;
+  const origin = window.location.origin;
   
-  // Verificar se estamos em produção (Render)
+  // Verificar se estamos em produção (Render ou qualquer domínio que não seja localhost)
   const isProduction = hostname !== 'localhost' && 
                        hostname !== '127.0.0.1' && 
                        !hostname.startsWith('192.168.') &&
-                       !hostname.startsWith('10.') &&
-                       hostname.includes('.onrender.com');
+                       !hostname.startsWith('10.');
   
   if (isProduction) {
     // PRODUÇÃO: Usar URL absoluta do mesmo domínio (Render)
     return {
-      baseUrl: window.location.origin, // https://eduscore-j49m.onrender.com
+      baseUrl: origin, // https://eduscore-j49m.onrender.com
       isProduction: true
     };
   } else {
@@ -57,6 +57,11 @@ async function apiFetch(endpoint, options = {}) {
   // Se já é uma URL absoluta, usar diretamente
   if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
     return fetch(endpoint, options);
+  }
+  
+  // Garantir que o endpoint começa com /
+  if (!endpoint.startsWith('/')) {
+    endpoint = '/' + endpoint;
   }
   
   // Obter URL completa usando getApiUrl
