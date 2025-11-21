@@ -10,13 +10,17 @@
   <script src="utils.js" defer></script>
 </head>
 <body>
+  <!-- Skip Links para navegação por teclado -->
+  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
+  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
+  
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
-      <nav class="nav-links" role="navigation" aria-label="Menu principal">
+      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
         <a href="home.html">
           <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
         </a>
@@ -41,7 +45,7 @@
       </nav>
     </aside>
 
-    <main class="content">
+    <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
@@ -74,7 +78,12 @@
         </div>
         <div>
           <label for="filtroTurma" style="margin-right: var(--spacing-sm); font-weight: 600; color: var(--color-primary-darker);">Etapa:</label>
-          <select id="filtroTurma" onchange="atualizarGrafico()" style="padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-surface); font-size: var(--font-size-sm); cursor: pointer;">
+          <select 
+            id="filtroTurma" 
+            onchange="atualizarGrafico()" 
+            aria-label="Filtrar relatório por etapa"
+            style="padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-surface); font-size: var(--font-size-sm); cursor: pointer;"
+          >
             <option value="Geral" selected>Geral</option>
           </select>
         </div>
@@ -154,7 +163,12 @@
           <h3>Média de Acertos por Disciplina</h3>
         </div>
         <div class="metric-card-content" style="min-height: 350px;">
-          <canvas id="graficoGeralTurmas" style="max-width: 100%; height: 320px !important;"></canvas>
+          <canvas 
+            id="graficoGeralTurmas" 
+            role="img"
+            aria-label="Gráfico de média de acertos por disciplina"
+            style="max-width: 100%; height: 320px !important;"
+          ></canvas>
         </div>
       </div>
     </main>
@@ -299,6 +313,14 @@
       });
       const medias = dadosOrdenados.map(d => d.media);
 
+      // Obter cores das variáveis CSS para Chart.js
+      const root = getComputedStyle(document.documentElement);
+      const colorPrimary = root.getPropertyValue('--color-primary').trim() || '#008cc4';
+      const colorPrimaryDarker = root.getPropertyValue('--color-primary-darker').trim() || '#003b54';
+      const colorTextLight = root.getPropertyValue('--color-text-light').trim() || '#666666';
+      const colorText = root.getPropertyValue('--color-text').trim() || '#333333';
+      const colorBorderLight = root.getPropertyValue('--color-border-light').trim() || '#e0e0e0';
+
       grafico = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -306,7 +328,7 @@
           datasets: [{
             label: 'Média de Acertos (%)',
             data: medias.length > 0 ? medias : [0],
-            backgroundColor: '#008cc4',
+            backgroundColor: colorPrimary,
             borderRadius: 8,
             barThickness: 28,
           }]
@@ -320,7 +342,7 @@
               display: false
             },
             tooltip: {
-              backgroundColor: '#003b54',
+              backgroundColor: colorPrimaryDarker,
               padding: 12,
               titleFont: {
                 size: 14,
@@ -344,10 +366,10 @@
                 font: {
                   size: 12
                 },
-                color: '#666'
+                color: colorTextLight
               },
               grid: {
-                color: '#f0f0f0'
+                color: colorBorderLight
               }
             },
             y: {
@@ -356,7 +378,7 @@
                   size: 13,
                   weight: '500'
                 },
-                color: '#333'
+                color: colorText
               },
               grid: {
                 display: false
@@ -371,7 +393,7 @@
       const turma = document.getElementById('filtroTurma').value;
       
       try {
-        showLoading();
+        showLoading('Atualizando gráfico...');
         
         // Recarregar dados com filtro de etapa
         await carregarEstatisticas(turma);
@@ -380,7 +402,7 @@
         // que chama inicializarGrafico, que já destrói o gráfico anterior
       } catch (error) {
         console.error('Erro ao atualizar gráfico:', error);
-        showToast('Erro ao atualizar gráfico. Tente novamente.', 'error');
+        showToast('Erro ao atualizar gráfico. Tente novamente.', 'error', 5000);
       } finally {
         hideLoading();
       }

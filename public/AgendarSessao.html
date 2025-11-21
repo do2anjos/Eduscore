@@ -9,22 +9,26 @@
   <script src="utils.js" defer></script>
 </head>
 <body>
+  <!-- Skip Links para navegação por teclado -->
+  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
+  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
+  
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil" />
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
-      <nav class="nav-links">
-        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" /> Home</a>
-        <a href="GerarRelatorio.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" /> Gerar Relatório</a>
-        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" /> Cadastrar</a>
-        <a href="CadastrarGabarito.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" /> Simulado</a>
-        <a href="AgendarSessao.html" class="active"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" /> Agendar Sessão</a>
+      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
+        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home</a>
+        <a href="GerarRelatorio.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório</a>
+        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar</a>
+        <a href="CadastrarGabarito.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado</a>
+        <a href="AgendarSessao.html" class="active" aria-current="page"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão</a>
       </nav>
     </aside>
 
-    <main class="content">
+    <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
@@ -59,7 +63,12 @@
 
       <!-- Botão Adicionar -->
       <div style="margin-top: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
-        <button class="btn-primary" onclick="abrirFormulario()" style="display: block; margin: 0 auto;">
+        <button 
+          class="btn-primary" 
+          onclick="abrirFormulario()" 
+          aria-label="Abrir formulário para adicionar nova sessão"
+          style="display: block; margin: 0 auto;"
+        >
           + Adicionar Sessão
         </button>
       </div>
@@ -72,10 +81,15 @@
         <div style="padding: var(--spacing-xl);">
           <form id="formSessao" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
             <div class="input-group">
-              <label for="alunoNome">Nome do Aluno <span class="required-field"></span></label>
+              <label for="alunoNome">
+                Nome do Aluno 
+                <span class="required-field"></span>
+              </label>
               <select 
                 id="alunoNome" 
                 required
+                aria-label="Selecione o aluno"
+                aria-required="true"
                 style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
               >
                 <option value="">Selecione o aluno</option>
@@ -84,10 +98,15 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
               <div class="input-group">
-                <label for="etapa">Etapa <span class="required-field"></span></label>
+                <label for="etapa">
+                  Etapa 
+                  <span class="required-field"></span>
+                </label>
                 <select 
                   id="etapa" 
                   required
+                  aria-label="Selecione a etapa"
+                  aria-required="true"
                   style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
                 >
                   <option value="">Selecione</option>
@@ -98,10 +117,15 @@
               </div>
 
               <div class="input-group">
-                <label for="materia">Disciplina <span class="required-field"></span></label>
+                <label for="materia">
+                  Disciplina 
+                  <span class="required-field"></span>
+                </label>
                 <select 
                   id="materia" 
                   required
+                  aria-label="Selecione a disciplina"
+                  aria-required="true"
                   style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
                 >
                   <option value="">Selecione a disciplina</option>
@@ -111,29 +135,55 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
               <div class="input-group">
-                <label for="dataSessao">Data <span class="required-field"></span></label>
+                <label for="dataSessao">
+                  Data 
+                  <span class="required-field"></span>
+                </label>
                 <input 
                   type="date" 
                   id="dataSessao" 
                   required
+                  aria-label="Data da sessão"
+                  aria-required="true"
                   style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
                 />
               </div>
 
               <div class="input-group">
-                <label for="horaSessao">Horário <span class="required-field"></span></label>
+                <label for="horaSessao">
+                  Horário 
+                  <span class="required-field"></span>
+                </label>
                 <input 
                   type="time" 
                   id="horaSessao" 
                   required
+                  aria-label="Horário da sessão"
+                  aria-required="true"
                   style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
                 />
               </div>
             </div>
 
             <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md);">
-              <button type="button" class="btn-secondary" onclick="fecharFormulario()" style="flex: 1;">Cancelar</button>
-              <button type="button" class="btn-primary" onclick="confirmarAgendamento()" style="flex: 1;">Agendar</button>
+              <button 
+                type="button" 
+                class="btn-secondary" 
+                onclick="fecharFormulario()" 
+                aria-label="Cancelar e fechar formulário"
+                style="flex: 1;"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button" 
+                class="btn-primary" 
+                onclick="confirmarAgendamento()" 
+                aria-label="Confirmar e salvar agendamento"
+                style="flex: 1;"
+              >
+                Agendar
+              </button>
             </div>
           </form>
         </div>
@@ -192,6 +242,7 @@
       if (!token) return;
 
       try {
+        showLoading('Carregando alunos...');
         const response = await fetch('/api/alunos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -202,11 +253,15 @@
         }
       } catch (error) {
         console.error('Erro ao carregar alunos:', error);
+        showToast('Erro ao carregar lista de alunos', 'error');
+      } finally {
+        hideLoading();
       }
     }
 
     async function carregarDisciplinas() {
       try {
+        showLoading('Carregando disciplinas...');
         const response = await fetch('/api/disciplinas');
         const data = await response.json();
         if (data.sucesso || Array.isArray(data)) {
@@ -215,6 +270,9 @@
         }
       } catch (error) {
         console.error('Erro ao carregar disciplinas:', error);
+        showToast('Erro ao carregar lista de disciplinas', 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -249,6 +307,7 @@
       if (!token) return;
 
       try {
+        showLoading('Carregando sessões...');
         const response = await fetch('/api/sessoes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -258,6 +317,9 @@
         }
       } catch (error) {
         console.error('Erro ao carregar sessões:', error);
+        showToast('Erro ao carregar sessões agendadas', 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -279,8 +341,22 @@
         div.innerHTML = `
           <span style="flex: 1;"><strong>${sessao.aluno_nome || 'Aluno'}</strong> | ${sessao.etapa} | ${dataFormatada} | ${sessao.hora} | ${sessao.disciplina_nome || 'Disciplina'}</span>
           <div class="actions" style="display: flex; gap: var(--spacing-sm);">
-            <button class="btn-secondary" onclick="editarSessao('${sessao.id}')" style="padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm);">Editar</button>
-            <button class="btn-secondary" onclick="excluirSessao('${sessao.id}')" style="padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm); background: var(--color-error); color: white;">Excluir</button>
+            <button 
+              class="btn-secondary" 
+              onclick="editarSessao('${sessao.id}')" 
+              aria-label="Editar sessão de ${sessao.aluno_nome || 'aluno'}"
+              style="padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm);"
+            >
+              Editar
+            </button>
+            <button 
+              class="btn-secondary" 
+              onclick="excluirSessao('${sessao.id}')" 
+              aria-label="Excluir sessão de ${sessao.aluno_nome || 'aluno'}"
+              style="padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm); background: var(--color-error); color: white;"
+            >
+              Excluir
+            </button>
           </div>
         `;
         container.appendChild(div);

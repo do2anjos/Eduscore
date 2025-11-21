@@ -9,30 +9,34 @@
   <script src="utils.js" defer></script>
 </head>
 <body>
+  <!-- Skip Links para navegação por teclado -->
+  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
+  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
+  
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil">
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
-      <nav class="nav-links">
-        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png"> Home</a>
-        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png"> Gerar Relatório</a>
-        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png"> Cadastrar</a>
+      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
+        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home</a>
+        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório</a>
+        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar</a>
         
         <div class="dropdown">
-          <a href="#" class="active"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png"> Simulado</a>
+          <a href="#" class="active" aria-current="page"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado</a>
           <div class="dropdown-options">
-            <a href="CadastrarGabarito.html" class="active">Cadastrar Gabarito</a>
-            <a href="CorrigirSimulado.html">Corrigir Gabarito</a>
+            <a href="CadastrarGabarito.html">Cadastrar Gabarito</a>
+            <a href="CorrigirSimulado.html" class="active">Corrigir Gabarito</a>
           </div>
         </div>
 
-        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png"> Agendar Sessão</a>
+        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão</a>
       </nav>
     </aside>
 
-    <main class="content">
+    <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
@@ -81,11 +85,22 @@
               type="text" 
               id="codigoAlunoInput" 
               placeholder="Digite o código ou matrícula"
-              oninput="verificarCodigo()" 
+              oninput="verificarCodigo()"
+              aria-label="Código de barras ou matrícula do aluno"
+              aria-describedby="codigoAlunoHint"
               style="padding: var(--spacing-md); width: 100%; max-width: 400px; border-radius: var(--radius-md); border: 1px solid var(--color-border); text-align: center; font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
             />
+            <span id="codigoAlunoHint" class="sr-only">Digite ou escaneie o código de barras ou matrícula do aluno</span>
           </div>
-          <button id="btnProximoAluno" class="btn-primary" onclick="nextStep()" style="display:none; margin: 0 auto; width: 100%; max-width: 400px;">Próximo</button>
+          <button 
+            id="btnProximoAluno" 
+            class="btn-primary" 
+            onclick="nextStep()" 
+            aria-label="Prosseguir para próximo passo"
+            style="display:none; margin: 0 auto; width: 100%; max-width: 400px;"
+          >
+            Próximo
+          </button>
         </div>
       </div>
 
@@ -95,8 +110,22 @@
           <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Anexar Foto" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
           <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">ANEXAR FOTO</h3>
           <p style="color: var(--color-text-light); margin-bottom: var(--spacing-xl); font-size: var(--font-size-base);">Selecione a foto da folha de resposta do aluno</p>
-          <input type="file" id="fotoInput" accept="image/*" style="display: none;" onchange="handleFileUpload(event)" />
-          <button class="btn-primary" onclick="document.getElementById('fotoInput').click()" style="width: 100%; max-width: 400px;">Anexar foto</button>
+          <input 
+            type="file" 
+            id="fotoInput" 
+            accept="image/*" 
+            style="display: none;" 
+            onchange="handleFileUpload(event)"
+            aria-label="Selecionar foto da folha de resposta"
+          />
+          <button 
+            class="btn-primary" 
+            onclick="document.getElementById('fotoInput').click()" 
+            aria-label="Abrir seletor de arquivo para anexar foto"
+            style="width: 100%; max-width: 400px;"
+          >
+            Anexar foto
+          </button>
         </div>
       </div>
 
@@ -108,7 +137,14 @@
           <div class="list-box" id="listaAlunos" style="margin: var(--spacing-xl) 0;">
             <!-- Aluno selecionado será carregado dinamicamente -->
           </div>
-          <button class="btn-primary" onclick="nextStep()" style="width: 100%; max-width: 400px;">Próximo</button>
+          <button 
+            class="btn-primary" 
+            onclick="nextStep()" 
+            aria-label="Prosseguir para próximo passo"
+            style="width: 100%; max-width: 400px;"
+          >
+            Próximo
+          </button>
         </div>
       </div>
 
@@ -118,8 +154,15 @@
           <img src="https://img.icons8.com/material-outlined/96/000000/view-file.png" alt="Visualizar Respostas" style="width: 96px; height: 96px; margin: 0 auto var(--spacing-lg); display: block;" />
           <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl); text-align: center;">Respostas Capturadas</h3>
           <p id="alunoSelecionado" style="color: var(--color-text-light); margin-bottom: var(--spacing-lg); text-align: center; font-size: var(--font-size-base);">Confira as alternativas marcadas para o aluno:</p>
-          <div class="list-box" style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: var(--spacing-xl);" id="respostasCapturadas"></div>
-          <button class="btn-primary" onclick="nextStep()" style="width: 100%; max-width: 400px; margin: 0 auto; display: block;">Próximo</button>
+          <div class="list-box" style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: var(--spacing-xl);" id="respostasCapturadas" role="region" aria-label="Lista de respostas capturadas"></div>
+          <button 
+            class="btn-primary" 
+            onclick="nextStep()" 
+            aria-label="Prosseguir para seleção de gabarito"
+            style="width: 100%; max-width: 400px; margin: 0 auto; display: block;"
+          >
+            Próximo
+          </button>
         </div>
       </div>
 
@@ -128,10 +171,17 @@
         <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
           <img src="https://img.icons8.com/material-outlined/96/000000/test-passed.png" alt="Gabarito" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
           <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">Selecionar Gabarito Cadastrado</h3>
-          <div class="list-box" id="gabaritoList" style="margin: var(--spacing-xl) 0;">
+          <div class="list-box" id="gabaritoList" style="margin: var(--spacing-xl) 0;" role="listbox" aria-label="Lista de gabaritos disponíveis">
             <!-- Gabaritos serão carregados dinamicamente -->
           </div>
-          <button class="btn-primary" onclick="finalizar()" style="width: 100%; max-width: 400px;">Corrigir</button>
+          <button 
+            class="btn-primary" 
+            onclick="finalizar()" 
+            aria-label="Finalizar correção do simulado"
+            style="width: 100%; max-width: 400px;"
+          >
+            Corrigir
+          </button>
         </div>
       </div>
 
@@ -175,6 +225,7 @@
       if (!token) return;
 
       try {
+        showLoading('Carregando alunos...');
         const response = await fetch('/api/alunos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -184,6 +235,9 @@
         }
       } catch (error) {
         console.error('Erro ao carregar alunos:', error);
+        showToast('Erro ao carregar lista de alunos', 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -192,6 +246,7 @@
       if (!token) return;
 
       try {
+        showLoading('Carregando gabaritos...');
         const response = await fetch('/api/gabaritos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -202,6 +257,9 @@
         }
       } catch (error) {
         console.error('Erro ao carregar gabaritos:', error);
+        showToast('Erro ao carregar lista de gabaritos', 'error');
+      } finally {
+        hideLoading();
       }
     }
 
@@ -450,11 +508,15 @@
 
       try {
         showLoading('Processando imagem...');
+        showUploadProgress(0);
 
         // Criar FormData para enviar a imagem
         const formData = new FormData();
         formData.append('imagem', file);
 
+        // Simular progresso durante upload (já que fetch não suporta progress nativamente)
+        showUploadProgress(30);
+        
         // Enviar imagem para o backend para processamento
         const response = await fetch('/api/respostas/processar-imagem', {
           method: 'POST',
@@ -463,7 +525,10 @@
           },
           body: formData
         });
+        
+        showUploadProgress(70);
 
+        showUploadProgress(90);
         const data = await response.json();
 
         if (!response.ok) {
@@ -473,6 +538,8 @@
         if (!data.sucesso) {
           throw new Error(data.erro || data.detalhes || 'Erro ao processar imagem');
         }
+        
+        showUploadProgress(100);
 
         // Armazenar a imagem anexada
         imagemAnexada = {
@@ -550,9 +617,10 @@
 
       } catch (error) {
         console.error('Erro ao processar imagem:', error);
-        showToast(`Erro ao processar imagem: ${error.message}`, 'error');
+        showToast(`Erro ao processar imagem: ${error.message}`, 'error', 5000);
       } finally {
         hideLoading();
+        hideUploadProgress();
       }
     }
 

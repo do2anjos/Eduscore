@@ -9,13 +9,17 @@
   <script src="utils.js" defer></script>
 </head>
 <body>
+  <!-- Skip Links para navegação por teclado -->
+  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
+  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
+  
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
-      <nav class="nav-links" role="navigation" aria-label="Menu principal">
+      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
         <a href="home.html">
           <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
         </a>
@@ -34,7 +38,7 @@
       </nav>
     </aside>
 
-    <main class="content">
+    <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile na mesma linha -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
@@ -76,9 +80,9 @@
         <div style="display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-2xl); align-items: start;">
           <!-- Foto de Perfil -->
           <div style="display: flex; flex-direction: column; align-items: center;">
-            <label for="uploadFoto" style="cursor: pointer; position: relative; display: block;">
+            <label for="uploadFoto" style="cursor: pointer; position: relative; display: block;" aria-label="Alterar foto de perfil">
               <img id="previewImagem" src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Foto de Perfil" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 4px solid var(--color-primary); box-shadow: var(--shadow-md); transition: var(--transition-base);" />
-              <div style="position: absolute; bottom: 8px; right: 8px; background: var(--color-primary); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); transition: var(--transition-base);">
+              <div style="position: absolute; bottom: 8px; right: 8px; background: var(--color-primary); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); transition: var(--transition-base);" aria-hidden="true">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="17 8 12 3 7 8"></polyline>
@@ -86,7 +90,7 @@
                 </svg>
               </div>
             </label>
-            <input type="file" id="uploadFoto" accept="image/*" style="display: none;" onchange="previewImagemPerfil(event)" />
+            <input type="file" id="uploadFoto" accept="image/*" style="display: none;" onchange="previewImagemPerfil(event)" aria-label="Upload de foto de perfil" />
             <p style="color: var(--color-text-light); font-size: var(--font-size-sm); text-align: center; margin-top: var(--spacing-md); max-width: 150px;">Clique na imagem para alterar sua foto</p>
           </div>
 
@@ -94,27 +98,72 @@
           <form id="formPerfil" onsubmit="atualizarPerfil(event)" style="flex: 1;">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
               <div class="input-group">
-                <label for="nome">Nome Completo <span class="required-field">*</span></label>
-                <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required />
+                <label for="nome">
+                  Nome Completo 
+                  <span class="required-field">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="nome" 
+                  name="nome" 
+                  placeholder="Digite seu nome completo" 
+                  required 
+                  aria-label="Nome completo"
+                  aria-required="true"
+                />
               </div>
 
               <div class="input-group">
                 <label for="perfil">Perfil</label>
-                <input type="text" id="perfil" name="perfil" readonly style="background-color: #f5f5f5; cursor: not-allowed; text-transform: capitalize;" />
+                <input 
+                  type="text" 
+                  id="perfil" 
+                  name="perfil" 
+                  readonly 
+                  aria-label="Perfil do usuário (somente leitura)"
+                  aria-readonly="true"
+                  style="background-color: var(--color-background); cursor: not-allowed; text-transform: capitalize;" 
+                />
                 <span class="input-hint">O perfil não pode ser alterado</span>
               </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
               <div class="input-group">
-                <label for="email">Email Institucional <span class="required-field">*</span></label>
-                <input type="email" id="email" name="email" placeholder="exemplo@instituicao.edu.br" required readonly style="background-color: #f5f5f5; cursor: not-allowed;" />
+                <label for="email">
+                  Email Institucional 
+                  <span class="required-field">*</span>
+                </label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email" 
+                  placeholder="exemplo@instituicao.edu.br" 
+                  required 
+                  readonly 
+                  aria-label="Email institucional (somente leitura)"
+                  aria-readonly="true"
+                  style="background-color: var(--color-background); cursor: not-allowed;" 
+                />
                 <span class="input-hint">O email não pode ser alterado</span>
               </div>
 
               <div class="input-group">
-                <label for="matricula">Matrícula <span class="required-field">*</span></label>
-                <input type="text" id="matricula" name="matricula" placeholder="Digite sua matrícula" required readonly style="background-color: #f5f5f5; cursor: not-allowed;" />
+                <label for="matricula">
+                  Matrícula 
+                  <span class="required-field">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="matricula" 
+                  name="matricula" 
+                  placeholder="Digite sua matrícula" 
+                  required 
+                  readonly 
+                  aria-label="Matrícula (somente leitura)"
+                  aria-readonly="true"
+                  style="background-color: var(--color-background); cursor: not-allowed;" 
+                />
                 <span class="input-hint">A matrícula não pode ser alterada</span>
               </div>
             </div>
@@ -122,14 +171,27 @@
             <div style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
               <div class="input-group">
                 <label for="telefone">Telefone</label>
-                <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" oninput="formatarTelefone(this)" />
+                <input 
+                  type="text" 
+                  id="telefone" 
+                  name="telefone" 
+                  placeholder="(00) 00000-0000" 
+                  oninput="formatarTelefone(this)"
+                  aria-label="Telefone de contato"
+                />
               </div>
             </div>
 
             <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light); display: flex; justify-content: center;">
-              <button type="submit" class="btn-primary" id="submitBtn" style="max-width: 200px;">
+              <button 
+                type="submit" 
+                class="btn-primary" 
+                id="submitBtn" 
+                aria-label="Salvar alterações do perfil"
+                style="max-width: 200px;"
+              >
                 <span id="btnText">Salvar Alterações</span>
-                <span id="btnSpinner" class="loading-spinner" style="display: none;"></span>
+                <span id="btnSpinner" class="loading-spinner" style="display: none;" aria-hidden="true"></span>
               </button>
             </div>
           </form>

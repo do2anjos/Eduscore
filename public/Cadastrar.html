@@ -9,13 +9,17 @@
   <script src="utils.js" defer></script>
 </head>
 <body>
+  <!-- Skip Links para navegação por teclado -->
+  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
+  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
+  
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
-      <nav class="nav-links" role="navigation" aria-label="Menu principal">
+      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
         <a href="home.html">
           <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
         </a>
@@ -34,7 +38,7 @@
       </nav>
     </aside>
 
-    <main class="content">
+    <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
@@ -74,7 +78,10 @@
         </div>
         <form id="cadastroAlunoForm" onsubmit="handleCadastroAluno(event)" style="display: flex; flex-direction: column; gap: var(--spacing-xl);">
           <div class="input-group">
-            <label for="nome">Nome Completo <span class="required-field"></span></label>
+            <label for="nome">
+              Nome Completo 
+              <span class="required-field"></span>
+            </label>
             <input 
               type="text" 
               id="nome" 
@@ -82,13 +89,19 @@
               placeholder="Digite o nome completo do aluno" 
               required 
               autocomplete="name"
+              aria-label="Nome completo do aluno"
+              aria-describedby="nome-hint"
+              aria-required="true"
               style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
             />
-            <span class="input-hint">Nome completo conforme documento de identidade</span>
+            <span id="nome-hint" class="input-hint">Nome completo conforme documento de identidade</span>
           </div>
 
           <div class="input-group">
-            <label for="matricula">Matrícula <span class="required-field"></span></label>
+            <label for="matricula">
+              Matrícula 
+              <span class="required-field"></span>
+            </label>
             <input 
               type="text" 
               id="matricula" 
@@ -96,13 +109,19 @@
               placeholder="Digite a matrícula do aluno" 
               required 
               autocomplete="off"
+              aria-label="Matrícula do aluno"
+              aria-describedby="matricula-hint"
+              aria-required="true"
               style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
             />
-            <span class="input-hint">Matrícula única do aluno na instituição</span>
+            <span id="matricula-hint" class="input-hint">Matrícula única do aluno na instituição</span>
           </div>
 
           <div class="input-group">
-            <label for="email">E-mail <span class="required-field"></span></label>
+            <label for="email">
+              E-mail 
+              <span class="required-field"></span>
+            </label>
             <input 
               type="email" 
               id="email" 
@@ -110,13 +129,19 @@
               placeholder="exemplo@email.com" 
               required 
               autocomplete="email"
+              aria-label="Email do aluno"
+              aria-describedby="email-hint"
+              aria-required="true"
               style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
             />
-            <span class="input-hint">Email para contato e comunicação</span>
+            <span id="email-hint" class="input-hint">Email para contato e comunicação</span>
           </div>
 
           <div class="input-group">
-            <label for="telefone">Telefone do Responsável <span class="required-field"></span></label>
+            <label for="telefone">
+              Telefone do Responsável 
+              <span class="required-field"></span>
+            </label>
             <input 
               type="tel" 
               id="telefone" 
@@ -124,9 +149,12 @@
               placeholder="(99) 99999-9999" 
               required 
               autocomplete="tel"
+              aria-label="Telefone do responsável"
+              aria-describedby="telefone-hint"
+              aria-required="true"
               style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
             />
-            <span class="input-hint">Formato: (XX) XXXXX-XXXX</span>
+            <span id="telefone-hint" class="input-hint">Formato: (XX) XXXXX-XXXX</span>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
@@ -138,24 +166,36 @@
               }
             </style>
             <div class="input-group">
-              <label for="nascimento">Data de Nascimento <span class="required-field"></span></label>
+              <label for="nascimento">
+                Data de Nascimento 
+                <span class="required-field"></span>
+              </label>
               <input 
                 type="date" 
                 id="nascimento" 
                 name="nascimento" 
                 required 
                 max="2010-12-31"
+                aria-label="Data de nascimento do aluno"
+                aria-describedby="nascimento-hint"
+                aria-required="true"
                 style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
               />
-              <span class="input-hint">Data de nascimento do aluno</span>
+              <span id="nascimento-hint" class="input-hint">Data de nascimento do aluno</span>
             </div>
 
             <div class="input-group">
-              <label for="etapa">Etapa <span class="required-field"></span></label>
+              <label for="etapa">
+                Etapa 
+                <span class="required-field"></span>
+              </label>
               <select 
                 id="etapa" 
                 name="etapa" 
                 required
+                aria-label="Etapa educacional do aluno"
+                aria-describedby="etapa-hint"
+                aria-required="true"
                 style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
               >
                 <option value="">Selecione a etapa</option>
@@ -163,7 +203,7 @@
                 <option value="2º Ano">2º Ano</option>
                 <option value="3º Ano">3º Ano</option>
               </select>
-              <span class="input-hint">Etapa educacional do aluno</span>
+              <span id="etapa-hint" class="input-hint">Etapa educacional do aluno</span>
             </div>
           </div>
 
@@ -171,10 +211,23 @@
           <div style="height: 1px; background: var(--color-border-light); margin: var(--spacing-md) 0;"></div>
 
           <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
-            <button type="button" class="btn-secondary" onclick="window.location.href='home.html'" style="flex: 1; min-width: 0;">Cancelar</button>
-            <button type="submit" class="btn-primary" style="flex: 1; min-width: 0;">
+            <button 
+              type="button" 
+              class="btn-secondary" 
+              onclick="window.location.href='home.html'" 
+              aria-label="Cancelar cadastro e voltar para home"
+              style="flex: 1; min-width: 0;"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              class="btn-primary" 
+              aria-label="Cadastrar novo aluno"
+              style="flex: 1; min-width: 0;"
+            >
               <span id="submitBtnText">Cadastrar Aluno</span>
-              <span id="submitSpinner" class="loading-spinner" style="display: none;"></span>
+              <span id="submitSpinner" class="loading-spinner" style="display: none;" aria-hidden="true"></span>
             </button>
           </div>
         </form>
@@ -200,7 +253,8 @@
         etapa: document.getElementById('etapa').value
       };
 
-      // Feedback visual (Heurística 1)
+      // Feedback visual padronizado (Heurística 1)
+      showLoading('Cadastrando aluno...');
       const btnText = document.getElementById('submitBtnText');
       const spinner = document.getElementById('submitSpinner');
       const submitBtn = event.target.querySelector('button[type="submit"]');
@@ -211,6 +265,10 @@
 
       try {
         const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token não encontrado. Faça login novamente.');
+        }
+
         const response = await fetch('/api/alunos', {
           method: 'POST',
           headers: {
@@ -229,16 +287,21 @@
             window.location.href = 'home.html';
           }, 1500);
         } else {
-          showToast(data.erro || 'Erro ao cadastrar aluno', 'error', 5000);
+          const errorMessage = data.erro || data.detalhes || 'Erro ao cadastrar aluno. Verifique os dados e tente novamente.';
+          showToast(errorMessage, 'error', 5000);
           btnText.style.display = 'inline';
           spinner.style.display = 'none';
           submitBtn.disabled = false;
         }
       } catch (error) {
-        showToast('Erro de conexão. Tente novamente.', 'error', 5000);
+        console.error('Erro ao cadastrar aluno:', error);
+        const errorMessage = error.message || 'Erro de conexão. Verifique sua internet e tente novamente.';
+        showToast(errorMessage, 'error', 5000);
         btnText.style.display = 'inline';
         spinner.style.display = 'none';
         submitBtn.disabled = false;
+      } finally {
+        hideLoading();
       }
     }
 

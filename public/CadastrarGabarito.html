@@ -9,30 +9,34 @@
   <script src="utils.js" defer></script>
 </head>
 <body>
+  <!-- Skip Links para navegação por teclado -->
+  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
+  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
+  
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil">
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
-      <nav class="nav-links">
-        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png"> Home</a>
-        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png"> Gerar Relatório</a>
-        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png"> Cadastrar</a>
+      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
+        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home</a>
+        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório</a>
+        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar</a>
         
         <div class="dropdown">
-          <a href="#" class="active"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png"> Simulado</a>
+          <a href="#" class="active" aria-current="page"><img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado</a>
           <div class="dropdown-options">
             <a href="CadastrarGabarito.html" class="active">Cadastrar Gabarito</a>
             <a href="CorrigirSimulado.html">Corrigir Gabarito</a>
           </div>
         </div>
 
-        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png"> Agendar Sessão</a>
+        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão</a>
       </nav>
     </aside>
 
-    <main class="content">
+    <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
@@ -71,14 +75,21 @@
           <h3 class="card-title">Upload de Arquivo</h3>
         </div>
         <div style="text-align: center; padding: var(--spacing-3xl);">
-          <label for="file-upload" style="cursor: pointer; display: inline-block;">
+          <label for="file-upload" style="cursor: pointer; display: inline-block;" aria-label="Upload de arquivo Excel ou CSV">
             <div id="upload-area" style="width: 120px; height: 120px; margin: 0 auto var(--spacing-lg); background: var(--color-background); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; border: 2px dashed var(--color-border); transition: all var(--transition-base);">
               <img src="https://img.icons8.com/ios-filled/80/xls.png" class="upload-icon" alt="Anexar Arquivo" style="width: 80px; height: 80px;">
             </div>
             <p style="color: var(--color-text); font-size: var(--font-size-base); font-weight: 500; margin-bottom: var(--spacing-sm);">Anexe arquivo Excel ou CSV</p>
             <p style="color: var(--color-text-light); font-size: var(--font-size-sm);">Formatos aceitos: .csv, .xls, .xlsx</p>
           </label>
-          <input type="file" id="file-upload" style="display: none;" accept=".csv,.xls,.xlsx" onchange="handleFile(this)">
+          <input 
+            type="file" 
+            id="file-upload" 
+            style="display: none;" 
+            accept=".csv,.xls,.xlsx" 
+            onchange="handleFile(this)"
+            aria-label="Selecionar arquivo Excel ou CSV para upload"
+          />
           
           <!-- Área de feedback do arquivo selecionado -->
           <div id="file-feedback" style="display: none; margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--color-success-light, #e8f5e9); border-radius: var(--radius-sm); border: 1px solid var(--color-success, #4caf50);">
@@ -114,16 +125,24 @@
               type="text" 
               id="gabaritoNome" 
               placeholder="Ex: GABARITO_01_SIS"
+              aria-label="Nome do gabarito"
+              aria-describedby="gabaritoNome-hint"
               style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
             />
-            <span class="input-hint">Nome identificador do gabarito</span>
+            <span class="input-hint" id="gabaritoNome-hint">Nome identificador do gabarito</span>
           </div>
 
           <div class="input-group" style="margin-top: var(--spacing-lg);">
-            <label for="etapa">Etapa <span class="required-field"></span></label>
+            <label for="etapa">
+              Etapa 
+              <span class="required-field"></span>
+            </label>
             <select 
               id="etapa" 
               required
+              aria-label="Selecione a etapa educacional"
+              aria-required="true"
+              aria-describedby="etapa-hint"
               style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
             >
               <option value="">Selecione a etapa</option>
@@ -131,11 +150,16 @@
               <option value="2º Ano">2º Ano</option>
               <option value="3º Ano">3º Ano</option>
             </select>
-            <span class="input-hint">Etapa educacional do simulado</span>
+            <span class="input-hint" id="etapa-hint">Etapa educacional do simulado</span>
           </div>
 
           <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light); display: flex; justify-content: center;">
-            <button class="btn-primary" onclick="cadastrar()" style="max-width: 200px;">
+            <button 
+              class="btn-primary" 
+              onclick="cadastrar()" 
+              aria-label="Adicionar novo gabarito"
+              style="max-width: 200px;"
+            >
               Adicionar Gabarito
             </button>
           </div>
@@ -181,6 +205,7 @@
       }
 
       try {
+        showLoading('Carregando gabaritos...');
         const response = await fetch('/api/gabaritos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -209,10 +234,13 @@
         }
       } catch (error) {
         console.error('Erro ao carregar gabaritos:', error);
+        showToast('Erro ao carregar gabaritos. Tente recarregar a página.', 'error', 5000);
         const container = document.getElementById('listaGabaritos');
         if (container) {
           container.innerHTML = '<p style="text-align: center; color: var(--color-error); padding: var(--spacing-xl);">Erro ao carregar gabaritos. Tente recarregar a página.</p>';
         }
+      } finally {
+        hideLoading();
       }
     }
 

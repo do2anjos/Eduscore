@@ -9,13 +9,17 @@
   <script src="utils.js" defer></script>
 </head>
 <body>
+  <!-- Skip Links para navegação por teclado -->
+  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
+  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
+  
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
         <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
-      <nav class="nav-links" role="navigation" aria-label="Menu principal">
+      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
         <a href="home.html">
           <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
         </a>
@@ -34,7 +38,7 @@
       </nav>
     </aside>
 
-    <main class="content">
+    <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile na mesma linha -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
@@ -78,15 +82,32 @@
         <div style="display: flex; flex-direction: column; gap: 16px;">
           <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);" onmouseover="this.style.backgroundColor='var(--color-background)'" onmouseout="this.style.backgroundColor='transparent'">
             <span style="font-weight: 500;">Notificações por Email</span>
-            <input type="checkbox" id="notificacoesEmail" style="width: 20px; height: 20px; cursor: pointer;" />
+            <input 
+              type="checkbox" 
+              id="notificacoesEmail" 
+              aria-label="Ativar notificações por email"
+              style="width: 20px; height: 20px; cursor: pointer;" 
+            />
           </label>
           <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);" onmouseover="this.style.backgroundColor='var(--color-background)'" onmouseout="this.style.backgroundColor='transparent'">
             <span style="font-weight: 500;">Notificações de Relatórios</span>
-            <input type="checkbox" id="notificacoesRelatorios" checked style="width: 20px; height: 20px; cursor: pointer;" />
+            <input 
+              type="checkbox" 
+              id="notificacoesRelatorios" 
+              checked 
+              aria-label="Ativar notificações de relatórios"
+              style="width: 20px; height: 20px; cursor: pointer;" 
+            />
           </label>
           <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);" onmouseover="this.style.backgroundColor='var(--color-background)'" onmouseout="this.style.backgroundColor='transparent'">
             <span style="font-weight: 500;">Notificações de Sessões</span>
-            <input type="checkbox" id="notificacoesSessoes" checked style="width: 20px; height: 20px; cursor: pointer;" />
+            <input 
+              type="checkbox" 
+              id="notificacoesSessoes" 
+              checked 
+              aria-label="Ativar notificações de sessões"
+              style="width: 20px; height: 20px; cursor: pointer;" 
+            />
           </label>
         </div>
       </div>
@@ -103,7 +124,12 @@
         <div style="display: flex; flex-direction: column; gap: 16px;">
           <div class="input-group">
             <label for="tema">Tema</label>
-            <select id="tema" name="tema" style="width: 100%;">
+            <select 
+              id="tema" 
+              name="tema" 
+              aria-label="Selecione o tema da interface"
+              style="width: 100%;"
+            >
               <option value="claro" selected>Claro</option>
               <option value="escuro">Escuro</option>
               <option value="auto">Automático</option>
@@ -111,7 +137,12 @@
           </div>
           <div class="input-group">
             <label for="idioma">Idioma</label>
-            <select id="idioma" name="idioma" style="width: 100%;">
+            <select 
+              id="idioma" 
+              name="idioma" 
+              aria-label="Selecione o idioma da interface"
+              style="width: 100%;"
+            >
               <option value="pt-BR" selected>Português (Brasil)</option>
               <option value="en-US">English (US)</option>
               <option value="es-ES">Español</option>
@@ -119,7 +150,12 @@
           </div>
           <div class="input-group">
             <label for="itensPorPagina">Itens por Página</label>
-            <select id="itensPorPagina" name="itensPorPagina" style="width: 100%;">
+            <select 
+              id="itensPorPagina" 
+              name="itensPorPagina" 
+              aria-label="Selecione quantidade de itens por página"
+              style="width: 100%;"
+            >
               <option value="10">10</option>
               <option value="25" selected>25</option>
               <option value="50">50</option>
