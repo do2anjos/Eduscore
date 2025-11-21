@@ -17,7 +17,6 @@
   <header class="landing-header" role="banner">
     <div class="landing-header-container">
       <div class="landing-logo">
-        <img src="/eduscore.png" alt="EduScore Logo" />
         <span class="landing-logo-text">EduScore</span>
       </div>
       <nav class="landing-nav" role="navigation" aria-label="Navegação principal">
@@ -55,7 +54,7 @@
               </div>
             </label>
             
-            <input type="file" id="uploadFoto" accept="image/*" style="display: none;" onchange="previewImagemPerfil(event)" />
+            <input type="file" id="uploadFoto" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;" onchange="previewImagemPerfil(event)" />
             <input type="hidden" id="fotoBase64" name="fotoBase64" />
             
             <p style="color: var(--color-text-light); font-size: var(--font-size-sm); margin-top: var(--spacing-md);">Clique na imagem para adicionar foto</p>
@@ -198,7 +197,6 @@
     <div class="section-container">
       <div class="footer-content">
         <div class="footer-brand">
-          <img src="/eduscore.png" alt="EduScore Logo" class="footer-logo" />
           <span class="footer-brand-text">EduScore</span>
         </div>
         <p class="footer-text">
@@ -218,18 +216,122 @@
       const fotoBase64Input = document.getElementById('fotoBase64');
 
       if (input.files && input.files[0]) {
-        if (input.files[0].size > 5 * 1024 * 1024) {
-          showErrorMessage('A imagem é muito grande. Por favor, selecione uma imagem menor que 5MB.');
+        const file = input.files[0];
+        
+        // Validar tipo de arquivo
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+          showErrorMessage('Formato de imagem inválido. Use apenas JPG, PNG ou WEBP.');
+          input.value = '';
           return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          imagemPreview.src = e.target.result;
-          fotoBase64Input.value = e.target.result.split(',')[1];
-        };
-        reader.readAsDataURL(input.files[0]);
+        // Validar tamanho (máximo 5MB antes de compressão)
+        if (file.size > 5 * 1024 * 1024) {
+          showErrorMessage('A imagem é muito grande. Por favor, selecione uma imagem menor que 5MB.');
+          input.value = '';
+          return;
+        }
+
+        // Comprimir e redimensionar a imagem
+        comprimirImagem(file, imagemPreview, fotoBase64Input);
       }
+    }
+
+    function comprimirImagem(file, previewElement, base64Input) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const img = new Image();
+        
+        img.onload = function() {
+          // Criar canvas para redimensionar e comprimir
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 400;
+          const MAX_HEIGHT = 400;
+          let width = img.width;
+          let height = img.height;
+
+          // Redimensionar mantendo proporção
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Desenhar imagem redimensionada no canvas
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Comprimir com qualidade ajustável
+          let quality = 0.7; // Começar com 70% de qualidade
+          let base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+          const MAX_SIZE = 500 * 1024; // 500KB máximo em base64
+          
+          // Se ainda for muito grande, reduzir qualidade progressivamente
+          while (base64.length > MAX_SIZE && quality > 0.3) {
+            quality -= 0.1;
+            base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+          }
+          
+          // Se ainda for muito grande após reduzir qualidade, redimensionar mais
+          if (base64.length > MAX_SIZE) {
+            // Redimensionar para 300x300
+            canvas.width = 300;
+            canvas.height = 300;
+            ctx.clearRect(0, 0, 300, 300);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, 300, 300);
+            quality = 0.6;
+            base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+            
+            // Se ainda for muito grande, reduzir mais
+            if (base64.length > MAX_SIZE) {
+              while (base64.length > MAX_SIZE && quality > 0.4) {
+                quality -= 0.1;
+                base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+              }
+            }
+          }
+          
+          // Verificação final
+          if (base64.length > MAX_SIZE) {
+            showErrorMessage('A imagem ainda é muito grande após compressão. Por favor, selecione uma imagem menor.');
+            return;
+          }
+
+          // Atualizar preview e base64
+          previewElement.src = canvas.toDataURL('image/jpeg', quality);
+          base64Input.value = base64;
+          
+          // Limpar mensagem de erro se houver
+          showErrorMessage('');
+        };
+        
+        img.onerror = function() {
+          showErrorMessage('Erro ao processar a imagem. Tente novamente.');
+        };
+        
+        img.src = e.target.result;
+      };
+      
+      reader.onerror = function() {
+        showErrorMessage('Erro ao ler o arquivo. Tente novamente.');
+      };
+      
+      reader.readAsDataURL(file);
     }
 
     function showPasswordRequirements() {
@@ -267,14 +369,19 @@
       
       const senhaValida = hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
       
+      // Obter cores das variáveis CSS
+      const root = getComputedStyle(document.documentElement);
+      const colorSuccess = root.getPropertyValue('--color-success').trim();
+      const colorError = root.getPropertyValue('--color-error').trim();
+      
       if (senhaValida) {
         strengthBar.style.width = '100%';
-        strengthBar.style.backgroundColor = var(--color-success);
+        strengthBar.style.backgroundColor = colorSuccess;
         errorElement.style.display = 'none';
         return true;
       } else {
         strengthBar.style.width = '30%';
-        strengthBar.style.backgroundColor = var(--color-error);
+        strengthBar.style.backgroundColor = colorError;
         errorElement.textContent = 'A senha não atende a todos os requisitos';
         errorElement.style.display = 'block';
         return false;
@@ -332,16 +439,24 @@
 
     function showSuccessMessage(message) {
       const element = document.getElementById('successMessage');
-      element.textContent = message;
-      element.style.display = 'block';
-      document.getElementById('errorMessage').style.display = 'none';
+      if (message) {
+        element.textContent = message;
+        element.style.display = 'block';
+        document.getElementById('errorMessage').style.display = 'none';
+      } else {
+        element.style.display = 'none';
+      }
     }
 
     function showErrorMessage(message) {
       const element = document.getElementById('errorMessage');
-      element.textContent = message;
-      element.style.display = 'block';
-      document.getElementById('successMessage').style.display = 'none';
+      if (message) {
+        element.textContent = message;
+        element.style.display = 'block';
+        document.getElementById('successMessage').style.display = 'none';
+      } else {
+        element.style.display = 'none';
+      }
     }
 
     async function cadastrarUsuario(event) {
@@ -355,12 +470,26 @@
         return;
       }
       
+      // Validar email institucional
+      const email = document.getElementById('email').value;
+      if (!email.endsWith('.edu.br')) {
+        showErrorMessage('Por favor, use um e-mail institucional (.edu.br)');
+        return;
+      }
+      
+      // Verificar tamanho da foto antes de enviar
+      const fotoBase64 = document.getElementById('fotoBase64').value;
+      if (fotoBase64 && fotoBase64.length > 1000 * 1024) { // 1MB em base64 (aproximadamente)
+        showErrorMessage('A foto ainda é muito grande. Por favor, selecione uma imagem menor.');
+        return;
+      }
+      
       const formData = {
         nome: document.getElementById('nome').value,
-        email: document.getElementById('email').value,
+        email: email,
         matricula: document.getElementById('matricula').value,
         telefone: document.getElementById('telefone').value.replace(/\D/g, ''),
-        foto_perfil: document.getElementById('fotoBase64').value,
+        foto_perfil: fotoBase64 || null, // Enviar null se não houver foto
         senha: document.getElementById('senha').value,
         perfil: document.getElementById('perfil').value
       };
