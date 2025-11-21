@@ -752,6 +752,9 @@ function updateUserProfile(usuario) {
 }
 
 // Exportar funções para uso global
+// IMPORTANTE: apiFetch deve estar disponível ANTES de qualquer script inline
+window.apiFetch = apiFetch;
+window.getApiUrl = getApiUrl;
 window.showToast = showToast;
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
@@ -763,6 +766,4 @@ window.isValidEmail = isValidEmail;
 window.setupUserProfileMenu = setupUserProfileMenu;
 window.logout = logout;
 window.loadUserData = loadUserData;
-window.getApiUrl = getApiUrl;
-window.apiFetch = apiFetch;
 
