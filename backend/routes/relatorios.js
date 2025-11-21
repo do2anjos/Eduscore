@@ -133,7 +133,9 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
     const mediaGeral = await db.query(mediaGeralQuery, paramsEtapa);
 
     // 4. Média por disciplina (contar questões únicas por gabarito, com filtro de etapa se aplicável)
-    // IMPORTANTE: Para modo "Geral", considerar TODAS as questões dos gabaritos que o aluno respondeu
+    // IMPORTANTE: A média deve considerar TODAS as questões dos gabaritos aplicados, não apenas as respondidas
+    // Questões não respondidas (vazias/inválidas) contam como erro (0%) na média
+    // Para modo "Geral", considerar TODAS as questões dos gabaritos que foram aplicados
     // Para modo por etapa, considerar TODAS as questões da disciplina nessa etapa
     let mediaPorDisciplinaQuery;
     
@@ -168,13 +170,7 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
               AND r.acertou = 1 
               THEN 1 
               ELSE 0 
-            END) * 100.0) / NULLIF(COUNT(DISTINCT CASE 
-              WHEN r.resposta_aluno IS NOT NULL 
-              AND r.resposta_aluno != '' 
-              AND r.resposta_aluno NOT LIKE '%,%'
-              THEN r.id
-              ELSE NULL
-            END), 0),
+            END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
             2
           ) as media
         FROM disciplinas d
@@ -201,9 +197,9 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
       `;
     } else {
       // Modo Geral: calcular MÉDIA DE ACERTOS e TAXA DE ERRO por Disciplina
-      // IMPORTANTE: Usar COUNT(*) (não COUNT DISTINCT) para contar TODAS as respostas válidas
-      // Similar ao cálculo de "Acertos Totais": COUNT(*) WHERE acertou = 1
-      // media = Média de Acertos = (Acertos / Total de respostas válidas) * 100 (para RelatorioGeral.html)
+      // IMPORTANTE: A média deve considerar TODAS as questões dos gabaritos aplicados
+      // Questões não respondidas (vazias/inválidas) contam como erro (0%) na média
+      // media = Média de Acertos = (Acertos / Total de questões) * 100 (para RelatorioGeral.html)
       // taxa_erro = Taxa de Erro = (Erros / Total de respostas válidas) * 100 (para home.html)
       mediaPorDisciplinaQuery = `
         SELECT 
@@ -234,6 +230,8 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
             ELSE 0 
           END) as erros,
           -- Média de Acertos (para RelatorioGeral.html)
+          -- IMPORTANTE: Dividir pelo total de questões, não apenas respostas válidas
+          -- Questões não respondidas contam como erro (0%) na média
           ROUND(
             (SUM(CASE 
               WHEN r.resposta_aluno IS NOT NULL 
@@ -242,13 +240,7 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
               AND r.acertou = 1 
               THEN 1 
               ELSE 0 
-            END) * 100.0) / NULLIF(COUNT(CASE 
-              WHEN r.resposta_aluno IS NOT NULL 
-              AND r.resposta_aluno != '' 
-              AND r.resposta_aluno NOT LIKE '%,%'
-              THEN 1
-              ELSE NULL
-            END), 0),
+            END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
             2
           ) as media,
           -- Taxa de Erro (para home.html)
