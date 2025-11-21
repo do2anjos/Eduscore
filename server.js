@@ -22,9 +22,9 @@ const PORT = process.env.PORT || 3000;
 // =============================================
 // CONFIGURAÇÃO DE TRUST PROXY (NECESSÁRIO PARA RENDER)
 // =============================================
-// Render usa proxy reverso, então precisamos confiar no proxy
-// Isso permite que express-rate-limit identifique corretamente os IPs
-app.set('trust proxy', true);
+// Render usa 1 proxy reverso, então confiamos apenas no primeiro proxy
+// Isso permite que express-rate-limit identifique corretamente os IPs sem permitir bypass
+app.set('trust proxy', 1);
 
 // =============================================
 // CONFIGURAÇÕES CRUCIAIS PARA PAYLOAD GRANDE
@@ -83,6 +83,7 @@ const generalLimiter = rateLimit({
 });
 
 // Rate limiting para login (mais restritivo)
+// Configurar keyGenerator para usar X-Forwarded-For corretamente no Render
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 5, // 5 tentativas por 15 minutos
@@ -90,7 +91,14 @@ const loginLimiter = rateLimit({
     sucesso: false,
     erro: 'Muitas tentativas de login. Tente novamente em 15 minutos.'
   },
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: true,
+  // Usar IP do cliente corretamente no Render (através do proxy)
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: {
+    trustProxy: true,
+    xForwardedForHeader: false // Não validar o header, apenas usar
+  }
 });
 
 // Rate limiting para uploads

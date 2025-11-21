@@ -10,10 +10,21 @@ function getApiUrl(path = '') {
     return path;
   }
   
-  // Em produção ou localhost, usar URL relativa (mesmo servidor)
-  // URLs relativas funcionam quando frontend e backend estão no mesmo domínio
-  // Como no Render o frontend e backend estão no mesmo servidor, funciona perfeitamente
-  return path;
+  // Detectar ambiente automaticamente
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  const port = window.location.port;
+  const origin = window.location.origin;
+  
+  // Em produção (Render) - usar URL absoluta do mesmo domínio
+  if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+    // Produção: usar URL absoluta do mesmo domínio
+    // No Render, frontend e backend estão no mesmo servidor
+    return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
+  } else {
+    // Desenvolvimento local: localhost:3000
+    return `http://localhost:3000${path.startsWith('/') ? '' : '/'}${path}`;
+  }
 }
 
 // Helper para fazer requisições fetch com URL correta
@@ -24,10 +35,14 @@ async function apiFetch(endpoint, options = {}) {
     return fetch(endpoint, options);
   }
   
-  // Usar URL relativa (funciona no mesmo servidor)
-  // No Render, frontend e backend estão no mesmo domínio
-  // Em localhost, funciona se servidos do mesmo servidor Express
-  return fetch(endpoint, options);
+  // Garantir que o endpoint começa com /
+  if (!endpoint.startsWith('/')) {
+    endpoint = '/' + endpoint;
+  }
+  
+  // Obter URL completa usando getApiUrl
+  const url = getApiUrl(endpoint);
+  return fetch(url, options);
 }
 
 // Melhorar navegação por teclado
