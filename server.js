@@ -28,8 +28,35 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // =============================================
 // CONFIGURAÇÕES DE SEGURANÇA E CORS
 // =============================================
+// CORS: Permitir requisições do mesmo domínio (Render) e localhost (desenvolvimento)
+const allowedOrigins = [
+  FRONTEND_URL || 'http://localhost:3000',
+  'http://localhost:3000',
+  'https://eduscore-j49m.onrender.com',
+  process.env.RENDER_EXTERNAL_URL // URL dinâmica do Render
+].filter(Boolean);
+
 app.use(cors({
-  origin: FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Permitir requisições sem origin (mesmo domínio, mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    
+    // Se a origin está na lista de permitidas
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Permitir requisições do mesmo hostname (mesmo domínio)
+    const hostname = origin.replace(/^https?:\/\//, '').split(':')[0];
+    const requestHostname = FRONTEND_URL ? new URL(FRONTEND_URL).hostname : hostname;
+    
+    if (hostname === requestHostname || hostname === 'localhost' || hostname === '127.0.0.1') {
+      return callback(null, true);
+    }
+    
+    // Bloquear origem não autorizada
+    callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

@@ -3,6 +3,33 @@
  * e melhorias de acessibilidade
  */
 
+// Detectar URL base da API automaticamente
+function getApiUrl(path = '') {
+  // Se o path já começa com http, retornar como está (URL absoluta)
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  // Em produção ou localhost, usar URL relativa (mesmo servidor)
+  // URLs relativas funcionam quando frontend e backend estão no mesmo domínio
+  // Como no Render o frontend e backend estão no mesmo servidor, funciona perfeitamente
+  return path;
+}
+
+// Helper para fazer requisições fetch com URL correta
+// Compatível com localhost e produção
+async function apiFetch(endpoint, options = {}) {
+  // Se já é uma URL absoluta, usar diretamente
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return fetch(endpoint, options);
+  }
+  
+  // Usar URL relativa (funciona no mesmo servidor)
+  // No Render, frontend e backend estão no mesmo domínio
+  // Em localhost, funciona se servidos do mesmo servidor Express
+  return fetch(endpoint, options);
+}
+
 // Melhorar navegação por teclado
 document.addEventListener('DOMContentLoaded', function() {
   // Adicionar suporte para navegação por teclado em elementos customizados
@@ -483,7 +510,7 @@ async function loadUserData() {
   }
 
   try {
-    const response = await fetch('/api/usuarios/me', {
+    const response = await apiFetch('/api/usuarios/me', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -570,7 +597,7 @@ function updateUserProfile(usuario) {
         }
         
         // Usar timestamp para evitar cache
-        fetch(`/api/usuarios/${userId}/foto?t=${Date.now()}`, {
+        apiFetch(`/api/usuarios/${userId}/foto?t=${Date.now()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -691,4 +718,6 @@ window.isValidEmail = isValidEmail;
 window.setupUserProfileMenu = setupUserProfileMenu;
 window.logout = logout;
 window.loadUserData = loadUserData;
+window.getApiUrl = getApiUrl;
+window.apiFetch = apiFetch;
 
