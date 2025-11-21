@@ -6,7 +6,7 @@
  * 2. Execute: node limpar_simulado_dez.js
  */
 
-const db = require('./backend/db');
+const db = require('../backend/db');
 
 // ============================================
 // CONFIGURAÇÃO - ALTERE AQUI A MATRÍCULA

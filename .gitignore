@@ -86,6 +86,9 @@ backend/.env
 *.db
 database.sqlite
 
+# Data directory
+data/
+
 # Uploads directory
 uploads/
 

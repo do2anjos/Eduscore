@@ -77,7 +77,7 @@ if (isTurso) {
 } else {
   // Configuração para SQLite local (desenvolvimento)
   const Database = require('better-sqlite3');
-const dbPath = process.env.DB_PATH || path.join(__dirname, '../database.sqlite');
+const dbPath = process.env.DB_PATH || path.join(__dirname, '../data/database.sqlite');
 
 // Garantir que o diretório existe
 const dbDir = path.dirname(dbPath);

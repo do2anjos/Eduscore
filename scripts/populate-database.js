@@ -1,10 +1,10 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 const crypto = require('crypto');
-require('dotenv').config({ path: path.join(__dirname, 'backend/.env') });
+require('dotenv').config({ path: path.join(__dirname, '../backend/.env') });
 
 // Caminho do banco de dados
-const dbPath = process.env.DB_PATH || path.join(__dirname, 'database.sqlite');
+const dbPath = process.env.DB_PATH || path.join(__dirname, '../data/database.sqlite');
 
 console.log('🌱 Populando banco de dados com dados de teste heterogêneos...\n');
 

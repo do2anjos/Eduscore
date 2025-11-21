@@ -3,7 +3,7 @@
  * Execute: node migrar_dados_turso.js
  */
 
-require('dotenv').config({ path: './backend/.env' });
+require('dotenv').config({ path: path.join(__dirname, '../backend/.env') });
 const { createClient } = require('@libsql/client');
 const Database = require('better-sqlite3');
 const path = require('path');
@@ -16,7 +16,7 @@ const tursoToken = process.argv[3] || process.env.TURSO_AUTH_TOKEN;
 
 if (!tursoUrl || !tursoToken) {
   console.error('❌ ERRO: TURSO_DATABASE_URL e TURSO_AUTH_TOKEN devem estar definidos!');
-  console.error('   Uso: node migrar_dados_turso.js <TURSO_URL> <TURSO_TOKEN>');
+  console.error('   Uso: node scripts/migrar_dados_turso.js <TURSO_URL> <TURSO_TOKEN>');
   console.error('   OU configure no arquivo backend/.env:');
   console.error('      TURSO_DATABASE_URL=libsql://...');
   console.error('      TURSO_AUTH_TOKEN=...');
@@ -24,7 +24,7 @@ if (!tursoUrl || !tursoToken) {
 }
 
 // Verificar se o banco SQLite local existe
-const dbLocalPath = process.env.DB_PATH || path.join(__dirname, 'database.sqlite');
+const dbLocalPath = process.env.DB_PATH || path.join(__dirname, '../data/database.sqlite');
 if (!fs.existsSync(dbLocalPath)) {
   console.error(`❌ ERRO: Banco SQLite local não encontrado em: ${dbLocalPath}`);
   process.exit(1);

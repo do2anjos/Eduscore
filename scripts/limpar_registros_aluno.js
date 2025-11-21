@@ -13,7 +13,7 @@
  * 2. Execute: node limpar_registros_aluno.js
  */
 
-const db = require('./backend/db');
+const db = require('../backend/db');
 
 // ============================================
 // CONFIGURAÇÃO - ALTERE AQUI A MATRÍCULA

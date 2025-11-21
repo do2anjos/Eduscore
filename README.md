@@ -104,8 +104,8 @@ Crie um arquivo `backend/.env` com as seguintes variáveis:
 
 ```env
 # Banco de Dados SQLite
-# Caminho do arquivo do banco (opcional, padrão: database.sqlite na raiz)
-DB_PATH=./database.sqlite
+# Caminho do arquivo do banco (opcional, padrão: data/database.sqlite)
+DB_PATH=./data/database.sqlite
 
 # Segurança - JWT Secret (OBRIGATÓRIO)
 # Gere uma chave segura com:
@@ -172,13 +172,27 @@ classy-main/
 │   ├── style.css       # Estilos globais
 │   ├── utils.js        # Utilitários frontend (heurísticas Nielsen)
 │   └── script.js       # Scripts adicionais
+├── scripts/             # Scripts utilitários Node.js
+│   ├── check-database.js     # Verificar estrutura do banco
+│   ├── populate-database.js  # Popular banco com dados de teste
+│   ├── migrar_dados_turso.js # Migrar dados para Turso
+│   └── ...              # Outros scripts utilitários
+├── config/              # Arquivos de configuração e deploy
+│   ├── build.sh         # Script de build para Render
+│   └── render.yaml      # Configuração do Render
+├── assets/              # Assets e recursos (imagens, ícones)
+│   ├── fluxo completo 1.png
+│   └── generated-icon.png
 ├── doc/                 # Documentação do projeto
 │   ├── API.md          # Documentação completa da API
 │   ├── CHANGELOG.md    # Histórico de alterações
 │   ├── CALCULO_METRICAS.md  # Como métricas são calculadas
-│   └── ...
+│   ├── MIGRACAO_TURSO.md    # Guia de migração para Turso
+│   ├── RENDER_SETUP.md      # Configuração do Render
+│   └── ...              # Outra documentação
 ├── uploads/             # Arquivos enviados (criado automaticamente)
-├── database.sqlite      # Banco de dados SQLite
+├── data/
+│   └── database.sqlite  # Banco de dados SQLite
 ├── server.js            # Servidor Express.js principal
 └── package.json         # Dependências do projeto
 ```

@@ -9,7 +9,7 @@
  * devido às foreign keys com ON DELETE CASCADE.
  */
 
-const db = require('./backend/db');
+const db = require('../backend/db');
 
 // ============================================
 // CONFIGURAÇÃO - MATRÍCULA DO ALUNO A MANTER

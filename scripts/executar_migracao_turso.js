@@ -17,8 +17,8 @@ process.env.TURSO_DATABASE_URL = tursoUrl;
 process.env.TURSO_AUTH_TOKEN = tursoToken;
 
 // Executar migrações
-const { createSchema } = require('./backend/migrations/create_schema');
-const { addImagensCartoesTable } = require('./backend/migrations/add_imagens_cartoes');
+const { createSchema } = require('../backend/migrations/create_schema');
+const { addImagensCartoesTable } = require('../backend/migrations/add_imagens_cartoes');
 
 async function executarMigracoes() {
   try {
