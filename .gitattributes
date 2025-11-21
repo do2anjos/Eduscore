@@ -1,11 +1,16 @@
 # Incluir Python na contagem
-*.py linguist-detectable=true
+*.py linguist-detectable=true linguist-language=Python
+backend/scripts/**/*.py linguist-language=Python
+
+# Incluir SQL na contagem
+*.sql linguist-detectable=true linguist-language=SQL
+backend/migrations/**/*.sql linguist-language=SQL
 
 # Incluir JSON na contagem
-*.json linguist-detectable=true
+*.json linguist-detectable=true linguist-language=JSON
 
 # Incluir Markdown na contagem
-*.md linguist-detectable=true
+*.md linguist-detectable=true linguist-language=Markdown
 
 # Excluir binários e gerados
 *.sqlite linguist-detectable=false
