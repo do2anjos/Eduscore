@@ -1266,6 +1266,29 @@
         const questoes = questoesData.questoes || [];
         const respostas = respostasData.respostas || [];
 
+        // Buscar a imagem do cartão através da API
+        let imagemCartao = null;
+        if (respostas.length > 0 && alunoId && gabaritoId) {
+          try {
+            const imagemRes = await fetch(`/api/respostas/imagem-cartao?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (imagemRes.ok) {
+              const imagemData = await imagemRes.json();
+              if (imagemData.sucesso && imagemData.imagem) {
+                imagemCartao = imagemData.imagem.url;
+              }
+            }
+          } catch (error) {
+            console.warn('Erro ao buscar imagem do cartão:', error);
+            // Continuar sem imagem se houver erro
+          }
+        }
+
         // Criar mapa de respostas por questão_id
         const mapaRespostas = {};
         respostas.forEach(resposta => {
@@ -1279,48 +1302,12 @@
         // Ordenar questões por número
         const questoesOrdenadas = [...questoes].sort((a, b) => Number(a.numero) - Number(b.numero));
 
-        // Buscar imagem do cartão
-        let imagemCartao = null;
-        try {
-          const imagemRes = await fetch(`/api/respostas/imagem-cartao?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          if (imagemRes.ok) {
-            const imagemData = await imagemRes.json();
-            if (imagemData.sucesso && imagemData.imagem) {
-              imagemCartao = imagemData.imagem.caminho;
-            }
-          }
-        } catch (imgError) {
-          console.warn('Erro ao buscar imagem do cartão:', imgError);
-        }
-
         // Gerar HTML da tabela de detalhes
         let html = `
           <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <h4 style="margin: 0; color: #003b54; font-size: 16px; font-weight: 600;">
-                Detalhes do Gabarito
-              </h4>
-              ${imagemCartao ? `
-                <button 
-                  onclick="abrirImagemCartao('${imagemCartao}')"
-                  style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--color-primary); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; font-weight: 600; transition: background-color var(--transition-base);"
-                  onmouseover="this.style.background='var(--color-primary-darker)'"
-                  onmouseout="this.style.background='var(--color-primary)'"
-                  aria-label="Ver cartão enviado"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                  Ver Cartão
-                </button>
-              ` : ''}
-            </div>
+            <h4 style="margin: 0 0 16px 0; color: #003b54; font-size: 16px; font-weight: 600;">
+              Detalhes do Gabarito
+            </h4>
             <div style="overflow-x: auto;">
               <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                 <thead>
@@ -1329,6 +1316,7 @@
                     <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 120px;">Gabarito</th>
                     <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 120px;">Capturada</th>
                     <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54;">Status</th>
+                    <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 100px;">Cartão</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1353,12 +1341,34 @@
             statusColor = '#e74c3c';
           }
 
+          // Botão para ver cartão (apenas na primeira questão para evitar repetição)
+          let botaoCartao = '';
+          if (numero === questoesOrdenadas[0].numero && imagemCartao) {
+            botaoCartao = `
+              <button 
+                onclick="abrirModalImagem('${imagemCartao}', '${gabaritoId}')"
+                style="background: none; border: none; cursor: pointer; padding: 4px 8px; color: #008cc4; font-size: 18px; transition: transform 0.2s;"
+                onmouseover="this.style.transform='scale(1.2)'; this.style.color='#006a9a'"
+                onmouseout="this.style.transform='scale(1)'; this.style.color='#008cc4'"
+                title="Ver cartão enviado"
+                aria-label="Ver cartão enviado pelo aluno"
+              >
+                👁️
+              </button>
+            `;
+          } else if (numero === questoesOrdenadas[0].numero) {
+            botaoCartao = `
+              <span style="color: #999; font-size: 14px;" title="Imagem do cartão não disponível">-</span>
+            `;
+          }
+
           html += `
             <tr style="border-bottom: 1px solid #e0e0e0;">
               <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54;">${numero}</td>
               <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #008cc4; font-size: 14px;">${gabarito || '-'}</td>
               <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: ${statusColor}; font-size: 14px;">${capturada}</td>
               <td style="padding: 10px 12px; text-align: center;">${statusHtml}</td>
+              <td style="padding: 10px 12px; text-align: center;">${botaoCartao}</td>
             </tr>
           `;
         });
@@ -1382,75 +1392,110 @@
       }
     }
 
-    // Função para abrir imagem do cartão em modal
-    function abrirImagemCartao(caminhoImagem) {
+    // Função para abrir modal com imagem do cartão
+    function abrirModalImagem(imagemUrl, gabaritoId) {
       // Criar modal
       const modal = document.createElement('div');
-      modal.id = 'modalImagemCartao';
+      modal.id = `modal-imagem-${gabaritoId}`;
       modal.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.85);
+        background: rgba(0, 0, 0, 0.9);
         z-index: 10000;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--spacing-xl);
-        box-sizing: border-box;
+        padding: 20px;
+        cursor: pointer;
       `;
       
-      modal.innerHTML = `
-        <div style="position: relative; max-width: 90%; max-height: 90%; background: white; border-radius: var(--radius-md); padding: var(--spacing-lg); box-shadow: var(--shadow-xl);">
-          <button 
-            onclick="fecharModalImagem()"
-            style="position: absolute; top: 10px; right: 10px; background: var(--color-primary); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: background-color var(--transition-base); z-index: 10001;"
-            onmouseover="this.style.background='var(--color-primary-darker)'"
-            onmouseout="this.style.background='var(--color-primary)'"
-            aria-label="Fechar"
-          >
-            ×
-          </button>
-          <div style="text-align: center; margin-bottom: var(--spacing-md);">
-            <h3 style="margin: 0; color: var(--color-primary-darker); font-size: var(--font-size-lg);">Cartão de Resposta</h3>
-          </div>
-          <div style="overflow: auto; max-height: calc(90vh - 120px);">
-            <img 
-              src="${caminhoImagem}" 
-              alt="Cartão de resposta do aluno"
-              style="max-width: 100%; height: auto; border-radius: var(--radius-sm); box-shadow: var(--shadow-md);"
-              onerror="this.parentElement.innerHTML='<div style=\\'text-align: center; padding: 40px; color: #e74c3c;\\'>Erro ao carregar imagem. A imagem pode ter sido removida ou não está disponível.</div>'"
-            />
-          </div>
-        </div>
+      // Container da imagem
+      const container = document.createElement('div');
+      container.style.cssText = `
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       `;
       
+      // Botão de fechar
+      const btnFechar = document.createElement('button');
+      btnFechar.innerHTML = '✕';
+      btnFechar.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10001;
+        transition: background 0.2s;
+      `;
+      btnFechar.onmouseover = () => btnFechar.style.background = '#c0392b';
+      btnFechar.onmouseout = () => btnFechar.style.background = '#e74c3c';
+      
+      // Imagem
+      const img = document.createElement('img');
+      img.src = imagemUrl;
+      img.style.cssText = `
+        max-width: 100%;
+        max-height: calc(90vh - 80px);
+        display: block;
+        border-radius: 4px;
+      `;
+      img.onerror = () => {
+        container.innerHTML = `
+          <div style="padding: 40px; text-align: center; color: #666;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📷</div>
+            <p style="margin: 0;">Imagem do cartão não encontrada</p>
+            <p style="margin: 8px 0 0 0; font-size: 14px; color: #999;">A imagem pode ter sido removida ou não está disponível</p>
+          </div>
+        `;
+      };
+      
+      // Montar estrutura
+      container.appendChild(btnFechar);
+      container.appendChild(img);
+      modal.appendChild(container);
       document.body.appendChild(modal);
       
-      // Fechar ao clicar fora da imagem
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          fecharModalImagem();
-        }
-      });
+      // Função para fechar
+      const fecharModal = () => {
+        document.body.removeChild(modal);
+        document.body.style.overflow = '';
+      };
+      
+      // Eventos para fechar
+      btnFechar.onclick = fecharModal;
+      modal.onclick = (e) => {
+        if (e.target === modal) fecharModal();
+      };
       
       // Fechar com ESC
-      const fecharComEsc = function(e) {
+      const handleEsc = (e) => {
         if (e.key === 'Escape') {
-          fecharModalImagem();
-          document.removeEventListener('keydown', fecharComEsc);
+          fecharModal();
+          document.removeEventListener('keydown', handleEsc);
         }
       };
-      document.addEventListener('keydown', fecharComEsc);
-    }
-    
-    function fecharModalImagem() {
-      const modal = document.getElementById('modalImagemCartao');
-      if (modal) {
-        modal.remove();
-      }
+      document.addEventListener('keydown', handleEsc);
+      
+      // Prevenir scroll do body
+      document.body.style.overflow = 'hidden';
     }
 
     // Adicionar animação de spin para o spinner
