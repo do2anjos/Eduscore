@@ -1,6 +1,127 @@
 /**
  * Utilitários para implementação das 10 Heurísticas de Nielsen
+ * e melhorias de acessibilidade
  */
+
+// Melhorar navegação por teclado
+document.addEventListener('DOMContentLoaded', function() {
+  // Adicionar suporte para navegação por teclado em elementos customizados
+  const interactiveElements = document.querySelectorAll('[role="button"], [role="tab"], [role="menuitem"]');
+  interactiveElements.forEach(element => {
+    if (!element.hasAttribute('tabindex')) {
+      element.setAttribute('tabindex', '0');
+    }
+    
+    // Adicionar suporte para Enter e Space
+    element.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        element.click();
+      }
+    });
+  });
+  
+  // Melhorar navegação em dropdowns
+  const dropdowns = document.querySelectorAll('.dropdown');
+  dropdowns.forEach(dropdown => {
+    const trigger = dropdown.querySelector('a, button');
+    if (trigger) {
+      trigger.setAttribute('aria-haspopup', 'true');
+      trigger.setAttribute('aria-expanded', 'false');
+      
+      trigger.addEventListener('click', function() {
+        const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+        trigger.setAttribute('aria-expanded', !isExpanded);
+      });
+    }
+  });
+
+  // Inicializar menu hamburger
+  initMobileMenu();
+});
+
+// Menu Hamburger para Mobile
+function initMobileMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  // Criar botão hamburger se não existir
+  let menuToggle = document.querySelector('.menu-toggle');
+  if (!menuToggle) {
+    menuToggle = document.createElement('button');
+    menuToggle.className = 'menu-toggle';
+    menuToggle.setAttribute('aria-label', 'Abrir menu de navegação');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    `;
+    document.body.insertBefore(menuToggle, document.body.firstChild);
+  }
+
+  // Criar overlay se não existir
+  let overlay = document.querySelector('.menu-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'menu-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(overlay);
+  }
+
+  // Toggle menu
+  function toggleMenu() {
+    const isOpen = sidebar.classList.contains('menu-open');
+    sidebar.classList.toggle('menu-open');
+    overlay.classList.toggle('active');
+    menuToggle.setAttribute('aria-expanded', !isOpen);
+    menuToggle.setAttribute('aria-label', isOpen ? 'Abrir menu de navegação' : 'Fechar menu de navegação');
+    
+    // Atualizar ícone
+    if (isOpen) {
+      menuToggle.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      `;
+    } else {
+      menuToggle.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      `;
+    }
+    
+    // Prevenir scroll do body quando menu está aberto
+    document.body.style.overflow = !isOpen ? 'hidden' : '';
+  }
+
+  // Event listeners
+  menuToggle.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', toggleMenu);
+
+  // Fechar menu ao clicar em link da navegação (mobile)
+  const navLinks = sidebar.querySelectorAll('.nav-links a');
+  navLinks.forEach(link => {
+    link.addEventListener('click', function() {
+      if (window.innerWidth <= 768) {
+        toggleMenu();
+      }
+    });
+  });
+
+  // Fechar menu com ESC
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && sidebar.classList.contains('menu-open')) {
+      toggleMenu();
+    }
+  });
+}
 
 // 1. VISIBILIDADE DO STATUS DO SISTEMA
 function showToast(message, type = 'info', duration = 3000) {
@@ -52,6 +173,30 @@ function showLoading(message = 'Carregando...') {
 function hideLoading() {
   const overlay = document.getElementById('loading-overlay');
   if (overlay) overlay.classList.remove('active');
+}
+
+// Função para mostrar progresso de upload
+function showUploadProgress(percent) {
+  let progressBar = document.getElementById('upload-progress-bar');
+  if (!progressBar) {
+    const overlay = document.getElementById('loading-overlay') || createLoadingOverlay();
+    progressBar = document.createElement('div');
+    progressBar.id = 'upload-progress-bar';
+    progressBar.className = 'progress-bar';
+    progressBar.innerHTML = '<div class="progress-bar-fill" style="width: 0%;"></div>';
+    overlay.querySelector('.loading-message').parentElement.appendChild(progressBar);
+  }
+  const fill = progressBar.querySelector('.progress-bar-fill');
+  if (fill) {
+    fill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+  }
+}
+
+function hideUploadProgress() {
+  const progressBar = document.getElementById('upload-progress-bar');
+  if (progressBar) {
+    progressBar.remove();
+  }
 }
 
 function createLoadingOverlay() {
@@ -113,7 +258,7 @@ function createConfirmDialog() {
   dialog.id = 'confirm-dialog';
   dialog.className = 'confirm-dialog';
   dialog.innerHTML = `
-    <div class="confirm-message" style="margin-bottom: 20px;"></div>
+    <div class="confirm-message" style="margin-bottom: var(--spacing-lg);"></div>
     <div class="confirm-dialog-actions">
       <button class="btn-secondary cancel-btn">Cancelar</button>
       <button class="email-btn confirm-btn">Confirmar</button>
@@ -147,7 +292,11 @@ function validateForm(formElement) {
   });
   
   if (!isValid && errors.length > 0) {
-    showToast(errors[0], 'error');
+    // Mensagem de erro mais específica e acionável
+    const errorMessage = errors.length === 1 
+      ? errors[0]
+      : `Por favor, corrija os seguintes erros: ${errors.join(', ')}`;
+    showToast(errorMessage, 'error', 5000);
   }
   
   return isValid;
@@ -534,6 +683,8 @@ function updateUserProfile(usuario) {
 window.showToast = showToast;
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
+window.showUploadProgress = showUploadProgress;
+window.hideUploadProgress = hideUploadProgress;
 window.showConfirmDialog = showConfirmDialog;
 window.validateForm = validateForm;
 window.isValidEmail = isValidEmail;
