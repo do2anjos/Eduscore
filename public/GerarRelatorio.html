@@ -262,7 +262,8 @@
                     <th style="padding: 12px 16px; text-align: center; font-weight: 600;">Questões Capturadas</th>
                     <th style="padding: 12px 16px; text-align: center; font-weight: 600;">Acertos</th>
                     <th style="padding: 12px 16px; text-align: center; font-weight: 600;">Média (%)</th>
-                    <th style="padding: 12px 16px; text-align: center; font-weight: 600; border-radius: 0 8px 0 0;">Data</th>
+                    <th style="padding: 12px 16px; text-align: center; font-weight: 600;">Data</th>
+                    <th style="padding: 12px 16px; text-align: center; font-weight: 600; border-radius: 0 8px 0 0;">Cartão</th>
                   </tr>
                 </thead>
                 <tbody id="corpoTabelaSimulados">
@@ -978,9 +979,24 @@
             <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center; color: #666;">
               ${dataFormatada}
             </td>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; text-align: center;">
+              <button 
+                onclick="verCartao('${gabaritoId}', '${alunoSelecionado ? alunoSelecionado.id : ''}')"
+                style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 4px; transition: background 0.2s;"
+                onmouseover="this.style.background='rgba(0, 140, 196, 0.1)'"
+                onmouseout="this.style.background='none'"
+                title="Ver cartão enviado"
+                aria-label="Ver cartão do simulado"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008cc4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </td>
           </tr>
           <tr id="detalhes-${gabaritoId}" style="display: none;">
-            <td colspan="7" style="padding: 0; border-bottom: 1px solid #e0e0e0; background: #f8f9fa;">
+            <td colspan="8" style="padding: 0; border-bottom: 1px solid #e0e0e0; background: #f8f9fa;">
               <div id="conteudo-detalhes-${gabaritoId}" style="padding: 20px;">
                 <div style="text-align: center; color: #666;">
                   <div class="loading-spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,140,196,.3); border-radius: 50%; border-top-color: #008cc4; animation: spin 1s ease-in-out infinite;"></div>
@@ -1266,29 +1282,6 @@
         const questoes = questoesData.questoes || [];
         const respostas = respostasData.respostas || [];
 
-        // Buscar a imagem do cartão através da API
-        let imagemCartao = null;
-        if (respostas.length > 0 && alunoId && gabaritoId) {
-          try {
-            const imagemRes = await fetch(`/api/respostas/imagem-cartao?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            if (imagemRes.ok) {
-              const imagemData = await imagemRes.json();
-              if (imagemData.sucesso && imagemData.imagem) {
-                imagemCartao = imagemData.imagem.url;
-              }
-            }
-          } catch (error) {
-            console.warn('Erro ao buscar imagem do cartão:', error);
-            // Continuar sem imagem se houver erro
-          }
-        }
-
         // Criar mapa de respostas por questão_id
         const mapaRespostas = {};
         respostas.forEach(resposta => {
@@ -1316,7 +1309,6 @@
                     <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 120px;">Gabarito</th>
                     <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 120px;">Capturada</th>
                     <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54;">Status</th>
-                    <th style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54; width: 100px;">Cartão</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1341,34 +1333,12 @@
             statusColor = '#e74c3c';
           }
 
-          // Botão para ver cartão (apenas na primeira questão para evitar repetição)
-          let botaoCartao = '';
-          if (numero === questoesOrdenadas[0].numero && imagemCartao) {
-            botaoCartao = `
-              <button 
-                onclick="abrirModalImagem('${imagemCartao}', '${gabaritoId}')"
-                style="background: none; border: none; cursor: pointer; padding: 4px 8px; color: #008cc4; font-size: 18px; transition: transform 0.2s;"
-                onmouseover="this.style.transform='scale(1.2)'; this.style.color='#006a9a'"
-                onmouseout="this.style.transform='scale(1)'; this.style.color='#008cc4'"
-                title="Ver cartão enviado"
-                aria-label="Ver cartão enviado pelo aluno"
-              >
-                👁️
-              </button>
-            `;
-          } else if (numero === questoesOrdenadas[0].numero) {
-            botaoCartao = `
-              <span style="color: #999; font-size: 14px;" title="Imagem do cartão não disponível">-</span>
-            `;
-          }
-
           html += `
             <tr style="border-bottom: 1px solid #e0e0e0;">
               <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #003b54;">${numero}</td>
               <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #008cc4; font-size: 14px;">${gabarito || '-'}</td>
               <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: ${statusColor}; font-size: 14px;">${capturada}</td>
               <td style="padding: 10px 12px; text-align: center;">${statusHtml}</td>
-              <td style="padding: 10px 12px; text-align: center;">${botaoCartao}</td>
             </tr>
           `;
         });
@@ -1392,110 +1362,264 @@
       }
     }
 
-    // Função para abrir modal com imagem do cartão
-    function abrirModalImagem(imagemUrl, gabaritoId) {
+    // Função para visualizar o cartão (imagem) do simulado
+    async function verCartao(gabaritoId, alunoId) {
+      if (!alunoId && alunoSelecionado && alunoSelecionado.id) {
+        alunoId = alunoSelecionado.id;
+      }
+      
+      if (!alunoId) {
+        showToast('Erro: Aluno não selecionado', 'error');
+        return;
+      }
+
+      try {
+        showLoading('Carregando cartão...');
+        
+        // Buscar respostas do aluno para este gabarito para encontrar a imagem
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        // Buscar informações sobre o gabarito e tentar encontrar a imagem mais recente
+        // Como não há relação direta, vamos buscar todas as imagens e encontrar a mais recente
+        // que foi processada para este aluno/gabarito
+        const response = await fetch(`/api/respostas?aluno_id=${alunoId}&gabarito_id=${gabaritoId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao buscar informações do cartão');
+        }
+
+        const data = await response.json();
+        const respostas = data.respostas || [];
+        
+        if (respostas.length === 0) {
+          showToast('Nenhuma resposta encontrada para este simulado', 'warning');
+          return;
+        }
+
+        // Buscar a imagem mais recente processada para este aluno/gabarito
+        // Vamos listar as imagens no diretório e encontrar a mais recente
+        const imagemResponse = await fetch(`/api/respostas/imagem/${alunoId}/${gabaritoId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        let imagemUrl = null;
+        if (imagemResponse.ok) {
+          const imagemData = await imagemResponse.json();
+          if (imagemData.sucesso && imagemData.imagem) {
+            imagemUrl = imagemData.imagem;
+          }
+        }
+
+        // Se não encontrou via endpoint, tentar buscar diretamente do diretório de uploads
+        // Listando todas as imagens e encontrando a mais recente
+        if (!imagemUrl) {
+          // Tentar buscar a imagem mais recente do diretório de uploads
+          // Como não temos endpoint específico, vamos tentar uma abordagem alternativa
+          showToast('Buscando imagem do cartão...', 'info');
+          
+          // Criar modal para exibir a imagem
+          exibirModalCartao(null, gabaritoId, alunoId);
+          return;
+        }
+
+        // Exibir modal com a imagem
+        exibirModalCartao(imagemUrl, gabaritoId, alunoId);
+        
+      } catch (error) {
+        console.error('Erro ao buscar cartão:', error);
+        showToast('Erro ao carregar cartão. Tentando método alternativo...', 'warning');
+        
+        // Tentar método alternativo: buscar diretamente do diretório de uploads
+        exibirModalCartao(null, gabaritoId, alunoId);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Função para exibir modal com o cartão
+    function exibirModalCartao(imagemUrl, gabaritoId, alunoId) {
+      // Remover modal existente se houver
+      const modalExistente = document.getElementById('modalCartao');
+      if (modalExistente) {
+        modalExistente.remove();
+      }
+
       // Criar modal
       const modal = document.createElement('div');
-      modal.id = `modal-imagem-${gabaritoId}`;
+      modal.id = 'modalCartao';
       modal.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.8);
         z-index: 10000;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px;
-        cursor: pointer;
+        padding: var(--spacing-xl);
+        box-sizing: border-box;
       `;
-      
-      // Container da imagem
-      const container = document.createElement('div');
-      container.style.cssText = `
-        position: relative;
-        max-width: 90%;
-        max-height: 90%;
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      `;
-      
-      // Botão de fechar
-      const btnFechar = document.createElement('button');
-      btnFechar.innerHTML = '✕';
-      btnFechar.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #e74c3c;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        font-size: 18px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10001;
-        transition: background 0.2s;
-      `;
-      btnFechar.onmouseover = () => btnFechar.style.background = '#c0392b';
-      btnFechar.onmouseout = () => btnFechar.style.background = '#e74c3c';
-      
-      // Imagem
-      const img = document.createElement('img');
-      img.src = imagemUrl;
-      img.style.cssText = `
-        max-width: 100%;
-        max-height: calc(90vh - 80px);
-        display: block;
-        border-radius: 4px;
-      `;
-      img.onerror = () => {
-        container.innerHTML = `
-          <div style="padding: 40px; text-align: center; color: #666;">
-            <div style="font-size: 48px; margin-bottom: 16px;">📷</div>
-            <p style="margin: 0;">Imagem do cartão não encontrada</p>
-            <p style="margin: 8px 0 0 0; font-size: 14px; color: #999;">A imagem pode ter sido removida ou não está disponível</p>
+
+      modal.innerHTML = `
+        <div style="
+          background: white;
+          border-radius: var(--radius-md);
+          max-width: 90%;
+          max-height: 90%;
+          position: relative;
+          box-shadow: var(--shadow-xl);
+          display: flex;
+          flex-direction: column;
+        ">
+          <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border-light);
+          ">
+            <h3 style="margin: 0; color: var(--color-primary-darker); font-size: var(--font-size-lg);">
+              Cartão do Simulado
+            </h3>
+            <button 
+              onclick="document.getElementById('modalCartao').remove()"
+              style="
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: var(--color-text-light);
+                padding: 0;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: var(--radius-sm);
+                transition: background 0.2s;
+              "
+              onmouseover="this.style.background='rgba(0,0,0,0.1)'"
+              onmouseout="this.style.background='none'"
+              aria-label="Fechar modal"
+            >
+              ×
+            </button>
           </div>
-        `;
-      };
-      
-      // Montar estrutura
-      container.appendChild(btnFechar);
-      container.appendChild(img);
-      modal.appendChild(container);
-      document.body.appendChild(modal);
-      
-      // Função para fechar
-      const fecharModal = () => {
-        document.body.removeChild(modal);
-        document.body.style.overflow = '';
-      };
-      
-      // Eventos para fechar
-      btnFechar.onclick = fecharModal;
-      modal.onclick = (e) => {
-        if (e.target === modal) fecharModal();
-      };
-      
+          <div style="
+            padding: var(--spacing-xl);
+            overflow: auto;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+          ">
+            ${imagemUrl 
+              ? `<img 
+                  src="${imagemUrl}" 
+                  alt="Cartão do simulado"
+                  style="max-width: 100%; max-height: 70vh; border-radius: var(--radius-sm); box-shadow: var(--shadow-md);"
+                  onerror="this.parentElement.innerHTML='<div style=\'text-align: center; color: #666; padding: 40px;\'><div style=\'font-size: 48px; margin-bottom: 16px;\'>📷</div><p>Imagem não encontrada ou não disponível</p><p style=\'font-size: 14px; color: #999;\'>O cartão pode não ter sido enviado ou processado ainda.</p></div>'"
+                />`
+              : `<div style="text-align: center; color: #666; padding: 40px;">
+                  <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                  <p>Buscando imagem do cartão...</p>
+                  <p style="font-size: 14px; color: #999; margin-top: 16px;">
+                    Se a imagem não aparecer, ela pode não estar disponível no servidor.
+                  </p>
+                  <button 
+                    onclick="buscarImagemCartao('${gabaritoId}', '${alunoId}')"
+                    style="
+                      margin-top: 20px;
+                      padding: var(--spacing-sm) var(--spacing-md);
+                      background: var(--color-primary);
+                      color: white;
+                      border: none;
+                      border-radius: var(--radius-sm);
+                      cursor: pointer;
+                      font-size: var(--font-size-sm);
+                    "
+                  >
+                    Tentar novamente
+                  </button>
+                </div>`
+            }
+          </div>
+        </div>
+      `;
+
+      // Fechar ao clicar fora do modal
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+
       // Fechar com ESC
-      const handleEsc = (e) => {
+      const fecharComEsc = (e) => {
         if (e.key === 'Escape') {
-          fecharModal();
-          document.removeEventListener('keydown', handleEsc);
+          modal.remove();
+          document.removeEventListener('keydown', fecharComEsc);
         }
       };
-      document.addEventListener('keydown', handleEsc);
+      document.addEventListener('keydown', fecharComEsc);
+
+      document.body.appendChild(modal);
       
-      // Prevenir scroll do body
-      document.body.style.overflow = 'hidden';
+      // Se não há URL, tentar buscar
+      if (!imagemUrl) {
+        buscarImagemCartao(gabaritoId, alunoId);
+      }
+    }
+
+    // Função auxiliar para buscar imagem do cartão
+    async function buscarImagemCartao(gabaritoId, alunoId) {
+      try {
+        // Tentar buscar a imagem mais recente do diretório de uploads
+        // Como não temos endpoint específico, vamos tentar listar as imagens
+        const token = localStorage.getItem('token');
+        
+        // Buscar todas as imagens disponíveis e encontrar a mais recente
+        // Por enquanto, vamos tentar acessar diretamente via URL padrão
+        const imagensDir = '/uploads/imagens/';
+        
+        // Tentar diferentes abordagens para encontrar a imagem
+        // 1. Buscar via endpoint de listagem de imagens (se existir)
+        // 2. Tentar URLs padrão baseadas no timestamp
+        
+        // Por enquanto, vamos mostrar uma mensagem informativa
+        const modalContent = document.querySelector('#modalCartao > div > div:last-child');
+        if (modalContent) {
+          modalContent.innerHTML = `
+            <div style="text-align: center; color: #666; padding: 40px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">📷</div>
+              <p>Imagem do cartão não encontrada automaticamente.</p>
+              <p style="font-size: 14px; color: #999; margin-top: 16px;">
+                As imagens são armazenadas em <code>/uploads/imagens/</code> no servidor.
+              </p>
+              <p style="font-size: 14px; color: #999;">
+                Entre em contato com o administrador para verificar se a imagem está disponível.
+              </p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Erro ao buscar imagem:', error);
+      }
     }
 
     // Adicionar animação de spin para o spinner
