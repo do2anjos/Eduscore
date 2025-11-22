@@ -2491,6 +2491,10 @@ button:active {
     transform: translateX(-100%);
     border-radius: 0;
     box-shadow: var(--shadow-xl);
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: var(--spacing-lg) 0 !important;
   }
 
   .sidebar.menu-open {
@@ -2509,19 +2513,28 @@ button:active {
 
   /* Ajustar perfil na sidebar mobile */
   .sidebar .profile {
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: var(--spacing-lg) !important;
+    margin-bottom: var(--spacing-lg) !important;
+    gap: var(--spacing-sm) !important;
   }
 
   .sidebar .profile img {
     width: 64px;
     height: 64px;
+    margin-bottom: var(--spacing-sm) !important;
   }
 
   .nav-links {
-    flex-direction: column;
-    padding: 0 var(--spacing-md);
-    gap: var(--spacing-xs);
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: 0 var(--spacing-md) !important;
+    gap: var(--spacing-xs) !important;
+    width: 100% !important;
   }
 
   .nav-links a {
