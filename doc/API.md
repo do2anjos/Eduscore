@@ -1,6 +1,6 @@
 # Documentação da API
 
-**Última atualização**: 2025-01-21 12:00:00
+**Última atualização**: 2025-11-22 16:02:00
 
 ## Base URL
 

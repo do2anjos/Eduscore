@@ -284,7 +284,7 @@ O problema principal é que **as páginas internas (após login) ainda usam um l
 
 ---
 
-**Relatório gerado em:** 2024
+**Relatório gerado em:** 2025-11-22 16:02:00
 **Última atualização:** Análise completa do projeto
 
 

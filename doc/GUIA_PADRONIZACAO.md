@@ -584,6 +584,9 @@ if (window.innerWidth <= 768px) {
 
 ---
 
-**Última atualização:** Janeiro 2025  
+**Última atualização:** 2025-11-22 16:02:00  
 **Mantido por:** Equipe de Desenvolvimento
+
+
+
 

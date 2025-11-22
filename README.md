@@ -4,13 +4,13 @@
 
 Plataforma educacional integrada que combina digitalização de folhas de resposta, análise de desempenho e predição de resultados utilizando machine learning, desenvolvida especificamente para o contexto de exames vestibulares no Amazonas.
 
-**Última atualização**: 2025-11-20 20:08:00
+**Última atualização**: 2025-11-22 16:02:00
 
 ## 🎯 Sobre o Projeto
 
 O **EduScore** é uma plataforma completa de analytics educacional que oferece:
 
-- 📝 **Digitalização de Folhas de Resposta**: Processamento automatizado de simulados e provas usando OCR e detecção de marcações em bolhas
+- 📝 **Digitalização de Folhas de Resposta**: Processamento automatizado de simulados e provas usando detecção de marcações em bolhas através de visão computacional
 - 📊 **Análise de Desempenho**: Relatórios detalhados e métricas em tempo real
 - 🔮 **Predição de Desempenho**: Modelo de machine learning para previsão de resultados (em desenvolvimento)
 - 📈 **Visualização de Dados**: Gráficos interativos e dashboards personalizados
@@ -92,9 +92,8 @@ pip3 install -r backend/scripts/requirements.txt
 **Dependências Python necessárias:**
 - `opencv-python` (cv2)
 - `numpy`
-- `Pillow` (processamento de imagens)
 
-**Nota**: Certifique-se de que o Python está instalado e no PATH do sistema. O Python é usado para processar imagens de folhas de resposta e detectar marcações em bolhas usando OCR e visão computacional.
+**Nota**: Certifique-se de que o Python está instalado e no PATH do sistema. O Python é usado para processar imagens de folhas de resposta e detectar marcações em bolhas usando visão computacional (OpenCV).
 
 4. Configure o arquivo `.env` em `backend/` (veja [Configuração](#configuração))
 
@@ -145,11 +144,11 @@ classy-main/
 │   │   ├── auth.js      # Autenticação JWT
 │   │   ├── errorHandler.js  # Tratamento de erros
 │   │   └── validation.js    # Validação de dados
-│   ├── scripts/          # Scripts Python para processamento
-│   │   ├── detectar_tipo_imagem.py  # Detecta automaticamente se imagem precisa de processamento
-│   │   ├── processar_respostas_Imagem_original.py  # Processa imagens originais (com correção de perspectiva)
-│   │   ├── processar_respostas_imagem_processadas.py  # Processa imagens já pré-processadas (sem correção de perspectiva)
-│   │   └── requirements.txt        # Dependências Python
+│   ├── scripts/          # Scripts Python para processamento de imagens
+│   │   ├── detectar_tipo_imagem.py  # Detecta automaticamente se imagem precisa de correção de perspectiva
+│   │   ├── processar_respostas_Imagem_original.py  # Processa imagens originais (com correção de perspectiva e detecção de bolhas)
+│   │   ├── processar_respostas_imagem_processadas.py  # Processa imagens já pré-processadas (detecção de bolhas sem correção de perspectiva)
+│   │   └── requirements.txt        # Dependências Python (OpenCV, NumPy)
 │   ├── routes/          # Rotas da API
 │   │   ├── alunos.js    # Gestão de alunos
 │   │   ├── disciplinas.js   # Gestão de disciplinas
@@ -205,7 +204,7 @@ classy-main/
 | **Gestão de Alunos** | CRUD completo de alunos | Node.js, Express.js, SQLite, SQL |
 | **Gestão de Disciplinas** | Gerenciamento de disciplinas e cursos | Node.js, Express.js, SQLite, SQL |
 | **Digitalização e Gabaritos** | Upload CSV, processamento de questões, correção automática | Node.js, Express.js, Multer, csv-parser, SQL |
-| **Processamento de Imagens** | OCR e detecção de marcações em bolhas | Python 3.7+, OpenCV, NumPy |
+| **Processamento de Imagens** | Detecção de marcações em bolhas via visão computacional | Python 3.7+, OpenCV, NumPy |
 | **Gestão de Sessões** | Agendamento e controle de simulados | Node.js, Express.js, SQLite, SQL |
 | **Respostas e Correção** | Processamento e correção automática | Node.js, Express.js, SQLite, SQL |
 | **Analytics e Relatórios** | Métricas, gráficos, estatísticas | Node.js, Express.js, Chart.js, SQL |
@@ -215,13 +214,14 @@ classy-main/
 
 **Stack Tecnológica:**
 - **Backend**: Node.js + Express.js
-- **Banco de Dados**: SQLite (better-sqlite3)
+- **Banco de Dados**: SQLite (better-sqlite3) / Turso (produção via @libsql/client)
 - **Autenticação**: JWT (jsonwebtoken) + bcrypt
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla) + Chart.js
 - **Processamento de Imagens**: Python 3.7+ com OpenCV (cv2) e NumPy
 - **Upload**: Multer (processamento de arquivos CSV)
 - **Segurança**: express-rate-limit, CORS, validação de dados
 - **Linguagens**: JavaScript, Python, SQL, HTML, CSS, JSON, Markdown
+- **Deploy**: Render.com (configuração via render.yaml)
 
 ## 🔐 Autenticação
 
@@ -269,14 +269,21 @@ Consulte o arquivo [API.md](./doc/API.md) para documentação completa da API.
 
 ## 📚 Documentação
 
-**Última atualização**: 2025-01-21 16:00:00
+**Última atualização**: 2025-11-22 16:02:00
 
 - **[API Documentation](doc/API.md)** - Documentação completa da API REST com exemplos
 - **[Cálculo de Métricas](doc/CALCULO_METRICAS.md)** - Como métricas e gráficos são calculados
 - **[Changelog](doc/CHANGELOG.md)** - Histórico completo de alterações com datas
+- **[Design System Guide](doc/DESIGN_SYSTEM_GUIDE.md)** - Guia completo do design system e componentes
+- **[Guia de Padronização](doc/GUIA_PADRONIZACAO.md)** - Padrões de código e estilo
 - **[Diagnóstico do Projeto](doc/DIAGNOSTICO_PROJETO.md)** - Análise inicial do projeto
 - **[Migração SQLite](doc/MIGRACAO_SQLITE.md)** - Detalhes da migração de PostgreSQL para SQLite
+- **[Migração Turso](doc/MIGRACAO_TURSO.md)** - Guia de migração para Turso (produção)
 - **[Heurísticas de Nielsen](doc/HEURISTICAS_NIELSEN.md)** - Implementação das 10 heurísticas de usabilidade
+- **[Inspeção de Tipografia](doc/INSPECAO_TIPOGRAFIA.md)** - Análise e melhorias de tipografia
+- **[Inspeção de Usabilidade UX/UI](doc/INSPECAO_USABILIDADE_UX_UI.md)** - Análise de usabilidade e interface
+- **[Render Setup](doc/RENDER_SETUP.md)** - Configuração para deploy no Render
+- **[Validação Final](doc/VALIDACAO_FINAL.md)** - Validação e testes finais do projeto
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -298,9 +305,8 @@ Consulte o arquivo [API.md](./doc/API.md) para documentação completa da API.
 
 ### Processamento de Imagens
 - **Python 3.7+** - Linguagem de processamento
-- **OpenCV (cv2)** - Visão computacional e OCR
+- **OpenCV (cv2)** - Visão computacional para detecção de marcações em bolhas
 - **NumPy** - Computação numérica
-- **Pillow** - Processamento de imagens
 
 ### Banco de Dados
 - **SQLite** - Banco de dados embutido
@@ -362,9 +368,11 @@ Todas as outras rotas requerem autenticação via JWT.
 - Em produção, configure `NODE_ENV=production`
 - Use uma chave JWT_SECRET forte e única em produção
 - O rate limiting protege contra abuso da API
-- Os dados são persistidos em SQLite (banco de dados embutido)
+- Os dados são persistidos em SQLite (desenvolvimento) ou Turso (produção)
 - Suporte completo para importação de gabaritos via CSV
 - Sistema preparado para escalar com múltiplos simulados e alunos
+- O sistema detecta automaticamente se está usando Turso ou SQLite local baseado nas variáveis de ambiente
+- Scripts Python são executados automaticamente para processar imagens de folhas de resposta
 
 ## 🐛 Troubleshooting
 

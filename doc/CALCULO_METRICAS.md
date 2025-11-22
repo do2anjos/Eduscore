@@ -1,6 +1,6 @@
 # Documentação de Cálculo de Métricas e Gráficos
 
-**Última atualização**: 2025-01-XX  
+**Última atualização**: 2025-11-22 16:02:00  
 **Versão**: 2.0.0
 
 Esta documentação descreve como os principais cards e gráficos do sistema são calculados e alimentados pelos endpoints do backend, e como são exibidos no frontend.
@@ -21,13 +21,13 @@ Esta documentação descreve como os principais cards e gráficos do sistema sã
   - Desempenho por disciplina do aluno
   - **Filtro por Simulado no Gráfico de Disciplinas** (NOVO - 2025-11-16)
   - **Card de Previsão** (NOVO - 2025-11-16)
-- **Endpoints de Disciplinas** (NOVO - 2025-01-XX)
+- **Endpoints de Disciplinas** (NOVO - 2025-01-21)
   - Estatísticas gerais de disciplinas
   - Relatório por disciplina específica
-- **Critérios de Validação de Respostas** (NOVO - 2025-01-XX)
+- **Critérios de Validação de Respostas** (NOVO - 2025-01-21)
   - Definição de resposta válida
   - Impacto nos cálculos
-- **Modos de Cálculo: Geral vs. Por Etapa** (NOVO - 2025-01-XX)
+- **Modos de Cálculo: Geral vs. Por Etapa** (NOVO - 2025-01-21)
   - Diferenças fundamentais
   - Quando usar cada modo
 
@@ -91,7 +91,7 @@ Esta documentação descreve como os principais cards e gráficos do sistema sã
 ### Gráfico: Média de Acertos por Disciplina
 - Frontend: `public/RelatorioGeral.html`.
 - Dados: `estatisticas.media_por_disciplina`.
-- **IMPORTANTE (2025-01-XX)**: A média considera TODAS as questões dos gabaritos aplicados, não apenas as respondidas. Questões não respondidas (vazias/inválidas) contam como erro (0%) na média.
+- **IMPORTANTE (2025-01-21)**: A média considera TODAS as questões dos gabaritos aplicados, não apenas as respondidas. Questões não respondidas (vazias/inválidas) contam como erro (0%) na média.
 - Lógica:
   - Ordena por `media` (descendente).
   - Trunca nomes longos para melhor leitura.
@@ -399,7 +399,7 @@ ORDER BY media DESC
 - **Contagem de Respostas**: `COUNT(DISTINCT CASE ...)` - Conta respostas **únicas** válidas
 - **Contagem de Questões**: `COUNT(DISTINCT q.id)` - Conta questões únicas da etapa
 - **Cálculo de Média**: `(Acertos / Total de questões da disciplina na etapa) * 100`
-  - **IMPORTANTE (2025-01-XX)**: O denominador é o total de questões, não apenas respostas válidas. Questões não respondidas (vazias/inválidas) contam como erro (0%) na média, garantindo que a taxa de acertos reflita corretamente o desempenho considerando todas as questões aplicadas.
+  - **IMPORTANTE (2025-01-21)**: O denominador é o total de questões, não apenas respostas válidas. Questões não respondidas (vazias/inválidas) contam como erro (0%) na média, garantindo que a taxa de acertos reflita corretamente o desempenho considerando todas as questões aplicadas.
 - **Filtro**: `WHERE g.etapa = $1` - Aplica filtro por etapa
 
 **Query Exemplo**:
@@ -500,8 +500,8 @@ ORDER BY media DESC
 - `GET /api/relatorios/estatisticas-individual/:aluno_id/disciplinas/:gabarito_id` – Desempenho por disciplina filtrado por simulado (NOVO - 2025-11-16 17:41:12).
 
 ### Endpoints de Disciplinas
-- `GET /api/disciplinas/estatisticas` – Estatísticas gerais de disciplinas (NOVO - 2025-01-XX).
-- `GET /api/disciplinas/:id/relatorio` – Relatório detalhado de uma disciplina específica (NOVO - 2025-01-XX).
+- `GET /api/disciplinas/estatisticas` – Estatísticas gerais de disciplinas (NOVO - 2025-01-21).
+- `GET /api/disciplinas/:id/relatorio` – Relatório detalhado de uma disciplina específica (NOVO - 2025-01-21).
 
 ---
 
@@ -528,7 +528,7 @@ SELECT ROUND(AVG(CASE WHEN acertou = 1 THEN 100 ELSE 0 END), 2) as media
 FROM respostas
 
 -- Média por disciplina (Modo Geral)
--- IMPORTANTE (2025-01-XX): A média divide pelos total de questões (COUNT(DISTINCT q.id)),
+-- IMPORTANTE (2025-01-21): A média divide pelos total de questões (COUNT(DISTINCT q.id)),
 -- não apenas respostas válidas. Questões não respondidas contam como erro (0%) na média.
 SELECT 
   d.id, d.nome,
@@ -673,7 +673,7 @@ ORDER BY mes ASC
 
 ---
 
-**Última atualização**: 2025-01-XX  
+**Última atualização**: 2025-11-22 16:02:00  
 **Versão**: 2.0.0
 
 Se precisar de mais detalhes (ex.: trechos SQL específicos por tabela), consulte as seções acima ou o código-fonte em `backend/routes/relatorios.js` e `backend/routes/disciplinas.js`.

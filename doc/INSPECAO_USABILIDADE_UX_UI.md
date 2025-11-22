@@ -1,6 +1,6 @@
 # Relatório de Inspeção: Usabilidade (Heurísticas de Nielsen) e UX/UI (Double Diamond)
 
-**Data:** Janeiro 2025  
+**Data:** 2025-11-22 16:02:00  
 **Projeto:** EduScore - Plataforma de Gestão Pedagógica  
 **Objetivo:** Análise completa de usabilidade e UX/UI para padronização do projeto
 
@@ -742,7 +742,10 @@ O projeto EduScore possui uma **boa base de implementação das heurísticas de 
 
 ---
 
-**Relatório gerado em:** Janeiro 2025  
+**Relatório gerado em:** 2025-11-22 16:02:00  
 **Próxima revisão:** Após implementação das ações imediatas  
 **Responsável:** Equipe de Desenvolvimento
+
+
+
 
