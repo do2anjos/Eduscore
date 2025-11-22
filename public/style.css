@@ -2761,84 +2761,26 @@ button:active {
     padding: var(--spacing-lg);
   }
 
-  /* Gráficos em mobile - scroll horizontal */
+  /* Gráficos em mobile */
+  canvas {
+    max-height: 250px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
   .metric-card-content {
     min-height: 200px !important;
     padding: var(--spacing-md) !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: thin;
-  }
-
-  .metric-card-content::-webkit-scrollbar {
-    height: 8px;
-  }
-
-  .metric-card-content::-webkit-scrollbar-track {
-    background: var(--color-background);
-    border-radius: 4px;
-  }
-
-  .metric-card-content::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 4px;
-  }
-
-  .metric-card-content::-webkit-scrollbar-thumb:hover {
-    background: var(--color-text-light);
-  }
-
-  /* Canvas com largura mínima para evitar barras espremidas */
-  .metric-card-content canvas {
-    max-height: 250px !important;
-    min-width: 600px !important;
-    width: auto !important;
-    height: auto !important;
   }
 
   /* Scroll horizontal para gráficos muito largos */
   .metric-card-modern.full-width {
-    overflow: visible !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .metric-card-modern.full-width .metric-card-content {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    min-width: 0 !important;
-  }
-
-  .metric-card-modern.full-width .metric-card-content canvas {
-    min-width: 600px !important;
-  }
-
-  /* Chart container também com scroll */
-  .chart-container {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: thin;
-  }
-
-  .chart-container::-webkit-scrollbar {
-    height: 8px;
-  }
-
-  .chart-container::-webkit-scrollbar-track {
-    background: var(--color-background);
-    border-radius: 4px;
-  }
-
-  .chart-container::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 4px;
-  }
-
-  .chart-container canvas {
-    min-width: 600px !important;
-    max-width: none !important;
-    width: auto !important;
-    max-height: 250px !important;
-    height: auto !important;
+    min-width: 320px;
   }
 
   /* Breadcrumb em mobile */
