@@ -767,3 +767,89 @@ window.setupUserProfileMenu = setupUserProfileMenu;
 window.logout = logout;
 window.loadUserData = loadUserData;
 
+// =============================================
+// DROPDOWNS DA SIDEBAR - MELHORIA DE USABILIDADE
+// =============================================
+
+/**
+ * Inicializa os dropdowns da sidebar para funcionar com clique/toque
+ * Melhora a usabilidade, especialmente em mobile
+ */
+function initializeSidebarDropdowns() {
+  const dropdowns = document.querySelectorAll('.nav-links .dropdown');
+  
+  dropdowns.forEach(dropdown => {
+    const dropdownLink = dropdown.querySelector('a');
+    const dropdownOptions = dropdown.querySelector('.dropdown-options');
+    
+    if (!dropdownLink || !dropdownOptions) return;
+    
+    // Adicionar seta indicadora se não existir
+    if (!dropdownLink.querySelector('.dropdown-arrow')) {
+      const arrow = document.createElement('span');
+      arrow.className = 'dropdown-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      `;
+      dropdownLink.appendChild(arrow);
+    }
+    
+    // Verificar se algum subitem está ativo para abrir o dropdown
+    const hasActiveSubItem = dropdownOptions.querySelector('.sub.active');
+    if (hasActiveSubItem) {
+      dropdown.classList.add('open');
+    }
+    
+    // Toggle ao clicar/toque no link principal
+    dropdownLink.addEventListener('click', (e) => {
+      // Se o link aponta para #, prevenir navegação
+      const href = dropdownLink.getAttribute('href');
+      if (href === '#' || href === 'javascript:void(0)') {
+        e.preventDefault();
+      }
+      
+      // Toggle do estado aberto/fechado
+      const isOpen = dropdown.classList.contains('open');
+      
+      // Fechar outros dropdowns abertos (comportamento de accordion)
+      if (!isOpen) {
+        dropdowns.forEach(otherDropdown => {
+          if (otherDropdown !== dropdown) {
+            otherDropdown.classList.remove('open');
+          }
+        });
+      }
+      
+      dropdown.classList.toggle('open');
+      
+      // Atualizar ARIA
+      const isNowOpen = dropdown.classList.contains('open');
+      dropdownLink.setAttribute('aria-expanded', isNowOpen);
+      dropdownOptions.setAttribute('aria-hidden', !isNowOpen);
+    });
+    
+    // Atualizar ARIA attributes
+    dropdownLink.setAttribute('aria-haspopup', 'true');
+    dropdownLink.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+    dropdownOptions.setAttribute('role', 'menu');
+    dropdownOptions.setAttribute('aria-hidden', !dropdown.classList.contains('open'));
+    
+    // Adicionar role="menuitem" nos subitens
+    dropdownOptions.querySelectorAll('a.sub').forEach(subItem => {
+      subItem.setAttribute('role', 'menuitem');
+    });
+  });
+}
+
+// Inicializar dropdowns quando o DOM estiver pronto
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeSidebarDropdowns);
+} else {
+  initializeSidebarDropdowns();
+}
+
+window.initializeSidebarDropdowns = initializeSidebarDropdowns;
+
