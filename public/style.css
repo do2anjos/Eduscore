@@ -3622,4 +3622,131 @@ a.btn-secondary:hover {
   .metric-card-header h3 {
     font-size: var(--font-size-lg) !important;
   }
+
+  /* Tabela de simulados em mobile */
+  #containerRelatorioSimulados {
+    margin-top: var(--spacing-lg) !important;
+  }
+
+  #containerRelatorioSimulados .metric-card-content {
+    padding: var(--spacing-md) !important;
+  }
+
+  #tabelaSimulados {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    /* Scrollbar mais visível em mobile */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) rgba(0,0,0,0.1);
+  }
+
+  #tabelaSimulados::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  #tabelaSimulados::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: var(--radius-sm);
+  }
+
+  #tabelaSimulados::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: var(--radius-sm);
+  }
+
+  #tabelaSimulados::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-dark);
+  }
+
+  #tabelaSimulados table {
+    min-width: 800px; /* Largura mínima para manter legibilidade */
+    font-size: var(--font-size-sm) !important;
+  }
+
+  #tabelaSimulados thead th {
+    padding: var(--spacing-sm) var(--spacing-xs) !important;
+    font-size: var(--font-size-xs) !important;
+    white-space: nowrap;
+  }
+
+  #tabelaSimulados tbody td {
+    padding: var(--spacing-sm) var(--spacing-xs) !important;
+    font-size: var(--font-size-xs) !important;
+    white-space: nowrap;
+  }
+
+  /* Botão de ver cartão em mobile */
+  #tabelaSimulados tbody td button {
+    padding: var(--spacing-xs) !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+
+  #tabelaSimulados tbody td button svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Mensagem sem simulados em mobile */
+  #mensagemSemSimulados {
+    padding: var(--spacing-xl) var(--spacing-md) !important;
+  }
+
+  #mensagemSemSimulados div[style*="font-size: 48px"] {
+    font-size: 36px !important;
+  }
+
+  /* Tabela de detalhes do simulado (comparação gabarito vs aluno) em mobile */
+  /* Selecionar divs que começam com conteudo-detalhes- */
+  div[id^="conteudo-detalhes-"] {
+    padding: var(--spacing-md) !important;
+  }
+
+  div[id^="conteudo-detalhes-"] h4 {
+    font-size: var(--font-size-base) !important;
+    margin-bottom: var(--spacing-md) !important;
+  }
+
+  div[id^="conteudo-detalhes-"] table,
+  div[style*="overflow-x: auto"] table {
+    font-size: var(--font-size-xs) !important;
+    min-width: 100%;
+  }
+
+  div[id^="conteudo-detalhes-"] thead th,
+  div[style*="overflow-x: auto"] thead th {
+    padding: var(--spacing-xs) var(--spacing-sm) !important;
+    font-size: var(--font-size-xs) !important;
+    white-space: nowrap;
+  }
+
+  div[id^="conteudo-detalhes-"] tbody td,
+  div[style*="overflow-x: auto"] tbody td {
+    padding: var(--spacing-xs) var(--spacing-sm) !important;
+    font-size: var(--font-size-xs) !important;
+  }
+
+  /* Scroll horizontal para tabela de detalhes */
+  div[style*="overflow-x: auto"] {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) rgba(0,0,0,0.1);
+  }
+
+  div[style*="overflow-x: auto"]::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  div[style*="overflow-x: auto"]::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: var(--radius-sm);
+  }
+
+  div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: var(--radius-sm);
+  }
 }
