@@ -2870,6 +2870,37 @@ button:active {
     margin-bottom: var(--spacing-xs);
   }
 
+  /* Campo de busca com botão - layout vertical em mobile */
+  /* Forçar layout vertical para divs que contêm botões */
+  .input-group > div {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--spacing-sm) !important;
+    align-items: stretch !important;
+  }
+
+  /* Container do input */
+  .input-group > div > div {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Botão dentro do input-group - largura total em mobile */
+  .input-group > div button#btnBuscar,
+  .input-group > div button.btn-primary,
+  .input-group > div button[class*="btn"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: auto !important;
+    align-self: stretch !important;
+    margin-top: 0 !important;
+    white-space: normal !important;
+    height: auto !important;
+    min-height: 44px !important;
+  }
+
   /* Botões em mobile - garantir touch targets */
   .btn,
   .btn-primary,
