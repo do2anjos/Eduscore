@@ -25,21 +25,28 @@
           <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
         </a>
         <div class="dropdown">
-          <a href="RelatorioGeral.html" onclick="toggleDropdown(event, this.parentElement);">
+          <a href="#" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
             <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
             <span class="dropdown-arrow">▶</span>
           </a>
-          <div class="dropdown-options">
-            <a href="RelatorioGeral.html" class="sub active">Relatório Geral</a>
-            <a href="GerarRelatorio.html" class="sub">Relatório Individual</a>
+          <div class="dropdown-options" role="menu">
+            <a href="RelatorioGeral.html" class="sub active" role="menuitem">Relatório Geral</a>
+            <a href="GerarRelatorio.html" class="sub" role="menuitem">Relatório Individual</a>
           </div>
         </div>
         <a href="Cadastrar.html">
           <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar
         </a>
-        <a href="CadastrarGabarito.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
-        </a>
+        <div class="dropdown">
+          <a href="#" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
+            <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
+            <span class="dropdown-arrow">▶</span>
+          </a>
+          <div class="dropdown-options" role="menu">
+            <a href="CadastrarGabarito.html" class="sub" role="menuitem">Cadastrar Gabarito</a>
+            <a href="CorrigirSimulado.html" class="sub" role="menuitem">Corrigir Gabarito</a>
+          </div>
+        </div>
         <a href="AgendarSessao.html">
           <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão
         </a>

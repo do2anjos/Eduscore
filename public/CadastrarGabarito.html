@@ -25,13 +25,13 @@
         <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar</a>
         
         <div class="dropdown">
-          <a href="#" class="active" aria-current="page" onclick="toggleDropdown(event, this.parentElement);">
+          <a href="#" class="active" aria-current="page" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
             <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
             <span class="dropdown-arrow">▶</span>
           </a>
-          <div class="dropdown-options">
-            <a href="CadastrarGabarito.html" class="sub active">Cadastrar Gabarito</a>
-            <a href="CorrigirSimulado.html" class="sub">Corrigir Gabarito</a>
+          <div class="dropdown-options" role="menu">
+            <a href="CadastrarGabarito.html" class="sub active" role="menuitem">Cadastrar Gabarito</a>
+            <a href="CorrigirSimulado.html" class="sub" role="menuitem">Corrigir Gabarito</a>
           </div>
         </div>
 

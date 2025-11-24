@@ -616,29 +616,40 @@ p {
   gap: var(--spacing-xs);
   max-height: 0;
   overflow: hidden;
-  transition: max-height var(--transition-slow), padding var(--transition-slow), margin var(--transition-slow), opacity var(--transition-base);
+  transition: max-height 0.3s ease, padding 0.3s ease, margin 0.3s ease, opacity 0.2s ease;
   opacity: 0;
 }
 
-/* Desktop: mostrar no hover */
-.dropdown:hover .dropdown-options {
-  display: flex;
-  max-height: 200px;
-  padding-left: var(--spacing-lg);
-  margin-top: var(--spacing-xs);
-  opacity: 1;
+/* Desktop: mostrar no hover (apenas se não estiver expandido via JS) */
+@media (min-width: 769px) {
+  .dropdown:hover:not(.expanded) .dropdown-options {
+    display: flex;
+    max-height: 200px;
+    padding-left: var(--spacing-lg);
+    margin-top: var(--spacing-xs);
+    opacity: 1;
+  }
+  
+  /* Se expandido via JS, manter visível mesmo sem hover */
+  .dropdown.expanded .dropdown-options {
+    display: flex !important;
+    max-height: 200px;
+    padding-left: var(--spacing-lg);
+    margin-top: var(--spacing-xs);
+    opacity: 1;
+  }
 }
 
-/* Desktop: mostrar quando expandido via JavaScript */
-.dropdown.expanded .dropdown-options {
-  display: flex;
-  max-height: 200px;
-  padding-left: var(--spacing-lg);
-  margin-top: var(--spacing-xs);
-  opacity: 1;
+/* Mobile: mostrar quando expandido */
+@media (max-width: 768px) {
+  .dropdown.expanded .dropdown-options {
+    display: flex !important;
+    max-height: 300px;
+    padding-left: var(--spacing-lg);
+    margin-top: var(--spacing-xs);
+    opacity: 1;
+  }
 }
-
-/* Mobile: mostrar quando expandido (via classe) - já definido acima */
 
 .dropdown-options a.sub {
   padding: var(--spacing-sm) var(--spacing-md);
@@ -1782,11 +1793,13 @@ form button:hover {
 
   .dropdown-arrow {
     display: inline-block !important;
-    opacity: 0.8;
+    opacity: 0.9 !important;
+    font-size: var(--font-size-sm) !important;
   }
 
   .dropdown.expanded .dropdown-arrow {
-    transform: rotate(90deg);
+    transform: rotate(90deg) !important;
+    opacity: 1 !important;
   }
 
   .dropdown-options {
@@ -1799,12 +1812,17 @@ form button:hover {
     box-shadow: none !important;
     max-height: 0;
     overflow: hidden;
-    transition: max-height var(--transition-slow), padding var(--transition-slow);
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+    display: none !important;
+    flex-direction: column;
+    opacity: 0;
   }
 
   .dropdown.expanded .dropdown-options {
+    display: flex !important;
     max-height: 300px;
     padding: 0 var(--spacing-md) var(--spacing-sm) var(--spacing-xl) !important;
+    opacity: 1;
   }
 
   .dropdown-options a.sub {
@@ -2710,12 +2728,14 @@ button:active {
     box-shadow: none !important;
     max-height: 0;
     overflow: hidden;
-    transition: max-height var(--transition-slow), padding var(--transition-slow), opacity var(--transition-base);
-    display: flex !important;
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.2s ease;
+    display: none !important;
+    flex-direction: column;
     opacity: 0;
   }
 
   .dropdown.expanded .dropdown-options {
+    display: flex !important;
     max-height: 300px;
     padding: 0 var(--spacing-md) var(--spacing-sm) var(--spacing-xl) !important;
     opacity: 1;

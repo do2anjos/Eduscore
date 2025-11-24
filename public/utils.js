@@ -758,13 +758,23 @@ function updateUserProfile(usuario) {
 /**
  * Alterna o estado de expansão de um dropdown
  * Em mobile: funciona como accordion (expandir/colapsar)
- * Em desktop: hover mostra dropdown, clique no link principal navega normalmente
+ * Em desktop: permite expandir manualmente além do hover
  */
 function toggleDropdown(event, dropdownElement) {
   if (!dropdownElement) return;
   
   // Detectar se é mobile
   const isMobile = window.innerWidth <= 768;
+  
+  // Se clicou em um sublink, permitir navegação normal
+  const clickedSubLink = event.target.closest('.dropdown-options a.sub');
+  if (clickedSubLink) {
+    return; // Permitir navegação normal
+  }
+  
+  // Se clicou na seta ou no link principal
+  const clickedArrow = event.target.closest('.dropdown-arrow');
+  const clickedMainLink = event.target.closest('.dropdown > a');
   
   if (isMobile) {
     // Mobile: comportamento de accordion
@@ -780,28 +790,62 @@ function toggleDropdown(event, dropdownElement) {
     });
     
     // Alternar estado do dropdown atual
-    dropdownElement.classList.toggle('expanded');
+    const isExpanded = dropdownElement.classList.toggle('expanded');
+    const mainLink = dropdownElement.querySelector('> a');
+    if (mainLink) {
+      mainLink.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+    }
   } else {
-    // Desktop: se clicou em um sublink, permitir navegação normal
-    const clickedSubLink = event.target.closest('.dropdown-options a.sub');
-    if (clickedSubLink) {
-      // Clicou em um sublink, permitir navegação normal
-      return;
+    // Desktop: expandir/colapsar manualmente
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Fechar outros dropdowns abertos
+    const allDropdowns = document.querySelectorAll('.dropdown');
+    allDropdowns.forEach(dropdown => {
+      if (dropdown !== dropdownElement && dropdown.classList.contains('expanded')) {
+        dropdown.classList.remove('expanded');
+      }
+    });
+    
+    // Alternar estado do dropdown atual
+    const isExpanded = dropdownElement.classList.toggle('expanded');
+    const mainLink = dropdownElement.querySelector('> a');
+    if (mainLink) {
+      mainLink.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
     }
     
-    // Desktop: se clicou no link principal, permitir navegação normal
-    // O hover já mostra o dropdown, então não precisa expandir manualmente
-    // Mas se quiser expandir manualmente também, pode fazer:
-    // event.preventDefault();
-    // dropdownElement.classList.toggle('expanded');
-    
-    // Por padrão, em desktop o hover já funciona, então permitimos navegação normal
-    // Se o usuário quiser ver as opções, pode passar o mouse
+    // Fechar ao clicar fora
+    setTimeout(() => {
+      const closeOnClickOutside = (e) => {
+        if (!dropdownElement.contains(e.target)) {
+          dropdownElement.classList.remove('expanded');
+          if (mainLink) {
+            mainLink.setAttribute('aria-expanded', 'false');
+          }
+          document.removeEventListener('click', closeOnClickOutside);
+        }
+      };
+      // Usar setTimeout para não fechar imediatamente
+      setTimeout(() => {
+        document.addEventListener('click', closeOnClickOutside);
+      }, 0);
+    }, 0);
   }
 }
 
 // Inicializar dropdowns ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
+  // Atualizar aria-expanded dos dropdowns
+  const updateAriaExpanded = () => {
+    document.querySelectorAll('.dropdown').forEach(dropdown => {
+      const link = dropdown.querySelector('> a');
+      if (link) {
+        link.setAttribute('aria-expanded', dropdown.classList.contains('expanded') ? 'true' : 'false');
+      }
+    });
+  };
+  
   // Em mobile, expandir dropdowns que contêm links ativos
   const isMobile = window.innerWidth <= 768;
   if (isMobile) {
@@ -810,9 +854,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const dropdown = link.closest('.dropdown');
       if (dropdown) {
         dropdown.classList.add('expanded');
+        const mainLink = dropdown.querySelector('> a');
+        if (mainLink) {
+          mainLink.setAttribute('aria-expanded', 'true');
+        }
       }
     });
   }
+  
+  // Observar mudanças nos dropdowns para atualizar aria-expanded
+  const observer = new MutationObserver(() => {
+    updateAriaExpanded();
+  });
+  
+  document.querySelectorAll('.dropdown').forEach(dropdown => {
+    observer.observe(dropdown, { attributes: true, attributeFilter: ['class'] });
+  });
+  
+  updateAriaExpanded();
 });
 
 // Exportar funções para uso global
