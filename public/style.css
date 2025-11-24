@@ -3700,7 +3700,7 @@ a.btn-secondary:hover {
   }
 
   /* Tabela de detalhes do simulado (comparação gabarito vs aluno) em mobile */
-  /* Selecionar divs que começam com conteudo-detalhes- */
+  /* Aplicar apenas dentro do container de detalhes - seletores mais específicos */
   div[id^="conteudo-detalhes-"] {
     padding: var(--spacing-md) !important;
   }
@@ -3710,43 +3710,49 @@ a.btn-secondary:hover {
     margin-bottom: var(--spacing-md) !important;
   }
 
-  div[id^="conteudo-detalhes-"] table,
-  div[style*="overflow-x: auto"] table {
-    font-size: var(--font-size-xs) !important;
-    min-width: 100%;
+  /* Tabela de comparação dentro dos detalhes - usar seletor mais genérico */
+  div[id^="conteudo-detalhes-"] div[style*="overflow-x: auto"],
+  div[id^="conteudo-detalhes-"] div[style*="overflow-x:auto"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) rgba(0,0,0,0.1);
   }
 
-  div[id^="conteudo-detalhes-"] thead th,
-  div[style*="overflow-x: auto"] thead th {
+  div[id^="conteudo-detalhes-"] div[style*="overflow-x: auto"]::-webkit-scrollbar,
+  div[id^="conteudo-detalhes-"] div[style*="overflow-x:auto"]::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  div[id^="conteudo-detalhes-"] div[style*="overflow-x: auto"]::-webkit-scrollbar-track,
+  div[id^="conteudo-detalhes-"] div[style*="overflow-x:auto"]::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: var(--radius-sm);
+  }
+
+  div[id^="conteudo-detalhes-"] div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb,
+  div[id^="conteudo-detalhes-"] div[style*="overflow-x:auto"]::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Tabela dentro dos detalhes */
+  div[id^="conteudo-detalhes-"] table {
+    font-size: var(--font-size-xs) !important;
+    min-width: 400px; /* Largura mínima para manter legibilidade das 4 colunas */
+    width: 100%;
+  }
+
+  div[id^="conteudo-detalhes-"] thead th {
     padding: var(--spacing-xs) var(--spacing-sm) !important;
     font-size: var(--font-size-xs) !important;
     white-space: nowrap;
   }
 
-  div[id^="conteudo-detalhes-"] tbody td,
-  div[style*="overflow-x: auto"] tbody td {
+  div[id^="conteudo-detalhes-"] tbody td {
     padding: var(--spacing-xs) var(--spacing-sm) !important;
     font-size: var(--font-size-xs) !important;
-  }
-
-  /* Scroll horizontal para tabela de detalhes */
-  div[style*="overflow-x: auto"] {
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-primary) rgba(0,0,0,0.1);
-  }
-
-  div[style*="overflow-x: auto"]::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  div[style*="overflow-x: auto"]::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.05);
-    border-radius: var(--radius-sm);
-  }
-
-  div[style*="overflow-x: auto"]::-webkit-scrollbar-thumb {
-    background: var(--color-primary);
-    border-radius: var(--radius-sm);
   }
 }
