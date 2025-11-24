@@ -1438,7 +1438,6 @@
         }
 
         // Buscar a imagem mais recente processada para este aluno/gabarito
-        // Vamos listar as imagens no diretório e encontrar a mais recente
         const imagemResponse = await apiFetch(`/api/respostas/imagem/${alunoId}/${gabaritoId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -1454,19 +1453,7 @@
           }
         }
 
-        // Se não encontrou via endpoint, tentar buscar diretamente do diretório de uploads
-        // Listando todas as imagens e encontrando a mais recente
-        if (!imagemUrl) {
-          // Tentar buscar a imagem mais recente do diretório de uploads
-          // Como não temos endpoint específico, vamos tentar uma abordagem alternativa
-          showToast('Buscando imagem do cartão...', 'info');
-          
-          // Criar modal para exibir a imagem
-          exibirModalCartao(null, gabaritoId, alunoId);
-          return;
-        }
-
-        // Exibir modal com a imagem
+        // Exibir modal com a imagem (se encontrada) ou buscar
         exibirModalCartao(imagemUrl, gabaritoId, alunoId);
         
       } catch (error) {
@@ -1621,36 +1608,106 @@
     // Função auxiliar para buscar imagem do cartão
     async function buscarImagemCartao(gabaritoId, alunoId) {
       try {
-        // Tentar buscar a imagem mais recente do diretório de uploads
-        // Como não temos endpoint específico, vamos tentar listar as imagens
         const token = localStorage.getItem('token');
-        
-        // Buscar todas as imagens disponíveis e encontrar a mais recente
-        // Por enquanto, vamos tentar acessar diretamente via URL padrão
-        const imagensDir = '/uploads/imagens/';
-        
-        // Tentar diferentes abordagens para encontrar a imagem
-        // 1. Buscar via endpoint de listagem de imagens (se existir)
-        // 2. Tentar URLs padrão baseadas no timestamp
-        
-        // Por enquanto, vamos mostrar uma mensagem informativa
+        if (!token) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        // Mostrar loading no modal
         const modalContent = document.querySelector('#modalCartao > div > div:last-child');
         if (modalContent) {
           modalContent.innerHTML = `
             <div style="text-align: center; color: #666; padding: 40px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+              <p>Buscando imagem do cartão...</p>
+            </div>
+          `;
+        }
+
+        // Buscar imagem via endpoint da API
+        const response = await apiFetch(`/api/respostas/imagem/${alunoId}/${gabaritoId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.sucesso && data.imagem) {
+            // Imagem encontrada - atualizar modal com a imagem
+            if (modalContent) {
+              modalContent.innerHTML = `
+                <img 
+                  src="${data.imagem}" 
+                  alt="Cartão do simulado"
+                  style="max-width: 100%; max-height: 70vh; border-radius: var(--radius-sm); box-shadow: var(--shadow-md);"
+                  onerror="this.parentElement.innerHTML='<div style=\'text-align: center; color: #666; padding: 40px;\'><div style=\'font-size: 48px; margin-bottom: 16px;\'>📷</div><p>Erro ao carregar imagem</p><p style=\'font-size: 14px; color: #999;\'>A imagem pode ter sido movida ou excluída.</p></div>'"
+                />
+              `;
+            }
+            return;
+          }
+        }
+
+        // Se chegou aqui, não encontrou a imagem
+        if (modalContent) {
+          modalContent.innerHTML = `
+            <div style="text-align: center; color: #666; padding: 40px;">
               <div style="font-size: 48px; margin-bottom: 16px;">📷</div>
-              <p>Imagem do cartão não encontrada automaticamente.</p>
+              <p>Imagem do cartão não encontrada.</p>
               <p style="font-size: 14px; color: #999; margin-top: 16px;">
-                As imagens são armazenadas em <code>/uploads/imagens/</code> no servidor.
+                A imagem pode não ter sido processada ainda ou a correção não foi finalizada.
               </p>
-              <p style="font-size: 14px; color: #999;">
-                Entre em contato com o administrador para verificar se a imagem está disponível.
-              </p>
+              <button 
+                onclick="buscarImagemCartao('${gabaritoId}', '${alunoId}')"
+                style="
+                  margin-top: 20px;
+                  padding: var(--spacing-sm) var(--spacing-md);
+                  background: var(--color-primary);
+                  color: white;
+                  border: none;
+                  border-radius: var(--radius-sm);
+                  cursor: pointer;
+                  font-size: var(--font-size-sm);
+                "
+              >
+                Tentar novamente
+              </button>
             </div>
           `;
         }
       } catch (error) {
         console.error('Erro ao buscar imagem:', error);
+        const modalContent = document.querySelector('#modalCartao > div > div:last-child');
+        if (modalContent) {
+          modalContent.innerHTML = `
+            <div style="text-align: center; color: #666; padding: 40px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+              <p>Erro ao buscar imagem do cartão.</p>
+              <p style="font-size: 14px; color: #999; margin-top: 16px;">
+                ${error.message || 'Erro desconhecido'}
+              </p>
+              <button 
+                onclick="buscarImagemCartao('${gabaritoId}', '${alunoId}')"
+                style="
+                  margin-top: 20px;
+                  padding: var(--spacing-sm) var(--spacing-md);
+                  background: var(--color-primary);
+                  color: white;
+                  border: none;
+                  border-radius: var(--radius-sm);
+                  cursor: pointer;
+                  font-size: var(--font-size-sm);
+                "
+              >
+                Tentar novamente
+              </button>
+            </div>
+          `;
+        }
       }
     }
 
