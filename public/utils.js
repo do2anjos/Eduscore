@@ -178,11 +178,40 @@ function initMobileMenu() {
   overlay.addEventListener('click', toggleMenu);
 
   // Fechar menu ao clicar em link da navegação (mobile)
+  // Mas NÃO fechar quando clicar em dropdowns ou links que não navegam
   const navLinks = sidebar.querySelectorAll('.nav-links a');
   navLinks.forEach(link => {
-    link.addEventListener('click', function() {
+    link.addEventListener('click', function(e) {
+      // Verificar se é um link de dropdown principal (dentro de .dropdown > a)
+      const isDropdownMainLink = link.parentElement && link.parentElement.classList.contains('dropdown');
+      
+      // Não fechar se for link de dropdown principal
+      if (isDropdownMainLink) {
+        return; // Deixar o toggleDropdown lidar com isso
+      }
+      
+      // Apenas fechar se for um link normal e realmente navegar
       if (window.innerWidth <= 768) {
-        toggleMenu();
+        const href = link.getAttribute('href');
+        if (href && href !== '#' && !href.startsWith('javascript:')) {
+          toggleMenu();
+        }
+      }
+    });
+  });
+  
+  // Fechar menu ao clicar em sublinks de dropdown que realmente navegam
+  const dropdownSubLinks = sidebar.querySelectorAll('.dropdown-options a.sub');
+  dropdownSubLinks.forEach(sublink => {
+    sublink.addEventListener('click', function(e) {
+      if (window.innerWidth <= 768) {
+        const href = sublink.getAttribute('href');
+        if (href && href !== '#' && !href.startsWith('javascript:')) {
+          // Aguardar um pouco para permitir que o dropdown expanda primeiro
+          setTimeout(() => {
+            toggleMenu();
+          }, 100);
+        }
       }
     });
   });
@@ -780,6 +809,7 @@ function toggleDropdown(event, dropdownElement) {
     // Mobile: comportamento de accordion
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation(); // Prevenir que outros listeners sejam executados
     
     // Fechar outros dropdowns abertos
     const allDropdowns = document.querySelectorAll('.dropdown');
@@ -795,6 +825,9 @@ function toggleDropdown(event, dropdownElement) {
     if (mainLink) {
       mainLink.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
     }
+    
+    // NÃO fechar a sidebar - deixar aberta para ver as opções
+    return false;
   } else {
     // Desktop: expandir/colapsar manualmente
     event.preventDefault();
