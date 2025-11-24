@@ -751,6 +751,70 @@ function updateUserProfile(usuario) {
   }
 }
 
+// =============================================
+// CONTROLE DE DROPDOWNS DA SIDEBAR (MOBILE/DESKTOP)
+// =============================================
+
+/**
+ * Alterna o estado de expansão de um dropdown
+ * Em mobile: funciona como accordion (expandir/colapsar)
+ * Em desktop: hover mostra dropdown, clique no link principal navega normalmente
+ */
+function toggleDropdown(event, dropdownElement) {
+  if (!dropdownElement) return;
+  
+  // Detectar se é mobile
+  const isMobile = window.innerWidth <= 768;
+  
+  if (isMobile) {
+    // Mobile: comportamento de accordion
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Fechar outros dropdowns abertos
+    const allDropdowns = document.querySelectorAll('.dropdown');
+    allDropdowns.forEach(dropdown => {
+      if (dropdown !== dropdownElement && dropdown.classList.contains('expanded')) {
+        dropdown.classList.remove('expanded');
+      }
+    });
+    
+    // Alternar estado do dropdown atual
+    dropdownElement.classList.toggle('expanded');
+  } else {
+    // Desktop: se clicou em um sublink, permitir navegação normal
+    const clickedSubLink = event.target.closest('.dropdown-options a.sub');
+    if (clickedSubLink) {
+      // Clicou em um sublink, permitir navegação normal
+      return;
+    }
+    
+    // Desktop: se clicou no link principal, permitir navegação normal
+    // O hover já mostra o dropdown, então não precisa expandir manualmente
+    // Mas se quiser expandir manualmente também, pode fazer:
+    // event.preventDefault();
+    // dropdownElement.classList.toggle('expanded');
+    
+    // Por padrão, em desktop o hover já funciona, então permitimos navegação normal
+    // Se o usuário quiser ver as opções, pode passar o mouse
+  }
+}
+
+// Inicializar dropdowns ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+  // Em mobile, expandir dropdowns que contêm links ativos
+  const isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    const activeSubLinks = document.querySelectorAll('.dropdown-options a.sub.active');
+    activeSubLinks.forEach(link => {
+      const dropdown = link.closest('.dropdown');
+      if (dropdown) {
+        dropdown.classList.add('expanded');
+      }
+    });
+  }
+});
+
 // Exportar funções para uso global
 // IMPORTANTE: apiFetch deve estar disponível ANTES de qualquer script inline
 window.apiFetch = apiFetch;
@@ -766,90 +830,5 @@ window.isValidEmail = isValidEmail;
 window.setupUserProfileMenu = setupUserProfileMenu;
 window.logout = logout;
 window.loadUserData = loadUserData;
-
-// =============================================
-// DROPDOWNS DA SIDEBAR - MELHORIA DE USABILIDADE
-// =============================================
-
-/**
- * Inicializa os dropdowns da sidebar para funcionar com clique/toque
- * Melhora a usabilidade, especialmente em mobile
- */
-function initializeSidebarDropdowns() {
-  const dropdowns = document.querySelectorAll('.nav-links .dropdown');
-  
-  dropdowns.forEach(dropdown => {
-    const dropdownLink = dropdown.querySelector('a');
-    const dropdownOptions = dropdown.querySelector('.dropdown-options');
-    
-    if (!dropdownLink || !dropdownOptions) return;
-    
-    // Adicionar seta indicadora se não existir
-    if (!dropdownLink.querySelector('.dropdown-arrow')) {
-      const arrow = document.createElement('span');
-      arrow.className = 'dropdown-arrow';
-      arrow.setAttribute('aria-hidden', 'true');
-      arrow.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      `;
-      dropdownLink.appendChild(arrow);
-    }
-    
-    // Verificar se algum subitem está ativo para abrir o dropdown
-    const hasActiveSubItem = dropdownOptions.querySelector('.sub.active');
-    if (hasActiveSubItem) {
-      dropdown.classList.add('open');
-    }
-    
-    // Toggle ao clicar/toque no link principal
-    dropdownLink.addEventListener('click', (e) => {
-      // Se o link aponta para #, prevenir navegação
-      const href = dropdownLink.getAttribute('href');
-      if (href === '#' || href === 'javascript:void(0)') {
-        e.preventDefault();
-      }
-      
-      // Toggle do estado aberto/fechado
-      const isOpen = dropdown.classList.contains('open');
-      
-      // Fechar outros dropdowns abertos (comportamento de accordion)
-      if (!isOpen) {
-        dropdowns.forEach(otherDropdown => {
-          if (otherDropdown !== dropdown) {
-            otherDropdown.classList.remove('open');
-          }
-        });
-      }
-      
-      dropdown.classList.toggle('open');
-      
-      // Atualizar ARIA
-      const isNowOpen = dropdown.classList.contains('open');
-      dropdownLink.setAttribute('aria-expanded', isNowOpen);
-      dropdownOptions.setAttribute('aria-hidden', !isNowOpen);
-    });
-    
-    // Atualizar ARIA attributes
-    dropdownLink.setAttribute('aria-haspopup', 'true');
-    dropdownLink.setAttribute('aria-expanded', dropdown.classList.contains('open'));
-    dropdownOptions.setAttribute('role', 'menu');
-    dropdownOptions.setAttribute('aria-hidden', !dropdown.classList.contains('open'));
-    
-    // Adicionar role="menuitem" nos subitens
-    dropdownOptions.querySelectorAll('a.sub').forEach(subItem => {
-      subItem.setAttribute('role', 'menuitem');
-    });
-  });
-}
-
-// Inicializar dropdowns quando o DOM estiver pronto
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeSidebarDropdowns);
-} else {
-  initializeSidebarDropdowns();
-}
-
-window.initializeSidebarDropdowns = initializeSidebarDropdowns;
+window.toggleDropdown = toggleDropdown;
 
