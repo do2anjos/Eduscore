@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,15 +9,16 @@
   <link rel="stylesheet" href="style.css" />
   <script src="utils.js" defer></script>
 </head>
+
 <body>
   <!-- Skip Links para navegação por teclado -->
   <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
   <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-  
+
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
-        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil" />
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
@@ -40,7 +42,8 @@
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile na mesma linha -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -55,9 +58,26 @@
               <p class="user-score"><strong>Coordenador</strong></p>
             </div>
             <ul>
-              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
-              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
-              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path>
+                    <path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path>
+                    <path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path>
+                  </svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" x2="9" y1="12" y2="12"></line>
+                  </svg> Sair</a></li>
             </ul>
           </div>
         </div>
@@ -73,25 +93,36 @@
       <!-- Seção de Informações do Perfil -->
       <div class="metric-card-modern" style="margin-top: var(--spacing-xl);">
         <div class="metric-card-header" style="margin-bottom: var(--spacing-xl);">
-          <h3 style="margin: 0; color: var(--color-primary-darker); font-size: var(--font-size-xl); font-weight: 600;">Informações do Perfil</h3>
-          <p style="margin: var(--spacing-xs) 0 0 0; color: var(--color-text-light); font-size: var(--font-size-sm);">Gerencie suas informações pessoais e foto de perfil</p>
+          <h3 style="margin: 0; color: var(--color-primary-darker); font-size: var(--font-size-xl); font-weight: 600;">
+            Informações do Perfil</h3>
+          <p style="margin: var(--spacing-xs) 0 0 0; color: var(--color-text-light); font-size: var(--font-size-sm);">
+            Gerencie suas informações pessoais e foto de perfil</p>
         </div>
 
         <div style="display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-2xl); align-items: start;">
           <!-- Foto de Perfil -->
           <div style="display: flex; flex-direction: column; align-items: center;">
-            <label for="uploadFoto" style="cursor: pointer; position: relative; display: block;" aria-label="Alterar foto de perfil">
-              <img id="previewImagem" src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Foto de Perfil" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 4px solid var(--color-primary); box-shadow: var(--shadow-md); transition: var(--transition-base);" />
-              <div style="position: absolute; bottom: 8px; right: 8px; background: var(--color-primary); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); transition: var(--transition-base);" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <label for="uploadFoto" style="cursor: pointer; position: relative; display: block;"
+              aria-label="Alterar foto de perfil">
+              <img id="previewImagem" src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png"
+                alt="Foto de Perfil"
+                style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 4px solid var(--color-primary); box-shadow: var(--shadow-md); transition: var(--transition-base);" />
+              <div
+                style="position: absolute; bottom: 8px; right: 8px; background: var(--color-primary); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); transition: var(--transition-base);"
+                aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" x2="12" y1="3" y2="15"></line>
                 </svg>
               </div>
             </label>
-            <input type="file" id="uploadFoto" accept="image/*" style="display: none;" onchange="previewImagemPerfil(event)" aria-label="Upload de foto de perfil" />
-            <p style="color: var(--color-text-light); font-size: var(--font-size-sm); text-align: center; margin-top: var(--spacing-md); max-width: 150px;">Clique na imagem para alterar sua foto</p>
+            <input type="file" id="uploadFoto" accept="image/*" style="display: none;"
+              onchange="previewImagemPerfil(event)" aria-label="Upload de foto de perfil" />
+            <p
+              style="color: var(--color-text-light); font-size: var(--font-size-sm); text-align: center; margin-top: var(--spacing-md); max-width: 150px;">
+              Clique na imagem para alterar sua foto</p>
           </div>
 
           <!-- Formulário de Edição -->
@@ -99,97 +130,60 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
               <div class="input-group">
                 <label for="nome">
-                  Nome Completo 
+                  Nome Completo
                   <span class="required-field">*</span>
                 </label>
-                <input 
-                  type="text" 
-                  id="nome" 
-                  name="nome" 
-                  placeholder="Digite seu nome completo" 
-                  required 
-                  aria-label="Nome completo"
-                  aria-required="true"
-                />
+                <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required
+                  aria-label="Nome completo" aria-required="true" />
               </div>
 
               <div class="input-group">
                 <label for="perfil">Perfil</label>
-                <input 
-                  type="text" 
-                  id="perfil" 
-                  name="perfil" 
-                  readonly 
-                  aria-label="Perfil do usuário (somente leitura)"
+                <input type="text" id="perfil" name="perfil" readonly aria-label="Perfil do usuário (somente leitura)"
                   aria-readonly="true"
-                  style="background-color: var(--color-background); cursor: not-allowed; text-transform: capitalize;" 
-                />
+                  style="background-color: var(--color-background); cursor: not-allowed; text-transform: capitalize;" />
                 <span class="input-hint">O perfil não pode ser alterado</span>
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
               <div class="input-group">
                 <label for="email">
-                  Email Institucional 
+                  Email Institucional
                   <span class="required-field">*</span>
                 </label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  name="email" 
-                  placeholder="exemplo@instituicao.edu.br" 
-                  required 
-                  readonly 
-                  aria-label="Email institucional (somente leitura)"
-                  aria-readonly="true"
-                  style="background-color: var(--color-background); cursor: not-allowed;" 
-                />
+                <input type="email" id="email" name="email" placeholder="exemplo@instituicao.edu.br" required readonly
+                  aria-label="Email institucional (somente leitura)" aria-readonly="true"
+                  style="background-color: var(--color-background); cursor: not-allowed;" />
                 <span class="input-hint">O email não pode ser alterado</span>
               </div>
 
               <div class="input-group">
                 <label for="matricula">
-                  Matrícula 
+                  Matrícula
                   <span class="required-field">*</span>
                 </label>
-                <input 
-                  type="text" 
-                  id="matricula" 
-                  name="matricula" 
-                  placeholder="Digite sua matrícula" 
-                  required 
-                  readonly 
-                  aria-label="Matrícula (somente leitura)"
-                  aria-readonly="true"
-                  style="background-color: var(--color-background); cursor: not-allowed;" 
-                />
+                <input type="text" id="matricula" name="matricula" placeholder="Digite sua matrícula" required readonly
+                  aria-label="Matrícula (somente leitura)" aria-readonly="true"
+                  style="background-color: var(--color-background); cursor: not-allowed;" />
                 <span class="input-hint">A matrícula não pode ser alterada</span>
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
+            <div
+              style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
               <div class="input-group">
                 <label for="telefone">Telefone</label>
-                <input 
-                  type="text" 
-                  id="telefone" 
-                  name="telefone" 
-                  placeholder="(00) 00000-0000" 
-                  oninput="formatarTelefone(this)"
-                  aria-label="Telefone de contato"
-                />
+                <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000"
+                  oninput="formatarTelefone(this)" aria-label="Telefone de contato" />
               </div>
             </div>
 
-            <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light); display: flex; justify-content: center;">
-              <button 
-                type="submit" 
-                class="btn-primary" 
-                id="submitBtn" 
-                aria-label="Salvar alterações do perfil"
-                style="max-width: 200px;"
-              >
+            <div
+              style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light); display: flex; justify-content: center;">
+              <button type="submit" class="btn-primary" id="submitBtn" aria-label="Salvar alterações do perfil"
+                style="max-width: 200px;">
                 <span id="btnText">Salvar Alterações</span>
                 <span id="btnSpinner" class="loading-spinner" style="display: none;" aria-hidden="true"></span>
               </button>
@@ -201,8 +195,10 @@
       <!-- Seção de Alteração de Senha -->
       <div class="metric-card-modern" style="margin-top: var(--spacing-xl);">
         <div class="metric-card-header" style="margin-bottom: var(--spacing-xl);">
-          <h3 style="margin: 0; color: var(--color-primary-darker); font-size: var(--font-size-xl); font-weight: 600;">Alterar Senha</h3>
-          <p style="margin: var(--spacing-xs) 0 0 0; color: var(--color-text-light); font-size: var(--font-size-sm);">Atualize sua senha de acesso à plataforma</p>
+          <h3 style="margin: 0; color: var(--color-primary-darker); font-size: var(--font-size-xl); font-weight: 600;">
+            Alterar Senha</h3>
+          <p style="margin: var(--spacing-xs) 0 0 0; color: var(--color-text-light); font-size: var(--font-size-sm);">
+            Atualize sua senha de acesso à plataforma</p>
         </div>
 
         <form id="formSenha" onsubmit="alterarSenha(event)">
@@ -220,11 +216,13 @@
 
             <div class="input-group">
               <label for="confirmarNovaSenha">Confirmar Nova Senha <span class="required-field">*</span></label>
-              <input type="password" id="confirmarNovaSenha" name="confirmarNovaSenha" placeholder="Confirme a nova senha" required />
+              <input type="password" id="confirmarNovaSenha" name="confirmarNovaSenha"
+                placeholder="Confirme a nova senha" required />
             </div>
           </div>
 
-          <div style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light); display: flex; justify-content: center;">
+          <div
+            style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light); display: flex; justify-content: center;">
             <button type="submit" class="btn-secondary" id="submitSenhaBtn" style="max-width: 200px;">
               <span id="btnSenhaText">Alterar Senha</span>
               <span id="btnSenhaSpinner" class="loading-spinner" style="display: none;"></span>
@@ -270,7 +268,7 @@
         }
 
         const data = await response.json();
-        
+
         if (data.sucesso && data.usuario) {
           usuarioAtual = data.usuario;
           preencherFormulario(data.usuario);
@@ -298,50 +296,50 @@
           if (previewImg.src && previewImg.src.startsWith('blob:')) {
             URL.revokeObjectURL(previewImg.src);
           }
-          
+
           // Tentar carregar foto via API
           apiFetch(`/api/usuarios/${usuario.id}/foto?t=${Date.now()}`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           })
-          .then(response => {
-            if (response.ok) {
-              return response.blob();
-            }
-            // Se retornar 404, não há foto salva ainda
-            if (response.status === 404) {
-              console.log('[DEBUG] Foto não encontrada no servidor (404) - usando imagem padrão');
-              return null;
-            }
-            throw new Error(`Erro ao carregar foto: ${response.status}`);
-          })
-          .then(blob => {
-            if (blob) {
-              // Criar blob URL para exibir a imagem
-              const blobUrl = URL.createObjectURL(blob);
-              previewImg.src = blobUrl;
-              previewImg.alt = usuario.nome || 'Foto de Perfil';
-              
-              previewImg.onerror = function() {
-                URL.revokeObjectURL(blobUrl); // Limpar blob URL em caso de erro
-                this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-                this.alt = 'Foto de Perfil';
-                this.onerror = null;
-              };
-            } else {
-              // Se blob for null (404), usar imagem padrão
+            .then(response => {
+              if (response.ok) {
+                return response.blob();
+              }
+              // Se retornar 404, não há foto salva ainda
+              if (response.status === 404) {
+                console.log('[DEBUG] Foto não encontrada no servidor (404) - usando imagem padrão');
+                return null;
+              }
+              throw new Error(`Erro ao carregar foto: ${response.status}`);
+            })
+            .then(blob => {
+              if (blob) {
+                // Criar blob URL para exibir a imagem
+                const blobUrl = URL.createObjectURL(blob);
+                previewImg.src = blobUrl;
+                previewImg.alt = usuario.nome || 'Foto de Perfil';
+
+                previewImg.onerror = function () {
+                  URL.revokeObjectURL(blobUrl); // Limpar blob URL em caso de erro
+                  this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+                  this.alt = 'Foto de Perfil';
+                  this.onerror = null;
+                };
+              } else {
+                // Se blob for null (404), usar imagem padrão
+                previewImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+                previewImg.alt = 'Foto de Perfil';
+                previewImg.onerror = null;
+              }
+            })
+            .catch(error => {
+              console.warn('[DEBUG] Erro ao carregar foto via API:', error);
               previewImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
               previewImg.alt = 'Foto de Perfil';
               previewImg.onerror = null;
-            }
-          })
-          .catch(error => {
-            console.warn('[DEBUG] Erro ao carregar foto via API:', error);
-            previewImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-            previewImg.alt = 'Foto de Perfil';
-            previewImg.onerror = null;
-          });
+            });
         } else {
           previewImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
           previewImg.alt = 'Foto de Perfil';
@@ -365,7 +363,7 @@
         }
 
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
           imagemPreview.src = e.target.result;
         };
         reader.readAsDataURL(input.files[0]);
@@ -374,25 +372,25 @@
 
     function formatarTelefone(input) {
       let value = input.value.replace(/\D/g, '');
-      
+
       if (value.length > 11) {
         value = value.substring(0, 11);
       }
-      
+
       if (value.length > 2) {
         value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
       }
-      
+
       if (value.length > 10) {
         value = `${value.substring(0, 10)}-${value.substring(10)}`;
       }
-      
+
       input.value = value;
     }
 
     async function atualizarPerfil(event) {
       event.preventDefault();
-      
+
       const token = localStorage.getItem('token');
       if (!token) {
         window.location.href = '/login.html';
@@ -423,9 +421,9 @@
     async function comprimirEEnviarImagem(file, formData, token) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
           const img = new Image();
-          img.onload = function() {
+          img.onload = function () {
             // Criar canvas para redimensionar e comprimir
             const canvas = document.createElement('canvas');
             const MAX_WIDTH = 400;
@@ -459,13 +457,13 @@
             let quality = 0.7; // Começar com 70% de qualidade
             let base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
             const MAX_SIZE = 250 * 1024; // 250KB máximo em base64 (reduzido para evitar erro 431)
-            
+
             // Se ainda for muito grande, reduzir qualidade progressivamente
             while (base64.length > MAX_SIZE && quality > 0.3) {
               quality -= 0.1;
               base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
             }
-            
+
             // Se ainda for muito grande após reduzir qualidade, redimensionar mais
             if (base64.length > MAX_SIZE) {
               // Redimensionar para 300x300
@@ -477,7 +475,7 @@
               ctx.drawImage(img, 0, 0, 300, 300);
               quality = 0.6;
               base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
-              
+
               // Se ainda for muito grande, reduzir mais
               if (base64.length > MAX_SIZE) {
                 while (base64.length > MAX_SIZE && quality > 0.4) {
@@ -486,7 +484,7 @@
                 }
               }
             }
-            
+
             // Verificação final - se ainda for muito grande, rejeitar
             if (base64.length > MAX_SIZE) {
               showToast('A imagem ainda é muito grande após compressão. Por favor, selecione uma imagem menor.', 'error');
@@ -507,14 +505,14 @@
             console.log('[DEBUG] Foto adicionada ao formData. Tamanho:', formData.foto_perfil.length, 'caracteres');
             enviarAtualizacao(formData, token).then(resolve).catch(reject);
           };
-          img.onerror = function() {
+          img.onerror = function () {
             console.error('[DEBUG] Erro ao carregar imagem no elemento Image');
             showToast('Erro ao processar a imagem. Tente novamente.', 'error');
             reject(new Error('Erro ao processar imagem'));
           };
           img.src = e.target.result;
         };
-        reader.onerror = function() {
+        reader.onerror = function () {
           console.error('[DEBUG] Erro ao ler arquivo');
           showToast('Erro ao ler a imagem. Tente novamente.', 'error');
           reject(new Error('Erro ao ler arquivo'));
@@ -531,7 +529,7 @@
 
         // Obter ID do usuário - tentar primeiro do usuarioAtual, depois do token
         let userId = null;
-        
+
         if (usuarioAtual && usuarioAtual.id) {
           userId = usuarioAtual.id;
           console.log('[DEBUG] userId do usuarioAtual:', userId);
@@ -545,7 +543,7 @@
                 'Content-Type': 'application/json'
               }
             });
-            
+
             if (response.ok) {
               const data = await response.json();
               if (data.sucesso && data.usuario && data.usuario.id) {
@@ -557,7 +555,7 @@
           } catch (e) {
             console.warn('[DEBUG] Erro ao carregar dados do usuário:', e);
           }
-          
+
           // Se ainda não tiver userId, tentar extrair do token
           if (!userId) {
             try {
@@ -570,7 +568,7 @@
             }
           }
         }
-        
+
         if (!userId) {
           throw new Error('Não foi possível identificar o usuário. Faça login novamente.');
         }
@@ -620,13 +618,13 @@
         }
 
         showToast('Perfil atualizado com sucesso!', 'success');
-        
+
         // Limpar input de arquivo após salvar com sucesso
         const fileInput = document.getElementById('uploadFoto');
         if (fileInput) {
           fileInput.value = '';
         }
-        
+
         // Atualizar usuarioAtual com os dados retornados do servidor
         if (data.sucesso && data.usuario) {
           console.log('[DEBUG] Dados do usuário recebidos:', {
@@ -635,9 +633,9 @@
             temFoto: !!data.usuario.foto_perfil,
             tamanhoFoto: data.usuario.foto_perfil ? data.usuario.foto_perfil.length : 0
           });
-          
+
           usuarioAtual = data.usuario;
-          
+
           // Se tinha foto no upload, aguardar um pouco para garantir que o banco foi atualizado
           // antes de recarregar a foto do servidor
           if (formData.foto_perfil) {
@@ -647,7 +645,7 @@
             document.getElementById('matricula').value = data.usuario.matricula || '';
             document.getElementById('telefone').value = data.usuario.telefone || '';
             document.getElementById('perfil').value = data.usuario.perfil ? data.usuario.perfil.charAt(0).toUpperCase() + data.usuario.perfil.slice(1) : '';
-            
+
             // Aguardar um pouco antes de recarregar a foto para garantir que o banco foi atualizado
             setTimeout(() => {
               preencherFormulario(data.usuario);
@@ -659,7 +657,7 @@
         } else {
           console.warn('[DEBUG] Resposta não contém dados do usuário:', data);
         }
-        
+
         // Recarregar dados do usuário para atualizar sidebar
         // Aguardar um pouco para garantir que o banco foi atualizado antes de recarregar
         setTimeout(async () => {
@@ -678,7 +676,7 @@
 
     async function alterarSenha(event) {
       event.preventDefault();
-      
+
       const token = localStorage.getItem('token');
       if (!token) {
         window.location.href = '/login.html';
@@ -750,5 +748,5 @@
     }
   </script>
 </body>
-</html>
 
+</html>

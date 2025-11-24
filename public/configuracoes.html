@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,15 +9,16 @@
   <link rel="stylesheet" href="style.css" />
   <script src="utils.js" defer></script>
 </head>
+
 <body>
   <!-- Skip Links para navegação por teclado -->
   <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
   <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-  
+
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
-        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil" />
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
@@ -40,7 +42,8 @@
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile na mesma linha -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -55,9 +58,26 @@
               <p class="user-score"><strong>Coordenador</strong></p>
             </div>
             <ul>
-              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
-              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
-              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path>
+                    <path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path>
+                    <path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path>
+                  </svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" x2="9" y1="12" y2="12"></line>
+                  </svg> Sair</a></li>
             </ul>
           </div>
         </div>
@@ -72,64 +92,60 @@
 
       <!-- Notificações -->
       <div class="metric-card-modern" style="margin-top: var(--spacing-xl);">
-        <h3 style="margin-bottom: var(--spacing-xl); color: var(--color-primary-darker); display: flex; align-items: center; gap: var(--spacing-sm);">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <h3
+          style="margin-bottom: var(--spacing-xl); color: var(--color-primary-darker); display: flex; align-items: center; gap: var(--spacing-sm);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
           Notificações
         </h3>
         <div style="display: flex; flex-direction: column; gap: 16px;">
-          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);" onmouseover="this.style.backgroundColor='var(--color-background)'" onmouseout="this.style.backgroundColor='transparent'">
+          <label
+            style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);"
+            onmouseover="this.style.backgroundColor='var(--color-background)'"
+            onmouseout="this.style.backgroundColor='transparent'">
             <span style="font-weight: 500;">Notificações por Email</span>
-            <input 
-              type="checkbox" 
-              id="notificacoesEmail" 
-              aria-label="Ativar notificações por email"
-              style="width: 20px; height: 20px; cursor: pointer;" 
-            />
+            <input type="checkbox" id="notificacoesEmail" aria-label="Ativar notificações por email"
+              style="width: 20px; height: 20px; cursor: pointer;" />
           </label>
-          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);" onmouseover="this.style.backgroundColor='var(--color-background)'" onmouseout="this.style.backgroundColor='transparent'">
+          <label
+            style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);"
+            onmouseover="this.style.backgroundColor='var(--color-background)'"
+            onmouseout="this.style.backgroundColor='transparent'">
             <span style="font-weight: 500;">Notificações de Relatórios</span>
-            <input 
-              type="checkbox" 
-              id="notificacoesRelatorios" 
-              checked 
-              aria-label="Ativar notificações de relatórios"
-              style="width: 20px; height: 20px; cursor: pointer;" 
-            />
+            <input type="checkbox" id="notificacoesRelatorios" checked aria-label="Ativar notificações de relatórios"
+              style="width: 20px; height: 20px; cursor: pointer;" />
           </label>
-          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);" onmouseover="this.style.backgroundColor='var(--color-background)'" onmouseout="this.style.backgroundColor='transparent'">
+          <label
+            style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);"
+            onmouseover="this.style.backgroundColor='var(--color-background)'"
+            onmouseout="this.style.backgroundColor='transparent'">
             <span style="font-weight: 500;">Notificações de Sessões</span>
-            <input 
-              type="checkbox" 
-              id="notificacoesSessoes" 
-              checked 
-              aria-label="Ativar notificações de sessões"
-              style="width: 20px; height: 20px; cursor: pointer;" 
-            />
+            <input type="checkbox" id="notificacoesSessoes" checked aria-label="Ativar notificações de sessões"
+              style="width: 20px; height: 20px; cursor: pointer;" />
           </label>
         </div>
       </div>
 
       <!-- Preferências de Exibição -->
       <div class="metric-card-modern" style="margin-top: var(--spacing-xl);">
-        <h3 style="margin-bottom: var(--spacing-xl); color: var(--color-primary-darker); display: flex; align-items: center; gap: var(--spacing-sm);">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <h3
+          style="margin-bottom: var(--spacing-xl); color: var(--color-primary-darker); display: flex; align-items: center; gap: var(--spacing-sm);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+            <path
+              d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24">
+            </path>
           </svg>
           Preferências de Exibição
         </h3>
         <div style="display: flex; flex-direction: column; gap: 16px;">
           <div class="input-group">
             <label for="tema">Tema</label>
-            <select 
-              id="tema" 
-              name="tema" 
-              aria-label="Selecione o tema da interface"
-              style="width: 100%;"
-            >
+            <select id="tema" name="tema" aria-label="Selecione o tema da interface" style="width: 100%;">
               <option value="claro" selected>Claro</option>
               <option value="escuro">Escuro</option>
               <option value="auto">Automático</option>
@@ -137,12 +153,7 @@
           </div>
           <div class="input-group">
             <label for="idioma">Idioma</label>
-            <select 
-              id="idioma" 
-              name="idioma" 
-              aria-label="Selecione o idioma da interface"
-              style="width: 100%;"
-            >
+            <select id="idioma" name="idioma" aria-label="Selecione o idioma da interface" style="width: 100%;">
               <option value="pt-BR" selected>Português (Brasil)</option>
               <option value="en-US">English (US)</option>
               <option value="es-ES">Español</option>
@@ -150,12 +161,8 @@
           </div>
           <div class="input-group">
             <label for="itensPorPagina">Itens por Página</label>
-            <select 
-              id="itensPorPagina" 
-              name="itensPorPagina" 
-              aria-label="Selecione quantidade de itens por página"
-              style="width: 100%;"
-            >
+            <select id="itensPorPagina" name="itensPorPagina" aria-label="Selecione quantidade de itens por página"
+              style="width: 100%;">
               <option value="10">10</option>
               <option value="25" selected>25</option>
               <option value="50">50</option>
@@ -167,29 +174,40 @@
 
       <!-- Privacidade e Segurança -->
       <div class="metric-card-modern" style="margin-top: var(--spacing-xl);">
-        <h3 style="margin-bottom: var(--spacing-xl); color: var(--color-primary-darker); display: flex; align-items: center; gap: var(--spacing-sm);">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <h3
+          style="margin-bottom: var(--spacing-xl); color: var(--color-primary-darker); display: flex; align-items: center; gap: var(--spacing-sm);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
           Privacidade e Segurança
         </h3>
         <div style="display: flex; flex-direction: column; gap: 16px;">
-          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);" onmouseover="this.style.backgroundColor='var(--color-background)'" onmouseout="this.style.backgroundColor='transparent'">
+          <label
+            style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);"
+            onmouseover="this.style.backgroundColor='var(--color-background)'"
+            onmouseout="this.style.backgroundColor='transparent'">
             <span style="font-weight: 500;">Autenticação de Dois Fatores (2FA)</span>
             <input type="checkbox" id="doisFatores" style="width: 20px; height: 20px; cursor: pointer;" />
           </label>
-          <label style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);" onmouseover="this.style.backgroundColor='var(--color-background)'" onmouseout="this.style.backgroundColor='transparent'">
+          <label
+            style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: var(--spacing-md); border-radius: var(--radius-sm); transition: background-color var(--transition-base);"
+            onmouseover="this.style.backgroundColor='var(--color-background)'"
+            onmouseout="this.style.backgroundColor='transparent'">
             <span style="font-weight: 500;">Sessões Ativas</span>
-            <button class="btn-secondary" style="padding: 6px 12px; font-size: 14px;" onclick="verSessoesAtivas()">Ver Sessões</button>
+            <button class="btn-secondary" style="padding: var(--spacing-xs) var(--spacing-md); font-size: var(--font-size-sm);" onclick="verSessoesAtivas()">Ver
+              Sessões</button>
           </label>
         </div>
       </div>
 
       <!-- Ações -->
       <div class="metric-card-modern" style="margin-top: var(--spacing-xl);">
-        <h3 style="margin-bottom: var(--spacing-xl); color: var(--color-primary-darker); display: flex; align-items: center; gap: var(--spacing-sm);">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <h3
+          style="margin-bottom: var(--spacing-xl); color: var(--color-primary-darker); display: flex; align-items: center; gap: var(--spacing-sm);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
             <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -200,7 +218,9 @@
         </h3>
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <button class="btn-secondary" onclick="exportarDados()" style="width: 100%; justify-content: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="margin-right: 8px;">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" x2="12" y1="15" y2="3"></line>
@@ -208,7 +228,9 @@
             Exportar Dados
           </button>
           <button class="btn-secondary" onclick="limparCache()" style="width: 100%; justify-content: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="margin-right: 8px;">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
@@ -259,7 +281,7 @@
         }
 
         const data = await response.json();
-        
+
         if (data.sucesso && data.configuracoes) {
           const config = data.configuracoes;
           document.getElementById('notificacoesEmail').checked = config.notificacoesEmail || false;
@@ -351,5 +373,5 @@
     }
   </script>
 </body>
-</html>
 
+</html>

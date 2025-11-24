@@ -323,7 +323,7 @@
       
       // Mostrar apenas o aluno selecionado no Step 1
       if (!alunoSelecionado) {
-        container.innerHTML = '<p style="text-align: center; color: #ff6b6b; padding: 20px;">Nenhum aluno selecionado. Por favor, volte ao passo anterior e identifique o aluno.</p>';
+        container.innerHTML = '<p style="text-align: center; color: var(--color-error); padding: var(--spacing-lg);">Nenhum aluno selecionado. Por favor, volte ao passo anterior e identifique o aluno.</p>';
         return;
       }
 
@@ -407,7 +407,7 @@
       const respostasTemporarias = Object.keys(respostasAluno).filter(k => k.startsWith('temp_'));
       
       if (respostasTemporarias.length === 0 && Object.keys(respostasAluno).length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
+        container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-lg);">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
         return;
       }
 
@@ -442,16 +442,16 @@
       questoesOrdenadas.sort((a, b) => a.numero - b.numero);
 
       if (questoesOrdenadas.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
+        container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-lg);">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
         return;
       }
 
       questoesOrdenadas.forEach((item, index) => {
         const div = document.createElement('div');
         const respostaTexto = item.resposta.trim() === '' 
-          ? '<span style="color: #999; font-style: italic;">Não marcado</span>' 
+          ? '<span style="color: var(--color-text-lighter); font-style: italic;">Não marcado</span>' 
           : item.resposta.includes(',') 
-            ? `<span style="color: #ff6b6b; font-weight: 600;">${item.resposta} (dupla marcação - inválida)</span>`
+            ? `<span style="color: var(--color-error); font-weight: 600;">${item.resposta} (dupla marcação - inválida)</span>`
             : item.resposta;
         div.innerHTML = `<strong>Questão ${String(item.numero).padStart(2, '0')}:</strong> ${respostaTexto}`;
         container.appendChild(div);

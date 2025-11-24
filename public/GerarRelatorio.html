@@ -586,6 +586,16 @@
         grafico.destroy();
       }
 
+      // Detectar se é mobile
+      const isMobile = window.innerWidth <= 768;
+      const fontSizeBase = isMobile ? 11 : 12;
+      const fontSizeLegend = isMobile ? 12 : 14;
+      const tooltipPadding = isMobile ? 8 : 12;
+      const tooltipFontSize = isMobile ? 12 : 13;
+      const tooltipTitleSize = isMobile ? 12 : 14;
+      const pointRadius = isMobile ? 3 : 5;
+      const pointHoverRadius = isMobile ? 5 : 7;
+
       // Obter cores das variáveis CSS para Chart.js
       const root = getComputedStyle(document.documentElement);
       const colorPrimary = root.getPropertyValue('--color-primary').trim() || '#008cc4';
@@ -622,8 +632,8 @@
             backgroundColor: colorPrimaryRgba,
         fill: true,
             tension: 0.4,
-            pointRadius: 5,
-            pointHoverRadius: 7,
+            pointRadius: pointRadius,
+            pointHoverRadius: pointHoverRadius,
             pointBackgroundColor: colorPrimary,
             pointBorderColor: '#fff',
             pointBorderWidth: 2
@@ -639,23 +649,23 @@
               position: 'top',
           labels: {
             font: {
-                  size: 14,
+                  size: fontSizeLegend,
                   weight: 'bold'
                 },
                 color: colorPrimaryDarker,
-                padding: 15
+                padding: isMobile ? 10 : 15
               }
             },
             tooltip: {
               backgroundColor: colorPrimaryDarker,
               titleFont: {
-                size: 14,
+                size: tooltipTitleSize,
                 weight: 'bold'
               },
               bodyFont: {
-                size: 13
+                size: tooltipFontSize
               },
-              padding: 12,
+              padding: tooltipPadding,
               displayColors: false,
               cornerRadius: 8,
               callbacks: {
@@ -669,10 +679,12 @@
             x: {
               ticks: {
                 font: {
-                  size: 12,
+                  size: fontSizeBase,
                   weight: 'bold'
                 },
-                color: colorPrimaryDarker
+                color: colorPrimaryDarker,
+                maxRotation: isMobile ? 45 : 0,
+                minRotation: isMobile ? 45 : 0
               },
               grid: {
                 display: false
@@ -684,13 +696,14 @@
           ticks: {
                 stepSize: 10,
             font: {
-                  size: 12,
+                  size: fontSizeBase,
                   weight: 'bold'
                 },
                 color: colorPrimaryDarker,
                 callback: function(value) {
                   return value + '%';
-                }
+                },
+                maxTicksLimit: isMobile ? 6 : 11
               },
               grid: {
                 color: colorBorderLight,
@@ -1101,6 +1114,15 @@
         graficoDisciplinas.destroy();
       }
 
+      // Detectar se é mobile
+      const isMobileDisciplinas = window.innerWidth <= 768;
+      const fontSizeBaseDisciplinas = isMobileDisciplinas ? 11 : 12;
+      const fontSizeYDisciplinas = isMobileDisciplinas ? 11 : 13;
+      const tooltipPaddingDisciplinas = isMobileDisciplinas ? 8 : 12;
+      const tooltipFontSizeDisciplinas = isMobileDisciplinas ? 12 : 13;
+      const tooltipTitleSizeDisciplinas = isMobileDisciplinas ? 12 : 14;
+      const barThicknessDisciplinas = isMobileDisciplinas ? 20 : 28;
+
       // Obter cores das variáveis CSS para Chart.js
       const rootDisciplinas = getComputedStyle(document.documentElement);
       const colorPrimaryDisciplinas = rootDisciplinas.getPropertyValue('--color-primary').trim() || '#008cc4';
@@ -1127,7 +1149,7 @@
             data: medias.length > 0 ? medias : [0],
             backgroundColor: colorPrimaryDisciplinas,
             borderRadius: 8,
-            barThickness: 28,
+            barThickness: barThicknessDisciplinas,
           }]
         },
         options: {
@@ -1141,13 +1163,13 @@
             },
             tooltip: {
               backgroundColor: colorPrimaryDarkerDisciplinas,
-              padding: 12,
+              padding: tooltipPaddingDisciplinas,
               titleFont: {
-                size: 14,
+                size: tooltipTitleSizeDisciplinas,
                 weight: '600'
               },
               bodyFont: {
-                size: 13
+                size: tooltipFontSizeDisciplinas
               },
               cornerRadius: 8,
               callbacks: {
@@ -1169,9 +1191,10 @@
               ticks: {
                 callback: value => `${value}%`,
                 font: {
-                  size: 12
+                  size: fontSizeBaseDisciplinas
                 },
-                color: colorTextLightDisciplinas
+                color: colorTextLightDisciplinas,
+                maxTicksLimit: isMobileDisciplinas ? 5 : 10
               },
               grid: {
                 color: colorBorderLightDisciplinas
@@ -1179,8 +1202,9 @@
             },
             y: {
               ticks: {
-                font: { size: 13, weight: '500' },
-                color: colorTextDisciplinas
+                font: { size: fontSizeYDisciplinas, weight: '500' },
+                color: colorTextDisciplinas,
+                maxTicksLimit: isMobileDisciplinas ? 8 : undefined
               },
               grid: { display: false }
             }

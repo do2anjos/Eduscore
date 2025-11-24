@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Home</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="utils.js" defer></script>
 </head>
+
 <body>
   <!-- Skip Links para navegação por teclado -->
   <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
   <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-  
+
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
-        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil" />
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
@@ -41,7 +43,8 @@
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile na mesma linha -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -56,9 +59,26 @@
               <p class="user-score"><strong>Coordenador</strong></p>
             </div>
             <ul>
-              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
-              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
-              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path>
+                    <path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path>
+                    <path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path>
+                  </svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" x2="9" y1="12" y2="12"></line>
+                  </svg> Sair</a></li>
             </ul>
           </div>
         </div>
@@ -78,8 +98,10 @@
             <h3>Alunos Ativos</h3>
             <span class="metric-icon">👤</span>
           </div>
-          <div class="metric-card-content" style="display: flex; align-items: center; justify-content: center; min-height: 180px;">
-            <div class="metric-value" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+          <div class="metric-card-content"
+            style="display: flex; align-items: center; justify-content: center; min-height: 180px;">
+            <div class="metric-value"
+              style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
               <span class="value-number" id="totalAlunosNumero">0</span>
               <span class="value-label" id="totalAlunosLegenda">alunos cadastrados</span>
             </div>
@@ -92,12 +114,9 @@
             <span class="metric-icon">📈</span>
           </div>
           <div class="metric-card-content" style="min-height: 200px;">
-            <canvas 
-              id="progressChart" 
-              role="img"
+            <canvas id="progressChart" role="img"
               aria-label="Gráfico de progresso mensal mostrando a média de acertos ao longo do tempo"
-              style="max-width: 100%; height: 180px !important;"
-            ></canvas>
+              style="max-width: 100%; height: 180px !important;"></canvas>
           </div>
         </div>
 
@@ -119,12 +138,8 @@
             <h3>Retenção por Disciplina</h3>
           </div>
           <div class="metric-card-content" style="min-height: 350px;">
-            <canvas 
-              id="retencaoChart" 
-              role="img"
-              aria-label="Gráfico de retenção por disciplina mostrando taxa de erro"
-              style="max-width: 100%; height: 320px !important;"
-            ></canvas>
+            <canvas id="retencaoChart" role="img" aria-label="Gráfico de retenção por disciplina mostrando taxa de erro"
+              style="max-width: 100%; height: 320px !important;"></canvas>
           </div>
         </div>
       </div>
@@ -132,9 +147,26 @@
   </div>
 
   <script>
+    let chartProgresso = null;
+    let chartRetencao = null;
+
     document.addEventListener('DOMContentLoaded', async () => {
       await loadUserData();
       await carregarDashboard();
+      
+      // Redesenhar gráficos ao redimensionar a janela
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          if (chartProgresso) {
+            chartProgresso.resize();
+          }
+          if (chartRetencao) {
+            chartRetencao.resize();
+          }
+        }, 250);
+      });
     });
 
     async function carregarDashboard() {
@@ -179,7 +211,7 @@
     async function carregarTotalAlunos() {
       const token = localStorage.getItem('token');
       if (!token) return;
-      
+
       try {
         const resp = await apiFetch('/api/alunos', {
           headers: {
@@ -213,100 +245,114 @@
     function renderizarProgresso(stats) {
       const token = localStorage.getItem('token');
       if (!token) return;
-      
+
+      // Detectar se é mobile
+      const isMobile = window.innerWidth <= 768;
+      const fontSizeBase = isMobile ? 11 : 12;
+      const fontSizeSmall = isMobile ? 10 : 11;
+      const tooltipPadding = isMobile ? 8 : 12;
+      const tooltipFontSize = isMobile ? 12 : 13;
+      const tooltipTitleSize = isMobile ? 12 : 14;
+
       apiFetch('/api/relatorios/estatisticas-mensal', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
-      .then(r => r.ok ? r.json() : Promise.reject(r))
-      .then(data => {
-        const series = Array.isArray(data.series) ? data.series : [];
-        const labels = series.map(s => {
-          // Formatar YYYY-MM para MMM/YY
-          const [y, m] = (s.mes || '').split('-');
-          if (!y || !m) return s.mes || 'N/A';
-          const date = new Date(Number(y), Number(m) - 1, 1);
-          return date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-        });
-        const valores = series.map(s => Number(s.media || 0));
-        
-        // Obter cores das variáveis CSS para Chart.js
-        const root = getComputedStyle(document.documentElement);
-        const colorPrimary = root.getPropertyValue('--color-primary').trim() || '#008cc4';
-        const colorPrimaryDarker = root.getPropertyValue('--color-primary-darker').trim() || '#003b54';
-        const colorTextLight = root.getPropertyValue('--color-text-light').trim() || '#666666';
-        const colorBorderLight = root.getPropertyValue('--color-border-light').trim() || '#e0e0e0';
+        .then(r => r.ok ? r.json() : Promise.reject(r))
+        .then(data => {
+          const series = Array.isArray(data.series) ? data.series : [];
+          const labels = series.map(s => {
+            // Formatar YYYY-MM para MMM/YY
+            const [y, m] = (s.mes || '').split('-');
+            if (!y || !m) return s.mes || 'N/A';
+            const date = new Date(Number(y), Number(m) - 1, 1);
+            return date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+          });
+          const valores = series.map(s => Number(s.media || 0));
 
-        new Chart(document.getElementById('progressChart'), {
-          type: 'bar',
-          data: {
-            labels: labels.length ? labels : ['Sem dados'],
-            datasets: [{
-              label: 'Média mensal (%)',
-              data: valores.length ? valores : [0],
-              backgroundColor: colorPrimary,
-              borderRadius: 8,
-              borderSkipped: false,
-            }]
-          },
-          options: {
-            plugins: { 
-              legend: { display: false },
-              tooltip: {
-                backgroundColor: colorPrimaryDarker,
-                padding: 12,
-                titleFont: { size: 14, weight: '600' },
-                bodyFont: { size: 13 },
-                cornerRadius: 8,
-                callbacks: { label: ctx => `${ctx.parsed.y.toFixed(1)}%` }
-              }
+          // Obter cores das variáveis CSS para Chart.js
+          const root = getComputedStyle(document.documentElement);
+          const colorPrimary = root.getPropertyValue('--color-primary').trim() || '#008cc4';
+          const colorPrimaryDarker = root.getPropertyValue('--color-primary-darker').trim() || '#003b54';
+          const colorTextLight = root.getPropertyValue('--color-text-light').trim() || '#666666';
+          const colorBorderLight = root.getPropertyValue('--color-border-light').trim() || '#e0e0e0';
+
+          chartProgresso = new Chart(document.getElementById('progressChart'), {
+            type: 'bar',
+            data: {
+              labels: labels.length ? labels : ['Sem dados'],
+              datasets: [{
+                label: 'Média mensal (%)',
+                data: valores.length ? valores : [0],
+                backgroundColor: colorPrimary,
+                borderRadius: 8,
+                borderSkipped: false,
+              }]
             },
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { 
-              y: { 
-                beginAtZero: true,
-                max: 100,
-                ticks: {
-                  font: { size: 12 },
-                  color: colorTextLight,
-                  callback: v => `${v}%`
-                },
-                grid: { color: colorBorderLight }
+            options: {
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: colorPrimaryDarker,
+                  padding: tooltipPadding,
+                  titleFont: { size: tooltipTitleSize, weight: '600' },
+                  bodyFont: { size: tooltipFontSize },
+                  cornerRadius: 8,
+                  callbacks: { label: ctx => `${ctx.parsed.y.toFixed(1)}%` }
+                }
               },
-              x: {
-                ticks: { font: { size: 12 }, color: colorTextLight },
-                grid: { display: false }
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 100,
+                  ticks: {
+                    font: { size: fontSizeBase },
+                    color: colorTextLight,
+                    callback: v => `${v}%`,
+                    maxTicksLimit: isMobile ? 5 : 10
+                  },
+                  grid: { color: colorBorderLight }
+                },
+                x: {
+                  ticks: { 
+                    font: { size: fontSizeSmall }, 
+                    color: colorTextLight,
+                    maxRotation: isMobile ? 45 : 0,
+                    minRotation: isMobile ? 45 : 0
+                  },
+                  grid: { display: false }
+                }
               }
             }
-          }
+          });
+        })
+        .catch((error) => {
+          console.error('Erro ao carregar progresso mensal:', error);
+          const root = getComputedStyle(document.documentElement);
+          const colorPrimary = root.getPropertyValue('--color-primary').trim() || '#008cc4';
+
+          chartProgresso = new Chart(document.getElementById('progressChart'), {
+            type: 'bar',
+            data: {
+              labels: ['Sem dados'],
+              datasets: [{
+                label: 'Média mensal (%)',
+                data: [0],
+                backgroundColor: colorPrimary,
+                borderRadius: 8
+              }]
+            },
+            options: {
+              plugins: { legend: { display: false } },
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
         });
-      })
-      .catch((error) => {
-        console.error('Erro ao carregar progresso mensal:', error);
-        const root = getComputedStyle(document.documentElement);
-        const colorPrimary = root.getPropertyValue('--color-primary').trim() || '#008cc4';
-        
-        new Chart(document.getElementById('progressChart'), {
-          type: 'bar',
-          data: { 
-            labels: ['Sem dados'], 
-            datasets: [{ 
-              label: 'Média mensal (%)', 
-              data: [0], 
-              backgroundColor: colorPrimary, 
-              borderRadius: 8 
-            }]
-          },
-          options: { 
-            plugins: { legend: { display: false }}, 
-            responsive: true, 
-            maintainAspectRatio: false 
-          }
-        });
-      });
     }
 
     function renderizarRetencao(stats) {
@@ -318,13 +364,22 @@
         const taxaErroB = Number(b.taxa_erro || 0);
         return taxaErroB - taxaErroA; // Descendente: maior para menor
       });
-      
+
       const labels = disciplinasOrdenadas.map(d => d.nome);
       const valores = disciplinasOrdenadas.map(d => Number(d.taxa_erro || 0));
-      
+
       // Armazenar dados completos para tooltip
       const dadosCompletos = disciplinasOrdenadas;
-      
+
+      // Detectar se é mobile
+      const isMobile = window.innerWidth <= 768;
+      const fontSizeBase = isMobile ? 11 : 12;
+      const fontSizeY = isMobile ? 11 : 13;
+      const tooltipPadding = isMobile ? 8 : 12;
+      const tooltipFontSize = isMobile ? 12 : 13;
+      const tooltipTitleSize = isMobile ? 12 : 14;
+      const barThickness = isMobile ? 20 : 28;
+
       // Obter cores das variáveis CSS para Chart.js
       const root = getComputedStyle(document.documentElement);
       const colorError = root.getPropertyValue('--color-error').trim() || '#dc3545';
@@ -332,17 +387,17 @@
       const colorTextLight = root.getPropertyValue('--color-text-light').trim() || '#666666';
       const colorText = root.getPropertyValue('--color-text').trim() || '#333333';
       const colorBorderLight = root.getPropertyValue('--color-border-light').trim() || '#e0e0e0';
- 
-      new Chart(document.getElementById('retencaoChart'), {
+
+      chartRetencao = new Chart(document.getElementById('retencaoChart'), {
         type: 'bar',
         data: {
           labels: labels.length ? labels : ['Sem dados'],
-            datasets: [{
+          datasets: [{
             label: 'Retenção (%)',
             data: valores.length ? valores : [0],
             backgroundColor: colorError,
             borderRadius: 8,
-            barThickness: 28,
+            barThickness: barThickness,
           }]
         },
         options: {
@@ -353,9 +408,9 @@
             legend: { display: false },
             tooltip: {
               backgroundColor: colorPrimaryDarker,
-              padding: 12,
-              titleFont: { size: 14, weight: '600' },
-              bodyFont: { size: 13 },
+              padding: tooltipPadding,
+              titleFont: { size: tooltipTitleSize, weight: '600' },
+              bodyFont: { size: tooltipFontSize },
               cornerRadius: 8,
               callbacks: {
                 label: context => {
@@ -374,15 +429,17 @@
               max: 100,
               ticks: {
                 callback: value => `${value}%`,
-                font: { size: 12 },
-                color: colorTextLight
+                font: { size: fontSizeBase },
+                color: colorTextLight,
+                maxTicksLimit: isMobile ? 5 : 10
               },
               grid: { color: colorBorderLight }
             },
             y: {
               ticks: {
-                font: { size: 13, weight: '500' },
-                color: colorText
+                font: { size: fontSizeY, weight: '500' },
+                color: colorText,
+                maxTicksLimit: isMobile ? 8 : undefined
               },
               grid: { display: false }
             }
@@ -393,4 +450,5 @@
   </script>
 
 </body>
+
 </html>

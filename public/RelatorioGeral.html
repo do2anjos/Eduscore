@@ -313,6 +313,15 @@
       });
       const medias = dadosOrdenados.map(d => d.media);
 
+      // Detectar se é mobile
+      const isMobile = window.innerWidth <= 768;
+      const fontSizeBase = isMobile ? 11 : 12;
+      const fontSizeY = isMobile ? 11 : 13;
+      const tooltipPadding = isMobile ? 8 : 12;
+      const tooltipFontSize = isMobile ? 12 : 13;
+      const tooltipTitleSize = isMobile ? 12 : 14;
+      const barThickness = isMobile ? 20 : 28;
+
       // Obter cores das variáveis CSS para Chart.js
       const root = getComputedStyle(document.documentElement);
       const colorPrimary = root.getPropertyValue('--color-primary').trim() || '#008cc4';
@@ -330,7 +339,7 @@
             data: medias.length > 0 ? medias : [0],
             backgroundColor: colorPrimary,
             borderRadius: 8,
-            barThickness: 28,
+            barThickness: barThickness,
           }]
         },
         options: {
@@ -343,13 +352,13 @@
             },
             tooltip: {
               backgroundColor: colorPrimaryDarker,
-              padding: 12,
+              padding: tooltipPadding,
               titleFont: {
-                size: 14,
+                size: tooltipTitleSize,
                 weight: '600'
               },
               bodyFont: {
-                size: 13
+                size: tooltipFontSize
               },
               cornerRadius: 8,
               callbacks: {
@@ -364,9 +373,10 @@
               ticks: {
                 callback: value => `${value}%`,
                 font: {
-                  size: 12
+                  size: fontSizeBase
                 },
-                color: colorTextLight
+                color: colorTextLight,
+                maxTicksLimit: isMobile ? 5 : 10
               },
               grid: {
                 color: colorBorderLight
@@ -375,10 +385,11 @@
             y: {
               ticks: {
                 font: {
-                  size: 13,
+                  size: fontSizeY,
                   weight: '500'
                 },
-                color: colorText
+                color: colorText,
+                maxTicksLimit: isMobile ? 8 : undefined
               },
               grid: {
                 display: false

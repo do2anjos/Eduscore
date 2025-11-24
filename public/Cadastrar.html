@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cadastrar Aluno - EduScore</title>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="utils.js" defer></script>
 </head>
+
 <body>
   <!-- Skip Links para navegação por teclado -->
   <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
   <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-  
+
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
-        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
+        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil" />
         <span style="opacity: 0;"><!-- Carregando... --></span>
       </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
@@ -40,7 +43,8 @@
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -55,9 +59,26 @@
               <p class="user-score"><strong>Coordenador</strong></p>
             </div>
             <ul>
-              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
-              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
-              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path>
+                    <path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path>
+                    <path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path>
+                  </svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" x2="9" y1="12" y2="12"></line>
+                  </svg> Sair</a></li>
             </ul>
           </div>
         </div>
@@ -70,134 +91,85 @@
           <p class="dashboard-subtitle" style="margin: 0;">Preencha os dados do aluno para cadastrá-lo na plataforma</p>
         </div>
       </div>
-      
+
       <!-- Formulário em Card -->
       <div class="card" style="max-width: 800px; margin: var(--spacing-xl) auto 0; padding: var(--spacing-3xl);">
         <div class="card-header" style="margin-bottom: var(--spacing-xl);">
           <h3 class="card-title" style="margin: 0; color: var(--color-primary-darker);">Informações do Aluno</h3>
         </div>
-        <form id="cadastroAlunoForm" onsubmit="handleCadastroAluno(event)" style="display: flex; flex-direction: column; gap: var(--spacing-xl);">
+        <form id="cadastroAlunoForm" onsubmit="handleCadastroAluno(event)"
+          style="display: flex; flex-direction: column; gap: var(--spacing-xl);">
           <div class="input-group">
             <label for="nome">
-              Nome Completo 
+              Nome Completo
               <span class="required-field"></span>
             </label>
-            <input 
-              type="text" 
-              id="nome" 
-              name="nome" 
-              placeholder="Digite o nome completo do aluno" 
-              required 
-              autocomplete="name"
-              aria-label="Nome completo do aluno"
-              aria-describedby="nome-hint"
-              aria-required="true"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-            />
+            <input type="text" id="nome" name="nome" placeholder="Digite o nome completo do aluno" required
+              autocomplete="name" aria-label="Nome completo do aluno" aria-describedby="nome-hint" aria-required="true"
+              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
             <span id="nome-hint" class="input-hint">Nome completo conforme documento de identidade</span>
           </div>
 
           <div class="input-group">
             <label for="matricula">
-              Matrícula 
+              Matrícula
               <span class="required-field"></span>
             </label>
-            <input 
-              type="text" 
-              id="matricula" 
-              name="matricula" 
-              placeholder="Digite a matrícula do aluno" 
-              required 
-              autocomplete="off"
-              aria-label="Matrícula do aluno"
-              aria-describedby="matricula-hint"
-              aria-required="true"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-            />
+            <input type="text" id="matricula" name="matricula" placeholder="Digite a matrícula do aluno" required
+              autocomplete="off" aria-label="Matrícula do aluno" aria-describedby="matricula-hint" aria-required="true"
+              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
             <span id="matricula-hint" class="input-hint">Matrícula única do aluno na instituição</span>
           </div>
 
           <div class="input-group">
             <label for="email">
-              E-mail 
+              E-mail
               <span class="required-field"></span>
             </label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              placeholder="exemplo@email.com" 
-              required 
-              autocomplete="email"
-              aria-label="Email do aluno"
-              aria-describedby="email-hint"
-              aria-required="true"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-            />
+            <input type="email" id="email" name="email" placeholder="exemplo@email.com" required autocomplete="email"
+              aria-label="Email do aluno" aria-describedby="email-hint" aria-required="true"
+              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
             <span id="email-hint" class="input-hint">Email para contato e comunicação</span>
           </div>
 
           <div class="input-group">
             <label for="telefone">
-              Telefone do Responsável 
+              Telefone do Responsável
               <span class="required-field"></span>
             </label>
-            <input 
-              type="tel" 
-              id="telefone" 
-              name="telefone" 
-              placeholder="(99) 99999-9999" 
-              required 
-              autocomplete="tel"
-              aria-label="Telefone do responsável"
-              aria-describedby="telefone-hint"
-              aria-required="true"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-            />
+            <input type="tel" id="telefone" name="telefone" placeholder="(99) 99999-9999" required autocomplete="tel"
+              aria-label="Telefone do responsável" aria-describedby="telefone-hint" aria-required="true"
+              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
             <span id="telefone-hint" class="input-hint">Formato: (XX) XXXXX-XXXX</span>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
             <style>
               @media (max-width: 768px) {
-                #cadastroAlunoForm > div[style*="grid-template-columns"] {
+                #cadastroAlunoForm>div[style*="grid-template-columns"] {
                   grid-template-columns: 1fr !important;
                 }
               }
             </style>
             <div class="input-group">
               <label for="nascimento">
-                Data de Nascimento 
+                Data de Nascimento
                 <span class="required-field"></span>
               </label>
-              <input 
-                type="date" 
-                id="nascimento" 
-                name="nascimento" 
-                required 
-                max="2010-12-31"
-                aria-label="Data de nascimento do aluno"
-                aria-describedby="nascimento-hint"
-                aria-required="true"
-                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-              />
+              <input type="date" id="nascimento" name="nascimento" required max="2010-12-31"
+                aria-label="Data de nascimento do aluno" aria-describedby="nascimento-hint" aria-required="true"
+                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
               <span id="nascimento-hint" class="input-hint">Data de nascimento do aluno</span>
             </div>
 
             <div class="input-group">
               <label for="etapa">
-                Etapa 
+                Etapa
                 <span class="required-field"></span>
               </label>
-              <select 
-                id="etapa" 
-                name="etapa" 
-                required
-                aria-label="Etapa educacional do aluno"
-                aria-describedby="etapa-hint"
-                aria-required="true"
-                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
-              >
+              <select id="etapa" name="etapa" required aria-label="Etapa educacional do aluno"
+                aria-describedby="etapa-hint" aria-required="true"
+                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);">
                 <option value="">Selecione a etapa</option>
                 <option value="1º Ano">1º Ano</option>
                 <option value="2º Ano">2º Ano</option>
@@ -210,22 +182,13 @@
           <!-- Divisor visual -->
           <div style="height: 1px; background: var(--color-border-light); margin: var(--spacing-md) 0;"></div>
 
-          <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
-            <button 
-              type="button" 
-              class="btn-secondary" 
-              onclick="window.location.href='home.html'" 
-              aria-label="Cancelar cadastro e voltar para home"
-              style="flex: 1; min-width: 0;"
-            >
+          <div
+            style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+            <button type="button" class="btn-secondary" onclick="window.location.href='home.html'"
+              aria-label="Cancelar cadastro e voltar para home" style="flex: 1; min-width: 0;">
               Cancelar
             </button>
-            <button 
-              type="submit" 
-              class="btn-primary" 
-              aria-label="Cadastrar novo aluno"
-              style="flex: 1; min-width: 0;"
-            >
+            <button type="submit" class="btn-primary" aria-label="Cadastrar novo aluno" style="flex: 1; min-width: 0;">
               <span id="submitBtnText">Cadastrar Aluno</span>
               <span id="submitSpinner" class="loading-spinner" style="display: none;" aria-hidden="true"></span>
             </button>
@@ -238,7 +201,7 @@
   <script>
     async function handleCadastroAluno(event) {
       event.preventDefault();
-      
+
       // Validação (Heurística 5: Prevenção de erros)
       if (!validateForm(event.target)) {
         return;
@@ -258,7 +221,7 @@
       const btnText = document.getElementById('submitBtnText');
       const spinner = document.getElementById('submitSpinner');
       const submitBtn = event.target.querySelector('button[type="submit"]');
-      
+
       btnText.style.display = 'none';
       spinner.style.display = 'inline-block';
       submitBtn.disabled = true;
@@ -306,7 +269,7 @@
     }
 
     // Formatação de telefone (Heurística 5: Prevenção de erros)
-    document.getElementById('telefone')?.addEventListener('input', function(e) {
+    document.getElementById('telefone')?.addEventListener('input', function (e) {
       let value = e.target.value.replace(/\D/g, '');
       if (value.length > 11) value = value.substring(0, 11);
       if (value.length > 2) value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
@@ -315,4 +278,5 @@
     });
   </script>
 </body>
+
 </html>
