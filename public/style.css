@@ -3014,14 +3014,24 @@ button:active {
     max-height: 160px !important;
   }
 
-  /* Scroll horizontal para gráficos muito largos */
-  .metric-card-modern.full-width {
+  /* Scroll horizontal apenas para container de simulados (com tabela) */
+  #containerRelatorioSimulados.metric-card-modern.full-width {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  .metric-card-modern.full-width .metric-card-content {
+  #containerRelatorioSimulados.metric-card-modern.full-width .metric-card-content {
     min-width: 320px;
+  }
+
+  /* Garantir que gráficos não sejam afetados pelo overflow */
+  .metric-card-modern.full-width:not(#containerRelatorioSimulados) {
+    overflow-x: visible !important;
+  }
+
+  .metric-card-modern.full-width:not(#containerRelatorioSimulados) .metric-card-content {
+    min-width: auto !important;
+    overflow: visible !important;
   }
 
   /* Melhorar legibilidade de gráficos em mobile */
