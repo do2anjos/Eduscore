@@ -629,7 +629,7 @@ p {
     margin-top: var(--spacing-xs);
     opacity: 1;
   }
-  
+
   /* Se expandido via JS, manter visível mesmo sem hover */
   .dropdown.expanded .dropdown-options {
     display: flex !important;
@@ -2872,7 +2872,7 @@ button:active {
 
   /* Campo de busca com botão - layout vertical em mobile */
   /* Forçar layout vertical para divs que contêm botões */
-  .input-group > div {
+  .input-group>div {
     display: flex !important;
     flex-direction: column !important;
     gap: var(--spacing-sm) !important;
@@ -2880,7 +2880,7 @@ button:active {
   }
 
   /* Container do input */
-  .input-group > div > div {
+  .input-group>div>div {
     width: 100% !important;
     min-width: 0 !important;
     flex: 1 1 100% !important;
@@ -2888,9 +2888,9 @@ button:active {
   }
 
   /* Botão dentro do input-group - largura total em mobile */
-  .input-group > div button#btnBuscar,
-  .input-group > div button.btn-primary,
-  .input-group > div button[class*="btn"] {
+  .input-group>div button#btnBuscar,
+  .input-group>div button.btn-primary,
+  .input-group>div button[class*="btn"] {
     width: 100% !important;
     max-width: 100% !important;
     min-width: auto !important;
@@ -3650,7 +3650,7 @@ a.btn-secondary:hover {
     position: relative;
     /* Scrollbar mais visível em mobile */
     scrollbar-width: thin;
-    scrollbar-color: var(--color-primary) rgba(0,0,0,0.1);
+    scrollbar-color: var(--color-primary) rgba(0, 0, 0, 0.1);
   }
 
   #tabelaSimulados::-webkit-scrollbar {
@@ -3658,7 +3658,7 @@ a.btn-secondary:hover {
   }
 
   #tabelaSimulados::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
     border-radius: var(--radius-sm);
   }
 
@@ -3672,7 +3672,8 @@ a.btn-secondary:hover {
   }
 
   #tabelaSimulados table {
-    min-width: 800px; /* Largura mínima para manter legibilidade */
+    min-width: 800px;
+    /* Largura mínima para manter legibilidade */
     font-size: var(--font-size-sm) !important;
   }
 
@@ -3728,7 +3729,7 @@ a.btn-secondary:hover {
     width: 100%;
     max-width: 100%;
     scrollbar-width: thin;
-    scrollbar-color: var(--color-primary) rgba(0,0,0,0.1);
+    scrollbar-color: var(--color-primary) rgba(0, 0, 0, 0.1);
   }
 
   div[id^="conteudo-detalhes-"] div[style*="overflow-x: auto"]::-webkit-scrollbar,
@@ -3738,7 +3739,7 @@ a.btn-secondary:hover {
 
   div[id^="conteudo-detalhes-"] div[style*="overflow-x: auto"]::-webkit-scrollbar-track,
   div[id^="conteudo-detalhes-"] div[style*="overflow-x:auto"]::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
     border-radius: var(--radius-sm);
   }
 
@@ -3751,7 +3752,8 @@ a.btn-secondary:hover {
   /* Tabela dentro dos detalhes */
   div[id^="conteudo-detalhes-"] table {
     font-size: var(--font-size-xs) !important;
-    min-width: 400px; /* Largura mínima para manter legibilidade das 4 colunas */
+    min-width: 400px;
+    /* Largura mínima para manter legibilidade das 4 colunas */
     width: 100%;
   }
 
@@ -3764,5 +3766,39 @@ a.btn-secondary:hover {
   div[id^="conteudo-detalhes-"] tbody td {
     padding: var(--spacing-xs) var(--spacing-sm) !important;
     font-size: var(--font-size-xs) !important;
+  }
+
+  /* ==================== */
+  /* FORMULÁRIO DE PERFIL/CADASTRO RESPONSIVO */
+  /* ==================== */
+
+  /* Ajuste do Grid de Cadastro/Perfil (transforma 2 colunas em 1) */
+  .section-container>div>div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+    gap: var(--spacing-lg) !important;
+  }
+
+  /* Ajuste dos Cards */
+  .card {
+    padding: var(--spacing-lg) !important;
+    width: 100% !important;
+  }
+
+  /* Ajuste dos Inputs */
+  .input-group {
+    max-width: 100% !important;
+  }
+
+  /* Ajuste da Foto de Perfil */
+  .card:first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100% !important;
+  }
+
+  /* Ajuste do Título */
+  .section-title {
+    font-size: var(--font-size-2xl) !important;
   }
 }
