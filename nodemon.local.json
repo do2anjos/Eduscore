@@ -1,0 +1,11 @@
+{
+    "env": {
+        "FORCE_LOCAL": "true"
+    },
+    "watch": [
+        "backend",
+        "public",
+        "server.js"
+    ],
+    "ext": "js,json,html,css"
+}
