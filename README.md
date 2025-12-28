@@ -1,4 +1,38 @@
-# EduScore - Plataforma Integrada de Analytics Educacional
+# EduScore - Sistema de Correção de Provas
+
+## 📱 Nova Funcionalidade Mobile (v2.0)
+O sistema agora conta com **Detecção ao Vivo (Live Detection)** para correção de provas ENEM via celular.
+
+### Como usar no Mobile:
+1. Acesse o sistema pelo celular.
+2. Vá em **Corrigir Simulado** > Selecione o Aluno > Clique em **Próximo**.
+3. A câmera abrirá **automaticamente** (sem botão de upload).
+4. Aponte para a folha de resposta ENEM.
+5. Aguarde o quadrado ficar **VERDE** 🟩 e clique no botão de captura.
+
+**Tecnologia:**
+- Backend: YOLOv8/11 (Detecção de Objetos) + Tesseract (OCR Dia 1/2).
+- Frontend: Detecção em tempo real via API (`/api/respostas/processar-frame-mobile`).
+
+---
+
+## 🚀 Como Fazer Deploy no Render.com
+
+Para evitar erros de memória no plano Free (512MB RAM), siga estes passos:
+
+1. **Build Command**: Configure na dashboard do Render:
+   ```bash
+   ./render-build.sh
+   ```
+   *(Isso instala as dependências leves do sistema como Tesseract e OpenCV Headless)*
+
+2. **Variáveis de Ambiente**:
+   - `NODE_VERSION`: `20` (ou superior)
+   - `JWT_SECRET`: (Seu segredo)
+
+---
+
+## 🛠️ Instalação Locals Educacional
 
 > **EduScore: From digitizing answer sheets to predicting performance using machine learning, an integrated educational analytics platform for the context of university entrance exams in Amazonas**
 
