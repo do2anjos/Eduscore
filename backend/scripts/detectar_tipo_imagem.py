@@ -3,6 +3,51 @@ import numpy as np
 import sys
 import json
 import os
+from pathlib import Path
+
+def verificar_enem_com_yolo(caminho_imagem):
+    """
+    Verifica se a imagem é uma folha ENEM usando detector YOLO
+    
+    Returns:
+        tuple: (is_enem, tipo_enem)
+        - is_enem: bool indicando se é folha ENEM
+        - tipo_enem: "enem_completo" se detectar day_region + answer_area,
+                     "enem_recorte" se detectar apenas answer_area,
+                     None caso contrário
+    """
+    try:
+        script_dir = Path(__file__).parent
+        detector_path = script_dir / "detector_yolo_enem.py"
+        
+        if not detector_path.exists():
+            return False, None
+        
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("detector_yolo_enem", detector_path)
+        detector_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(detector_module)
+        
+        resultado = detector_module.detect_rois(caminho_imagem)
+        
+        if not resultado['sucesso']:
+            return False, None
+        
+        rois = resultado.get('rois', {})
+        tem_day_region = 'day_region' in rois and len(rois['day_region']) > 0
+        tem_answer_area = 'answer_area_enem' in rois and len(rois['answer_area_enem']) > 0
+        
+        if tem_day_region and tem_answer_area:
+            return True, "enem_completo"
+        elif tem_answer_area:
+            return True, "enem_recorte"
+        else:
+            return False, None
+            
+    except Exception as e:
+        print(f"[DETECTAR-TIPO] Erro ao verificar ENEM com YOLO: {e}", file=sys.stderr)
+        return False, None
+
 
 def carregar_imagem(caminho):
     """
@@ -24,16 +69,26 @@ def carregar_imagem(caminho):
 def detectar_tipo_imagem(caminho_imagem):
     """
     Detecta se a imagem já está processada (corrigida em perspectiva) ou se precisa de processamento.
+    Também detecta se é uma folha ENEM (completa ou recorte).
     
     Retorna:
+        "enem_completo": folha ENEM completa detectada (day_region + answer_area_enem)
+        "enem_recorte": apenas answer_area_enem detectada
         "processada": se a imagem já está retificada e pronta para detecção
         "original": se a imagem precisa de correção de perspectiva
     """
     
+    # PRIORIDADE 1: Verificar se é folha ENEM usando YOLO
+    is_enem, tipo_enem = verificar_enem_com_yolo(caminho_imagem)
+    if is_enem and tipo_enem:
+        return tipo_enem
+    
+    # PRIORIDADE 2: Continuar com detecção tradicional se não for ENEM
     # Carregar imagem
     imagem = carregar_imagem(caminho_imagem)
     if imagem is None:
         raise ValueError(f"Erro ao carregar a imagem: {caminho_imagem}")
+
     
     altura, largura = imagem.shape[:2]
     

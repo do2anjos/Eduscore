@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,11 +9,12 @@
   <link rel="stylesheet" href="style.css" />
   <script src="utils.js" defer></script>
 </head>
+
 <body>
   <!-- Skip Links para navegação por teclado -->
   <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
   <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-  
+
   <div class="home-container">
     <aside class="sidebar">
       <div class="profile" id="sidebar-profile">
@@ -21,11 +23,15 @@
       </div>
       <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
         <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home</a>
-        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório</a>
-        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar</a>
-        
+        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" />
+          Gerar Relatório</a>
+        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" />
+          Cadastrar</a>
+
         <div class="dropdown">
-          <a href="#" class="active" aria-current="page" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
+          <a href="#" class="active" aria-current="page"
+            onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false"
+            aria-haspopup="true">
             <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
             <span class="dropdown-arrow">▶</span>
           </a>
@@ -35,13 +41,15 @@
           </div>
         </div>
 
-        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão</a>
+        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" />
+          Agendar Sessão</a>
       </nav>
     </aside>
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
         <nav class="breadcrumb" aria-label="Breadcrumb" style="margin: 0;">
           <a href="home.html">Home</a>
           <span class="breadcrumb-separator">/</span>
@@ -56,9 +64,26 @@
               <p class="user-score"><strong>Professor</strong></p>
             </div>
             <ul>
-              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Meu Perfil</a></li>
-              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path><path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path><path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path></svg> Configurações</a></li>
-              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg> Sair</a></li>
+              <li><a href="meuperfil.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg> Meu Perfil</a></li>
+              <li><a href="configuracoes.html"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M12.22 2h-4.44a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.88z"></path>
+                    <path d="M18 2h-2.17a2 2 0 0 0-1.41.59L12 5l-2.41-2.41A2 2 0 0 0 8.17 2H6"></path>
+                    <path d="M9.5 2a2.83 2.83 0 0 1 5 0"></path>
+                  </svg> Configurações</a></li>
+              <li><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" x2="9" y1="12" y2="12"></line>
+                  </svg> Sair</a></li>
             </ul>
           </div>
         </div>
@@ -66,42 +91,45 @@
 
       <!-- Header -->
       <div class="dashboard-header">
-        <div style="display: flex; align-items: center; justify-content: center; width: 100%; gap: var(--spacing-md); position: relative;">
-          <button id="voltarBtn" onclick="previousStep()" class="voltar-btn-inline" aria-label="Voltar passo anterior" style="display: none; position: absolute; left: 0;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
+        <div
+          style="display: flex; align-items: center; justify-content: center; width: 100%; gap: var(--spacing-md); position: relative;">
+          <button id="voltarBtn" onclick="previousStep()" class="voltar-btn-inline" aria-label="Voltar passo anterior"
+            style="display: none; position: absolute; left: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Voltar
           </button>
-          <span id="alunoInfo" style="font-size: var(--font-size-lg); font-weight: 600; color: var(--color-primary-darker);">Ler código!</span>
+          <span id="alunoInfo"
+            style="font-size: var(--font-size-lg); font-weight: 600; color: var(--color-primary-darker);">Ler
+            código!</span>
         </div>
       </div>
 
       <!-- Step 1: Identificar Aluno -->
       <div class="step active" id="step1">
         <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
-          <img src="https://img.icons8.com/material-outlined/96/000000/barcode-scanner.png" alt="Código de Barras" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
-          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">IDENTIFICAR ALUNO</h3>
-          <p style="color: var(--color-text-light); margin-bottom: var(--spacing-xl); font-size: var(--font-size-base);">Digite ou escaneie o código de barras/matrícula do aluno</p>
-          <div style="margin: var(--spacing-xl) 0; display: flex; justify-content: center; align-items: center; flex-direction: column;">
-            <input 
-              type="text" 
-              id="codigoAlunoInput" 
-              placeholder="Digite o código ou matrícula"
-              oninput="verificarCodigo()"
-              aria-label="Código de barras ou matrícula do aluno"
+          <img src="https://img.icons8.com/material-outlined/96/000000/barcode-scanner.png" alt="Código de Barras"
+            style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
+          <h3
+            style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">
+            IDENTIFICAR ALUNO</h3>
+          <p
+            style="color: var(--color-text-light); margin-bottom: var(--spacing-xl); font-size: var(--font-size-base);">
+            Digite ou escaneie o código de barras/matrícula do aluno</p>
+          <div
+            style="margin: var(--spacing-xl) 0; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+            <input type="text" id="codigoAlunoInput" placeholder="Digite o código ou matrícula"
+              oninput="verificarCodigo()" aria-label="Código de barras ou matrícula do aluno"
               aria-describedby="codigoAlunoHint"
-              style="padding: var(--spacing-md); width: 100%; max-width: 400px; border-radius: var(--radius-md); border: 1px solid var(--color-border); text-align: center; font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-            />
-            <span id="codigoAlunoHint" class="sr-only">Digite ou escaneie o código de barras ou matrícula do aluno</span>
+              style="padding: var(--spacing-md); width: 100%; max-width: 400px; border-radius: var(--radius-md); border: 1px solid var(--color-border); text-align: center; font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
+            <span id="codigoAlunoHint" class="sr-only">Digite ou escaneie o código de barras ou matrícula do
+              aluno</span>
           </div>
-          <button 
-            id="btnProximoAluno" 
-            class="btn-primary" 
-            onclick="nextStep()" 
+          <button id="btnProximoAluno" class="btn-primary" onclick="nextStep()"
             aria-label="Prosseguir para próximo passo"
-            style="display:none; margin: 0 auto; width: 100%; max-width: 400px;"
-          >
+            style="display:none; margin: 0 auto; width: 100%; max-width: 400px;">
             Próximo
           </button>
         </div>
@@ -109,43 +137,66 @@
 
       <!-- Step 2: Anexar Foto -->
       <div class="step" id="step2">
-        <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
-          <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Anexar Foto" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
-          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">ANEXAR FOTO</h3>
-          <p style="color: var(--color-text-light); margin-bottom: var(--spacing-xl); font-size: var(--font-size-base);">Selecione a foto da folha de resposta do aluno</p>
-          <input 
-            type="file" 
-            id="fotoInput" 
-            accept="image/*" 
-            style="display: none;" 
-            onchange="handleFileUpload(event)"
-            aria-label="Selecionar foto da folha de resposta"
-          />
-          <button 
-            class="btn-primary" 
-            onclick="document.getElementById('fotoInput').click()" 
-            aria-label="Abrir seletor de arquivo para anexar foto"
-            style="width: 100%; max-width: 400px;"
-          >
-            Anexar foto
+        <!-- Interface DESKTOP (upload tradicional) - SEMPRE VISÍVEL POR PADRÃO -->
+        <div class="card" id="uploadInterface"
+          style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
+          <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Anexar Foto"
+            style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
+          <h3
+            style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">
+            ANEXAR FOTO</h3>
+          <p
+            style="color: var(--color-text-light); margin-bottom: var(--spacing-xl); font-size: var(--font-size-base);">
+            Selecione a foto da folha de resposta do aluno</p>
+
+          <input type="file" id="fotoInput" accept="image/*" style="display: none;" onchange="handleFileUpload(event)"
+            aria-label="Selecionar foto da folha de resposta" />
+          <button class="btn-secondary" onclick="document.getElementById('fotoInput').click()"
+            aria-label="Abrir seletor de arquivo para anexar foto" style="width: 100%; max-width: 400px;">
+            📁 Selecionar Arquivo
           </button>
+        </div>
+
+        <!-- Interface MOBILE (camera YOLO) - OCULTA, será mostrada pelo JS -->
+        <div id="cameraInterface"
+          style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; background: #000;">
+          <button onclick="fecharCameraMobile()"
+            style="position: absolute; top: 16px; left: 16px; z-index: 10000; background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+            ← Voltar
+          </button>
+
+          <video id="videoPreview" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+          <canvas id="canvasOverlay"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+
+          <div
+            style="position: absolute; bottom: 0; left: 0; right: 0; padding: 24px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); display: flex; flex-direction: column; align-items: center; gap: 16px;">
+            <div id="detectionFeedback"
+              style="padding: 12px 24px; border-radius: 12px; font-weight: 600; background: #f03e3e; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+              🔍 Procurando folha ENEM...
+            </div>
+
+            <button id="btnCapturarCamera" onclick="capturarDaCamera()" disabled
+              style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid white; background: #007aa3; cursor: pointer; font-size: 24px; opacity: 0.5;">
+              📷
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Step 3: Aluno Selecionado -->
       <div class="step" id="step3">
         <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
-          <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Documentos" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
-          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">Aluno Selecionado</h3>
+          <img src="https://img.icons8.com/material-outlined/96/000000/document--v1.png" alt="Documentos"
+            style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
+          <h3
+            style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">
+            Aluno Selecionado</h3>
           <div class="list-box" id="listaAlunos" style="margin: var(--spacing-xl) 0;">
             <!-- Aluno selecionado será carregado dinamicamente -->
           </div>
-          <button 
-            class="btn-primary" 
-            onclick="nextStep()" 
-            aria-label="Prosseguir para próximo passo"
-            style="width: 100%; max-width: 400px;"
-          >
+          <button class="btn-primary" onclick="nextStep()" aria-label="Prosseguir para próximo passo"
+            style="width: 100%; max-width: 400px;">
             Próximo
           </button>
         </div>
@@ -154,16 +205,19 @@
       <!-- Step 3.5: Respostas Capturadas -->
       <div class="step" id="step3_5">
         <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl);">
-          <img src="https://img.icons8.com/material-outlined/96/000000/view-file.png" alt="Visualizar Respostas" style="width: 96px; height: 96px; margin: 0 auto var(--spacing-lg); display: block;" />
-          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl); text-align: center;">Respostas Capturadas</h3>
-          <p id="alunoSelecionado" style="color: var(--color-text-light); margin-bottom: var(--spacing-lg); text-align: center; font-size: var(--font-size-base);">Confira as alternativas marcadas para o aluno:</p>
-          <div class="list-box" style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: var(--spacing-xl);" id="respostasCapturadas" role="region" aria-label="Lista de respostas capturadas"></div>
-          <button 
-            class="btn-primary" 
-            onclick="nextStep()" 
-            aria-label="Prosseguir para seleção de gabarito"
-            style="width: 100%; max-width: 400px; margin: 0 auto; display: block;"
-          >
+          <img src="https://img.icons8.com/material-outlined/96/000000/view-file.png" alt="Visualizar Respostas"
+            style="width: 96px; height: 96px; margin: 0 auto var(--spacing-lg); display: block;" />
+          <h3
+            style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl); text-align: center;">
+            Respostas Capturadas</h3>
+          <p id="alunoSelecionado"
+            style="color: var(--color-text-light); margin-bottom: var(--spacing-lg); text-align: center; font-size: var(--font-size-base);">
+            Confira as alternativas marcadas para o aluno:</p>
+          <div class="list-box"
+            style="max-height: 300px; overflow-y: auto; text-align: left; margin-bottom: var(--spacing-xl);"
+            id="respostasCapturadas" role="region" aria-label="Lista de respostas capturadas"></div>
+          <button class="btn-primary" onclick="nextStep()" aria-label="Prosseguir para seleção de gabarito"
+            style="width: 100%; max-width: 400px; margin: 0 auto; display: block;">
             Próximo
           </button>
         </div>
@@ -172,17 +226,17 @@
       <!-- Step 4: Selecionar Gabarito -->
       <div class="step" id="step4">
         <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
-          <img src="https://img.icons8.com/material-outlined/96/000000/test-passed.png" alt="Gabarito" style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
-          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">Selecionar Gabarito Cadastrado</h3>
-          <div class="list-box" id="gabaritoList" style="margin: var(--spacing-xl) 0;" role="listbox" aria-label="Lista de gabaritos disponíveis">
+          <img src="https://img.icons8.com/material-outlined/96/000000/test-passed.png" alt="Gabarito"
+            style="width: 96px; height: 96px; margin-bottom: var(--spacing-lg);" />
+          <h3
+            style="color: var(--color-primary-darker); margin-bottom: var(--spacing-md); font-size: var(--font-size-xl);">
+            Selecionar Gabarito Cadastrado</h3>
+          <div class="list-box" id="gabaritoList" style="margin: var(--spacing-xl) 0;" role="listbox"
+            aria-label="Lista de gabaritos disponíveis">
             <!-- Gabaritos serão carregados dinamicamente -->
           </div>
-          <button 
-            class="btn-primary" 
-            onclick="finalizar()" 
-            aria-label="Finalizar correção do simulado"
-            style="width: 100%; max-width: 400px;"
-          >
+          <button class="btn-primary" onclick="finalizar()" aria-label="Finalizar correção do simulado"
+            style="width: 100%; max-width: 400px;">
             Corrigir
           </button>
         </div>
@@ -191,9 +245,13 @@
       <!-- Step 5: Sucesso -->
       <div class="step" id="step5">
         <div class="card" style="max-width: 600px; margin: 0 auto; padding: var(--spacing-3xl); text-align: center;">
-          <img src="https://img.icons8.com/ios-filled/100/007aa3/checked--v1.png" alt="Sucesso" style="width: 100px; height: 100px; margin-bottom: var(--spacing-lg);" />
-          <h3 style="color: var(--color-primary-darker); margin-bottom: var(--spacing-xl); font-size: var(--font-size-xl);">Simulado corrigido<br>com sucesso</h3>
-          <a href="CorrigirSimulado.html" class="btn-primary" style="display: inline-block; text-decoration: none; width: 100%; max-width: 400px;">Voltar ao Início</a>
+          <img src="https://img.icons8.com/ios-filled/100/007aa3/checked--v1.png" alt="Sucesso"
+            style="width: 100px; height: 100px; margin-bottom: var(--spacing-lg);" />
+          <h3
+            style="color: var(--color-primary-darker); margin-bottom: var(--spacing-xl); font-size: var(--font-size-xl);">
+            Simulado corrigido<br>com sucesso</h3>
+          <a href="CorrigirSimulado.html" class="btn-primary"
+            style="display: inline-block; text-decoration: none; width: 100%; max-width: 400px;">Voltar ao Início</a>
         </div>
       </div>
     </main>
@@ -213,7 +271,316 @@
       await loadUserData();
       await carregarAlunos();
       await carregarGabaritos();
+
+      // Detectar se é mobile e mostrar botão de camera
+      detectarDispositivo();
     });
+
+    function detectarDispositivo() {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        // MOBILE: Forçar uso da camera YOLO
+        console.log('[MOBILE] Dispositivo móvel detectado - Forçando camera YOLO');
+
+        // Quando o Step 2 ficar ativo, iniciar camera automaticamente
+        const observador = new MutationObserver((mutations) => {
+          const step2 = document.getElementById('step2');
+          if (step2 && step2.classList.contains('active')) {
+            // Step 2 ativo no mobile - iniciar camera automaticamente
+            setTimeout(() => {
+              iniciarCameraMobile();
+            }, 300);
+            observador.disconnect();
+          }
+        });
+
+        // Observar mudanças no step2
+        const step2 = document.getElementById('step2');
+        if (step2) {
+          observador.observe(step2, { attributes: true, attributeFilter: ['class'] });
+        }
+      } else {
+        // DESKTOP: Manter upload tradicional (nada a fazer)
+        console.log('[DESKTOP] Dispositivo desktop - Upload tradicional');
+      }
+    }
+
+    // Variáveis globais para camera
+    let cameraStream = null;
+    let detectionInterval = null;
+    let cameraCanvas = null;
+    let cameraCtx = null;
+    let cameraVideo = null;
+
+    async function iniciarCameraMobile() {
+      try {
+        showLoading('Iniciando camera...');
+
+        // Ocultar interface de upload, mostrar interface de camera
+        document.getElementById('uploadInterface').style.display = 'none';
+        document.getElementById('cameraInterface').style.display = 'block';
+
+        // Elementos
+        cameraVideo = document.getElementById('videoPreview');
+        cameraCanvas = document.getElementById('canvasOverlay');
+        cameraCtx = cameraCanvas.getContext('2d');
+
+        // Acessar camera traseira
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+
+        cameraVideo.srcObject = cameraStream;
+
+        // Ajustar canvas quando video carregar
+        cameraVideo.addEventListener('loadedmetadata', () => {
+          cameraCanvas.width = cameraVideo.videoWidth;
+          cameraCanvas.height = cameraVideo.videoHeight;
+          hideLoading();
+          iniciarLiveDetection();
+        });
+
+      } catch (error) {
+        console.error('Erro ao acessar camera:', error);
+        hideLoading();
+        showToast('Erro ao acessar a camera. Verifique as permissões.', 'error');
+        fecharCameraMobile();
+      }
+    }
+
+    function fecharCameraMobile() {
+      // Parar camera
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+
+      // Parar detecção
+      if (detectionInterval) {
+        clearInterval(detectionInterval);
+        detectionInterval = null;
+      }
+
+      // Voltar para interface de upload
+      document.getElementById('cameraInterface').style.display = 'none';
+      document.getElementById('uploadInterface').style.display = 'block';
+    }
+
+    function iniciarLiveDetection() {
+      const feedbackEl = document.getElementById('detectionFeedback');
+      const btnCapturar = document.getElementById('btnCapturarCamera');
+
+      let isDetected = false;
+
+      // Loop de detecção a cada 800ms
+      detectionInterval = setInterval(async () => {
+        if (!cameraVideo || cameraVideo.readyState !== cameraVideo.HAVE_ENOUGH_DATA) {
+          return;
+        }
+
+        try {
+          // Capturar frame
+          const frameBlob = await capturarFrameAtualCamera();
+
+          // Enviar para backend
+          const token = localStorage.getItem('token');
+          const formData = new FormData();
+          formData.append('frame', frameBlob, 'frame.jpg');
+
+          const response = await apiFetch('/api/respostas/processar-frame-mobile', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+          });
+
+          const data = await response.json();
+
+          if (data.sucesso && data.detectado) {
+            // Folha detectada!
+            isDetected = true;
+            feedbackEl.style.background = '#51cf66';
+            feedbackEl.textContent = data.feedback || '✓ Folha detectada! Capture agora.';
+            btnCapturar.disabled = false;
+            btnCapturar.style.opacity = '1';
+
+            // Desenhar ROIs
+            desenharROIsCamera(data.rois);
+
+          } else if (data.rois && Object.keys(data.rois).length > 0) {
+            // Detectou parcialmente
+            isDetected = false;
+            feedbackEl.style.background = '#ffd43b';
+            feedbackEl.textContent = data.feedback || 'Centralize melhor a folha';
+            btnCapturar.disabled = true;
+            btnCapturar.style.opacity = '0.5';
+
+            // Desenhar ROIs parciais
+            desenharROIsCamera(data.rois);
+
+          } else {
+            // Nada detectado
+            isDetected = false;
+            feedbackEl.style.background = '#f03e3e';
+            feedbackEl.textContent = data.feedback || '🔍 Procurando folha ENEM...';
+            btnCapturar.disabled = true;
+            btnCapturar.style.opacity = '0.5';
+
+            // Limpar canvas
+            cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+          }
+
+        } catch (error) {
+          console.error('Erro na detecção:', error);
+        }
+      }, 800);
+    }
+
+    async function capturarFrameAtualCamera() {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = cameraVideo.videoWidth;
+      tempCanvas.height = cameraVideo.videoHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(cameraVideo, 0, 0);
+
+      return new Promise((resolve) => {
+        tempCanvas.toBlob(resolve, 'image/jpeg', 0.95);
+      });
+    }
+
+    function desenharROIsCamera(rois) {
+      cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+
+      const scaleX = cameraCanvas.width / cameraVideo.videoWidth;
+      const scaleY = cameraCanvas.height / cameraVideo.videoHeight;
+
+      Object.entries(rois).forEach(([nome, deteccoes]) => {
+        if (!deteccoes || deteccoes.length === 0) return;
+
+        deteccoes.forEach(deteccao => {
+          const [x, y, w, h] = deteccao.bbox;
+          const scaledX = x * scaleX;
+          const scaledY = y * scaleY;
+          const scaledW = w * scaleX;
+          const scaledH = h * scaleY;
+
+          const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
+
+          cameraCtx.strokeStyle = cor;
+          cameraCtx.lineWidth = 4;
+          cameraCtx.strokeRect(scaledX, scaledY, scaledW, scaledH);
+
+          cameraCtx.fillStyle = cor;
+          cameraCtx.font = '16px Atkinson Hyperlegible, sans-serif';
+          cameraCtx.fillText(nome.replace('_', ' '), scaledX, scaledY - 8);
+        });
+      });
+    }
+
+    async function capturarDaCamera() {
+      try {
+        // Pausar detecção
+        if (detectionInterval) {
+          clearInterval(detectionInterval);
+          detectionInterval = null;
+        }
+
+        showLoading('Processando captura...');
+
+        // Capturar imagem final
+        const imageBlob = await capturarFrameAtualCamera();
+
+        // Enviar para processamento completo
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('imagem', imageBlob, 'captura_enem.jpg');
+
+        const response = await apiFetch('/api/respostas/capturar-enem-mobile', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+
+        const data = await response.json();
+        hideLoading();
+
+        if (!data.sucesso) {
+          throw new Error(data.erro || 'Erro ao processar captura');
+        }
+
+        // Fechar camera
+        fecharCameraMobile();
+
+        // Processar respostas capturadas
+        mostrarResultadoCaptura(data);
+
+      } catch (error) {
+        console.error('Erro ao capturar:', error);
+        hideLoading();
+        showToast(`Erro ao processar captura: ${error.message}`, 'error');
+        iniciarLiveDetection(); // Reiniciar detecção
+      }
+    }
+
+    async function mostrarResultadoCaptura(data) {
+      showToast(`Captura ENEM Dia ${data.dia_detectado} processada! ${data.total_respostas} respostas extraídas.`, 'success');
+
+      // Armazenar respostas temporárias
+      if (data.respostas && Array.isArray(data.respostas)) {
+        Object.keys(respostasAluno).forEach(key => {
+          if (key.startsWith('temp_')) delete respostasAluno[key];
+        });
+
+        data.respostas.forEach(item => {
+          const questaoNumero = parseInt(item.Questão || item.Questao || item.questao);
+          if (!isNaN(questaoNumero) && questaoNumero > 0) {
+            const resposta = item.Resposta || item.resposta || '';
+            respostasAluno[`temp_${questaoNumero}`] = resposta;
+          }
+        });
+      }
+
+      // Buscar gabaritos por dia e ir para próximo step
+      if (data.dia_detectado) {
+        await buscarGabaritosPorDia(data.dia_detectado);
+      }
+
+      // Ir para step3_5 (respostas capturadas)
+      await selecionarAluno(alunoSelecionado);
+
+    }
+
+    async function buscarGabaritosPorDia(dia) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        showLoading(`Buscando gabaritos do Dia ${dia}...`);
+
+        const response = await apiFetch(`/api/gabaritos/por-dia/${dia}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+
+        if (data.sucesso && data.gabaritos && data.gabaritos.length > 0) {
+          // Substituir lista de gabaritos pela lista filtrada
+          gabaritos = data.gabaritos;
+          renderizarGabaritos();
+
+          showToast(`${data.gabaritos.length} gabarito(s) encontrado(s) para o Dia ${dia} do ENEM`, 'info');
+        } else {
+          showToast(`Nenhum gabarito cadastrado para o Dia ${dia}. Mostrando todos os gabaritos.`, 'warning');
+          // Manter todos os gabaritos caso não encontre nenhum para o dia
+        }
+
+      } catch (error) {
+        console.error('Erro ao buscar gabaritos por dia:', error);
+        showToast('Erro ao buscar gabaritos. Mostrando todos disponíveis.', 'warning');
+      } finally {
+        hideLoading();
+      }
+    }
 
     async function loadUserData() {
       const token = localStorage.getItem('token');
@@ -269,7 +636,7 @@
     function renderizarGabaritos() {
       const container = document.getElementById('gabaritoList');
       if (!container) return;
-      
+
       container.innerHTML = '';
       gabaritos.forEach(gabarito => {
         const div = document.createElement('div');
@@ -321,9 +688,9 @@
     async function carregarListaAlunos() {
       const container = document.getElementById('listaAlunos');
       if (!container) return;
-      
+
       container.innerHTML = '';
-      
+
       // Mostrar apenas o aluno selecionado no Step 1
       if (!alunoSelecionado) {
         container.innerHTML = '<p style="text-align: center; color: var(--color-error); padding: var(--spacing-lg);">Nenhum aluno selecionado. Por favor, volte ao passo anterior e identifique o aluno.</p>';
@@ -336,7 +703,7 @@
       div.textContent = `${alunoSelecionado.nome_completo} - ${alunoSelecionado.matricula}`;
       div.style.cursor = 'pointer';
       container.appendChild(div);
-      
+
       // Auto-selecionar o aluno e avançar automaticamente para step3_5
       setTimeout(() => {
         selecionarAluno(alunoSelecionado);
@@ -349,15 +716,15 @@
       document.getElementById('step3_5').classList.add('active');
       document.getElementById('alunoSelecionado').innerText = `Confira as alternativas marcadas para o aluno: ${aluno.nome_completo}`;
       document.getElementById('alunoInfo').innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
-      
+
       // Carregar respostas existentes do aluno se houver (preserva respostas temporárias)
       await carregarRespostasAluno(aluno.id);
-      
+
       // Aguardar um pouco para garantir que as respostas foram preservadas
       setTimeout(() => {
         preencherRespostasCapturadas();
       }, 100);
-      
+
       currentStep = '3_5';
       atualizarBotaoVoltar();
     }
@@ -379,18 +746,18 @@
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        
+
         const respostasArray = data.respostas || (Array.isArray(data) ? data : []);
         // Filtrar respostas do aluno
         const respostasDoAluno = respostasArray.filter(r => r.aluno_id === alunoId);
-        
+
         // Mesclar respostas do banco com respostas temporárias
         // Respostas temporárias têm prioridade (são as mais recentes)
         respostasAluno = {};
         respostasDoAluno.forEach(r => {
           respostasAluno[r.questao_id] = r.resposta_aluno;
         });
-        
+
         // Restaurar respostas temporárias (sobrescrever se houver conflito)
         Object.keys(respostasTemporarias).forEach(key => {
           respostasAluno[key] = respostasTemporarias[key];
@@ -403,12 +770,12 @@
     function preencherRespostasCapturadas() {
       const container = document.getElementById('respostasCapturadas');
       if (!container) return;
-      
+
       container.innerHTML = "";
-      
+
       // Contar apenas respostas temporárias (do processamento atual) e respostas do banco já mapeadas
       const respostasTemporarias = Object.keys(respostasAluno).filter(k => k.startsWith('temp_'));
-      
+
       if (respostasTemporarias.length === 0 && Object.keys(respostasAluno).length === 0) {
         container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-lg);">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
         return;
@@ -416,7 +783,7 @@
 
       // Preparar lista de respostas para exibição
       const questoesOrdenadas = [];
-      
+
       // Primeiro, adicionar respostas que já estão mapeadas por questao_id (se gabarito foi carregado)
       if (questoesGabarito.length > 0) {
         questoesGabarito.forEach(q => {
@@ -427,7 +794,7 @@
           }
         });
       }
-      
+
       // Adicionar respostas temporárias (temp_${numero}) que ainda não foram mapeadas
       Object.keys(respostasAluno).forEach(key => {
         if (key.startsWith('temp_')) {
@@ -451,9 +818,9 @@
 
       questoesOrdenadas.forEach((item, index) => {
         const div = document.createElement('div');
-        const respostaTexto = item.resposta.trim() === '' 
-          ? '<span style="color: var(--color-text-lighter); font-style: italic;">Não marcado</span>' 
-          : item.resposta.includes(',') 
+        const respostaTexto = item.resposta.trim() === ''
+          ? '<span style="color: var(--color-text-lighter); font-style: italic;">Não marcado</span>'
+          : item.resposta.includes(',')
             ? `<span style="color: var(--color-error); font-weight: 600;">${item.resposta} (dupla marcação - inválida)</span>`
             : item.resposta;
         div.innerHTML = `<strong>Questão ${String(item.numero).padStart(2, '0')}:</strong> ${respostaTexto}`;
@@ -519,7 +886,7 @@
 
         // Simular progresso durante upload (já que fetch não suporta progress nativamente)
         showUploadProgress(30);
-        
+
         // Enviar imagem para o backend para processamento
         const response = await apiFetch('/api/respostas/processar-imagem', {
           method: 'POST',
@@ -528,7 +895,7 @@
           },
           body: formData
         });
-        
+
         showUploadProgress(70);
 
         showUploadProgress(90);
@@ -541,7 +908,7 @@
         if (!data.sucesso) {
           throw new Error(data.erro || data.detalhes || 'Erro ao processar imagem');
         }
-        
+
         showUploadProgress(100);
 
         // Armazenar a imagem anexada (caminho temporário até finalizar correção)
@@ -556,7 +923,7 @@
         // Processar respostas extraídas
         const respostasExtraidas = data.respostas || [];
         const detalhes = data.detalhes || {};
-        
+
         if (respostasExtraidas.length > 0) {
           // Limpar respostas temporárias anteriores para evitar conflito
           Object.keys(respostasAluno).forEach(key => {
@@ -564,21 +931,21 @@
               delete respostasAluno[key];
             }
           });
-          
+
           // Armazenar com o número da questão como chave temporária
           respostasExtraidas.forEach((item) => {
             // Buscar dinamicamente pelos campos (resolver problema de encoding com acentos)
             const keys = Object.keys(item);
             const questKey = keys.find(k => k.toLowerCase().includes('quest') || k.toLowerCase().includes('num'));
             const respKey = keys.find(k => k.toLowerCase().includes('resposta') || k.toLowerCase().includes('resp'));
-            
+
             const questaoNumero = questKey ? item[questKey] : (item['Questão'] || item.Questão || item.Questao || item.questao || item.numero);
             const resposta = respKey ? item[respKey] : (item['Resposta'] || item.Resposta || item.resposta || item.resposta_aluno || '');
-            
+
             if (questaoNumero !== undefined && questaoNumero !== null && questaoNumero !== '') {
               // Converter para número se for string
               const numQuestao = typeof questaoNumero === 'string' ? parseInt(questaoNumero.trim()) : questaoNumero;
-              
+
               if (!isNaN(numQuestao) && numQuestao > 0) {
                 // Armazenar temporariamente usando número da questão
                 respostasAluno[`temp_${numQuestao}`] = resposta || '';
@@ -588,11 +955,11 @@
 
           // Construir mensagem detalhada
           let mensagem = `${respostasExtraidas.length} respostas extraídas!`;
-          
+
           if (detalhes.questoes_validas > 0) {
             mensagem += `\n✓ ${detalhes.questoes_validas} válida(s)`;
           }
-          
+
           if (detalhes.questoes_com_dupla_marcacao > 0) {
             mensagem += `\n⚠ ${detalhes.questoes_com_dupla_marcacao} com dupla marcação (inválidas)`;
             showToast(mensagem, 'warning');
@@ -602,7 +969,7 @@
           } else {
             showToast(mensagem, 'success');
           }
-          
+
           // Exibir avisos se houver
           if (detalhes.avisos && detalhes.avisos.length > 0) {
             detalhes.avisos.forEach(aviso => {
@@ -643,7 +1010,7 @@
 
       // Buscar aluno por matrícula ou ID
       const aluno = alunos.find(a => a.matricula === input || a.id === input);
-      
+
       if (aluno) {
         infoSpan.innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
         btn.style.display = "inline-block";
@@ -674,7 +1041,7 @@
 
       // Mapear respostas temporárias (temp_${numero}) para questao_id quando gabarito é selecionado
       const respostasMapeadas = {};
-      
+
       // Primeiro, copiar respostas que já estão mapeadas por questao_id
       Object.keys(respostasAluno).forEach(key => {
         if (!key.startsWith('temp_')) {
@@ -732,24 +1099,24 @@
         // Processar apenas questões capturadas
         for (const questao of questoesCapturadas) {
           const respostaAluno = respostasMapeadas[questao.id] || ''; // String vazia se não houver resposta
-          
+
           // Verificar tipo de resposta
           const respostaTrim = respostaAluno.trim();
           const temDuplaMarcacao = respostaTrim.includes(',');
           const estaVazia = respostaTrim === '';
-          
+
           // Contabilizar tipos
           if (estaVazia) {
             questoesVazias++;
           } else if (temDuplaMarcacao) {
             questoesDuplaMarcacao++;
           }
-          
+
           // Se for dupla marcação ou vazio, não conta como acerto
           // Dupla marcação = inválida (acertou = false)
           // Vazio = não marcado (acertou = false)
           let acertou = false;
-          
+
           if (!temDuplaMarcacao && !estaVazia) {
             // Apenas verifica acerto se houver resposta única válida
             acertou = respostaTrim.toUpperCase() === questao.resposta_correta.toUpperCase().trim();
@@ -832,11 +1199,11 @@
             mensagem += `\n⚠ Dupla marcação (inválidas): ${questoesDuplaMarcacao}`;
           }
           showToast(mensagem, 'success');
-        document.getElementById('step4').classList.remove('active');
-        document.getElementById('step5').classList.add('active');
-        document.getElementById('alunoInfo').innerText = "Ler código!";
-        atualizarBotaoVoltar();
-          
+          document.getElementById('step4').classList.remove('active');
+          document.getElementById('step5').classList.add('active');
+          document.getElementById('alunoInfo').innerText = "Ler código!";
+          atualizarBotaoVoltar();
+
           // Limpar dados
           alunoSelecionado = null;
           gabaritoSelecionado = null;
@@ -844,7 +1211,7 @@
           questoesGabarito = [];
           imagemAnexada = null;
           document.getElementById('codigoAlunoInput').value = '';
-      } else {
+        } else {
           showToast('Erro ao salvar respostas', 'error');
         }
 
@@ -858,4 +1225,5 @@
 
   </script>
 </body>
+
 </html>

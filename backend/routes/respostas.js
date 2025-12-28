@@ -61,7 +61,7 @@ const storageImagens = multer.diskStorage({
   }
 });
 
-const uploadImagemTemp = multer({ 
+const uploadImagemTemp = multer({
   storage: storageImagensTemp,
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
@@ -74,7 +74,7 @@ const uploadImagemTemp = multer({
   }
 });
 
-const uploadImagem = multer({ 
+const uploadImagem = multer({
   storage: storageImagens,
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
@@ -149,15 +149,15 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
 
     if (imagemQuery.rows.length > 0) {
       const imagem = imagemQuery.rows[0];
-      
+
       // Verificar se o arquivo permanente ainda existe
       const caminhoCompleto = path.join(__dirname, '../../', imagem.caminho_imagem);
       if (fs.existsSync(caminhoCompleto)) {
         // Retornar o caminho relativo da imagem
-        const imagemPath = imagem.caminho_imagem.startsWith('/') 
-          ? imagem.caminho_imagem 
+        const imagemPath = imagem.caminho_imagem.startsWith('/')
+          ? imagem.caminho_imagem
           : `/uploads/imagens/${imagem.nome_imagem}`;
-        
+
         return res.json({
           sucesso: true,
           imagem: imagemPath,
@@ -190,11 +190,11 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
 
     const dataResposta = respostaQuery.rows[0].data_resposta;
     const timestamp = new Date(dataResposta).getTime();
-    
+
     // Buscar APENAS no diretório permanente (não no temporário)
     // Imagens temporárias NÃO devem aparecer até que a correção seja finalizada
     const imagensDir = path.join(uploadsDir, 'imagens');
-    
+
     if (!fs.existsSync(imagensDir)) {
       return res.status(404).json({
         sucesso: false,
@@ -204,7 +204,7 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
 
     // Listar apenas imagens permanentes (sem prefixo temp_)
     const arquivos = fs.readdirSync(imagensDir);
-    const imagens = arquivos.filter(arquivo => 
+    const imagens = arquivos.filter(arquivo =>
       arquivo.startsWith('resposta_') && // Sem prefixo temp_
       !arquivo.startsWith('temp_') && // Garantir que não é temporária
       /\.(jpg|jpeg|png|gif|webp)$/i.test(arquivo)
@@ -226,7 +226,7 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
       if (match) {
         const timestampImagem = parseInt(match[1]);
         const diferenca = Math.abs(timestampImagem - timestamp);
-        
+
         // Considerar imagens processadas até 1 hora antes ou depois da resposta
         if (diferenca < 3600000 && diferenca < menorDiferenca) {
           menorDiferenca = diferenca;
@@ -244,7 +244,7 @@ router.get('/imagem/:aluno_id/:gabarito_id', async (req, res) => {
 
     // Retornar o caminho relativo da imagem permanente
     const imagemPath = `/uploads/imagens/${imagemMaisProxima}`;
-    
+
     res.json({
       sucesso: true,
       imagem: imagemPath,
@@ -270,22 +270,22 @@ router.post('/', async (req, res) => {
   // resposta_aluno pode ser string vazia (indica não marcado)
   // acertou deve ser boolean
   if (!aluno_id || !questao_id || !gabarito_id || resposta_aluno === undefined || typeof acertou !== 'boolean') {
-    return res.status(400).json({ 
+    return res.status(400).json({
       sucesso: false,
       erro: 'Dados incompletos',
       detalhes: 'Todos os campos são obrigatórios (aluno_id, questao_id, gabarito_id, resposta_aluno, acertou). resposta_aluno pode ser string vazia para indicar não marcado.'
     });
   }
-  
+
   // Normalizar resposta_aluno (garantir string, mesmo que vazia)
-  const respostaNormalizada = resposta_aluno !== null && resposta_aluno !== undefined 
-    ? String(resposta_aluno).trim() 
+  const respostaNormalizada = resposta_aluno !== null && resposta_aluno !== undefined
+    ? String(resposta_aluno).trim()
     : '';
 
   // Validar dupla marcação: se resposta contém vírgula, é dupla marcação
   const temDuplaMarcacao = respostaNormalizada.includes(',');
   const estaVazia = respostaNormalizada === '';
-  
+
   // Se houver dupla marcação, garantir que acertou seja false (inválida)
   // Se estiver vazia, também é false (não marcado)
   let acertouValidado = acertou;
@@ -327,7 +327,7 @@ router.post('/', async (req, res) => {
     );
 
     let rows;
-    
+
     if (existing.rows.length > 0) {
       // Atualizar resposta existente
       const respostaId = existing.rows[0].id;
@@ -369,9 +369,9 @@ router.post('/', async (req, res) => {
         );
 
         // Se não existe ou se a imagem é diferente, criar nova entrada
-        if (imagemExistente.rows.length === 0 || 
-            !imagemExistente.rows[0].caminho_imagem || 
-            imagemExistente.rows[0].caminho_imagem !== imagem_caminho) {
+        if (imagemExistente.rows.length === 0 ||
+          !imagemExistente.rows[0].caminho_imagem ||
+          imagemExistente.rows[0].caminho_imagem !== imagem_caminho) {
           const imagemId = generateUUID();
           await db.query(
             `INSERT INTO imagens_cartoes 
@@ -418,7 +418,7 @@ router.post('/', async (req, res) => {
 // Rota GET /api/respostas/:id - Busca uma resposta específica
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
-  
+
   try {
     const { rows } = await db.query(
       `SELECT id, aluno_id, questao_id, gabarito_id, resposta_aluno, acertou, data_resposta
@@ -428,9 +428,9 @@ router.get('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         sucesso: false,
-        erro: 'Resposta não encontrada' 
+        erro: 'Resposta não encontrada'
       });
     }
 
@@ -454,7 +454,7 @@ router.put('/:id', async (req, res) => {
   const { resposta_aluno, acertou } = req.body;
 
   if (!resposta_aluno || typeof acertou !== 'boolean') {
-    return res.status(400).json({ 
+    return res.status(400).json({
       sucesso: false,
       erro: 'Dados incompletos',
       detalhes: 'resposta_aluno e acertou são obrigatórios'
@@ -471,9 +471,9 @@ router.put('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         sucesso: false,
-        erro: 'Resposta não encontrada' 
+        erro: 'Resposta não encontrada'
       });
     }
 
@@ -504,14 +504,14 @@ router.delete('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         sucesso: false,
-        erro: 'Resposta não encontrada' 
+        erro: 'Resposta não encontrada'
       });
     }
 
-    res.status(200).json({ 
-      sucesso: true, 
+    res.status(200).json({
+      sucesso: true,
       mensagem: 'Resposta removida com sucesso',
       resposta: rows[0]
     });
@@ -530,7 +530,7 @@ router.delete('/:id', async (req, res) => {
  */
 async function detectarTipoImagem(imagemPath) {
   const scriptDetecao = path.join(__dirname, '../scripts/detectar_tipo_imagem.py');
-  
+
   if (!fs.existsSync(scriptDetecao)) {
     console.log('[PROCESSAR-IMAGEM] Script de detecção não encontrado, usando script original por padrão');
     return 'original'; // Fallback: assume que precisa de processamento
@@ -540,9 +540,9 @@ async function detectarTipoImagem(imagemPath) {
     const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
     const scriptPathNormalizado = path.resolve(scriptDetecao).replace(/\\/g, '/');
     const imagemPathNormalizado = path.resolve(imagemPath).replace(/\\/g, '/');
-    
+
     const comando = `${pythonCommand} "${scriptPathNormalizado}" "${imagemPathNormalizado}"`;
-    
+
     const { stdout, stderr } = await execAsync(comando, {
       maxBuffer: 10 * 1024 * 1024,
       encoding: 'utf8'
@@ -561,7 +561,7 @@ async function detectarTipoImagem(imagemPath) {
         return resultado.tipo;
       }
     }
-    
+
     console.log('[PROCESSAR-IMAGEM] Detecção falhou, usando script original por padrão');
     return 'original'; // Fallback
   } catch (error) {
@@ -578,14 +578,14 @@ async function executarScriptProcessamento(scriptPath, imagemPath) {
   const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
   const scriptPathNormalizado = path.resolve(scriptPath).replace(/\\/g, '/');
   const imagemPathNormalizado = path.resolve(imagemPath).replace(/\\/g, '/');
-  
+
   const comando = `${pythonCommand} "${scriptPathNormalizado}" "${imagemPathNormalizado}"`;
-  
+
   const { stdout, stderr } = await execAsync(comando, {
     maxBuffer: 10 * 1024 * 1024, // 10MB buffer
     encoding: 'utf8'
   });
-  
+
   // Processar stderr
   if (stderr && stderr.trim()) {
     console.log('[PROCESSAR-IMAGEM] Stderr do Python:', stderr);
@@ -596,13 +596,13 @@ async function executarScriptProcessamento(scriptPath, imagemPath) {
   if (!jsonMatch) {
     throw new Error('Resposta do Python não contém JSON válido');
   }
-  
+
   const resultadoPython = JSON.parse(jsonMatch[0]);
-  
+
   if (!resultadoPython.sucesso) {
     throw new Error(resultadoPython.erro || 'Erro no processamento Python');
   }
-  
+
   return resultadoPython;
 }
 
@@ -618,22 +618,29 @@ async function executarScriptProcessamento(scriptPath, imagemPath) {
 router.post('/processar-imagem', uploadImagemTemp.single('imagem'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         sucesso: false,
-        erro: 'Imagem é obrigatória' 
+        erro: 'Imagem é obrigatória'
       });
     }
 
     const imagemPath = req.file.path;
     const imagemFilename = req.file.filename;
 
-    // 1. Detectar o tipo de imagem (processada ou original)
+    // 1. Detectar o tipo de imagem (processada, original, enem_completo, enem_recorte)
     console.log('[PROCESSAR-IMAGEM] Detectando tipo de imagem...');
     const tipoImagem = await detectarTipoImagem(imagemPath);
 
     // 2. Escolher o script apropriado baseado na detecção
     let scriptPath;
-    if (tipoImagem === 'processada') {
+    let isEnem = false;
+
+    if (tipoImagem === 'enem_completo' || tipoImagem === 'enem_recorte') {
+      // Folha ENEM detectada - usar script ENEM mobile
+      scriptPath = path.join(__dirname, '../scripts/processar_respostas_enem_mobile.py');
+      console.log(`[PROCESSAR-IMAGEM] Folha ENEM detectada (${tipoImagem}). Usando script ENEM mobile.`);
+      isEnem = true;
+    } else if (tipoImagem === 'processada') {
       scriptPath = path.join(__dirname, '../scripts/processar_respostas_imagem_processadas.py');
       console.log('[PROCESSAR-IMAGEM] Usando script para imagens processadas');
     } else {
@@ -668,53 +675,64 @@ router.post('/processar-imagem', uploadImagemTemp.single('imagem'), async (req, 
 
     } catch (execError) {
       console.error('[PROCESSAR-IMAGEM] Erro ao executar script Python:', execError);
-      
+
       // Se for erro de execução (Python não encontrado, etc.)
       if (execError.code === 'ENOENT' || execError.message.includes('python')) {
         throw new Error('Python não encontrado. Certifique-se de que Python está instalado e no PATH.');
       }
-      
+
       // Se for erro de processamento (arquivo não encontrado, etc.)
       if (execError.stderr || execError.message.includes('Erro')) {
         const erroPython = execError.stderr || execError.message;
         throw new Error(`Erro no processamento da imagem: ${erroPython}`);
       }
-      
+
       throw execError;
     }
-    
+
     // Construir mensagem com informações sobre dupla marcação e questões em branco
-    let mensagem = respostasExtraidas.length > 0 
+    let mensagem = respostasExtraidas.length > 0
       ? `Imagem processada com sucesso! ${respostasExtraidas.length} respostas extraídas.`
       : 'Imagem processada, mas nenhuma resposta foi encontrada.';
-    
+
     if (detalhesProcessamento.questoes_com_dupla_marcacao > 0) {
       mensagem += ` ⚠ ${detalhesProcessamento.questoes_com_dupla_marcacao} questão(ões) com dupla marcação (inválidas).`;
     }
-    
+
     if (detalhesProcessamento.questoes_sem_marcacao > 0) {
       mensagem += ` ○ ${detalhesProcessamento.questoes_sem_marcacao} questão(ões) em branco.`;
     }
 
     // Retornar resposta com as respostas extraídas
     // A imagem está salva temporariamente e será movida para permanente apenas ao finalizar correção
-    res.status(200).json({
+    const response = {
       sucesso: true,
       mensagem: mensagem,
       imagem: {
-        nome: imagemFilename, // Nome temporário: temp_resposta_...
-        caminho: imagemPath,  // Caminho temporário: .../temp/temp_resposta_...
+        nome: imagemFilename, // Nome temporário: temp_resposta_...\n        caminho: imagemPath,  // Caminho temporário: .../temp/temp_resposta_...
         tamanho: req.file.size,
         temporaria: true // Flag indicando que é temporária
       },
       respostas: respostasExtraidas,
       total_respostas: respostasExtraidas.length,
       detalhes: detalhesProcessamento
-    });
+    };
+
+    // Adicionar informações específicas ENEM se for folha ENEM
+    if (isEnem && resultadoPython.dia_detectado) {
+      response.dia_detectado = resultadoPython.dia_detectado;
+      response.questao_inicial = resultadoPython.questao_inicial;
+      response.questao_final = resultadoPython.questao_final;
+      response.confianca_ocr = resultadoPython.confianca_ocr;
+      response.detalhes.tipo_deteccao = 'enem_mobile';
+      response.detalhes.rois_detectadas = resultadoPython.rois_detectadas || {};
+    }
+
+    res.status(200).json(response);
 
   } catch (err) {
     console.error('Erro ao processar imagem:', err);
-    
+
     // Limpar arquivo temporário se houver erro
     if (req.file && fs.existsSync(req.file.path)) {
       try {
@@ -752,7 +770,7 @@ router.post('/confirmar-imagem', async (req, res) => {
     // Verificar se a imagem temporária existe
     const caminhoCompleto = path.resolve(caminho_imagem_temp);
     const caminhoDir = path.dirname(caminhoCompleto);
-    
+
     // Garantir que está no diretório temporário (segurança)
     if (!caminhoDir.includes('temp') || !fs.existsSync(caminhoCompleto)) {
       return res.status(404).json({
@@ -763,7 +781,7 @@ router.post('/confirmar-imagem', async (req, res) => {
 
     // Nome do arquivo temporário
     const nomeTemp = path.basename(caminhoCompleto);
-    
+
     // Novo nome permanente (remover prefixo "temp_")
     const nomePermanente = nomeTemp.replace(/^temp_/, '');
     const caminhoPermanente = path.join(imagensPermanenteDir, nomePermanente);
@@ -785,9 +803,9 @@ router.post('/confirmar-imagem', async (req, res) => {
       );
 
       // Se não existe ou se a imagem é diferente, criar nova entrada
-      if (imagemExistente.rows.length === 0 || 
-          !imagemExistente.rows[0].caminho_imagem || 
-          imagemExistente.rows[0].caminho_imagem !== caminhoRelativo) {
+      if (imagemExistente.rows.length === 0 ||
+        !imagemExistente.rows[0].caminho_imagem ||
+        imagemExistente.rows[0].caminho_imagem !== caminhoRelativo) {
         const imagemId = generateUUID();
         await db.query(
           `INSERT INTO imagens_cartoes 
@@ -797,7 +815,7 @@ router.post('/confirmar-imagem', async (req, res) => {
         );
         console.log(`[CONFIRMAR-IMAGEM] Imagem associada: ${nomePermanente} para aluno ${aluno_id} e gabarito ${gabarito_id}`);
       }
-      
+
       res.status(200).json({
         sucesso: true,
         imagem: {
@@ -816,7 +834,7 @@ router.post('/confirmar-imagem', async (req, res) => {
           console.error('Erro ao reverter movimento da imagem:', revertErr);
         }
       }
-      
+
       if (dbErr.message.includes('no such table')) {
         console.warn('[CONFIRMAR-IMAGEM] Tabela imagens_cartoes não existe');
         // Mesmo assim retorna sucesso, pois a imagem foi movida
@@ -829,7 +847,7 @@ router.post('/confirmar-imagem', async (req, res) => {
           aviso: 'Imagem salva, mas tabela imagens_cartoes não existe'
         });
       }
-      
+
       throw dbErr;
     }
 
@@ -838,6 +856,207 @@ router.post('/confirmar-imagem', async (req, res) => {
     res.status(500).json({
       sucesso: false,
       erro: 'Erro ao confirmar imagem',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
+/**
+ * Rota POST /api/respostas/processar-frame-mobile
+ * Live detection rápida - apenas detecção YOLO sem processar bolhas
+ * Para feedback em tempo real na interface mobile
+ */
+router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Frame é obrigatório'
+      });
+    }
+
+    const framePath = req.file.path;
+
+    // Executar apenas detecção YOLO (rápido, sem processar bolhas)
+    const scriptPath = path.join(__dirname, '../scripts/detector_yolo_enem.py');
+
+    if (!fs.existsSync(scriptPath)) {
+      throw new Error('Script de detecção YOLO não encontrado');
+    }
+
+    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+    const comando = `${pythonCommand} "${scriptPath}" "${framePath}"`;
+
+    const { stdout, stderr } = await execAsync(comando, {
+      maxBuffer: 10 * 1024 * 1024,
+      encoding: 'utf8'
+    });
+
+    if (stderr && stderr.trim()) {
+      console.log('[FRAME-MOBILE] Stderr:', stderr);
+    }
+
+    // Parsear resultado JSON
+    const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Resposta do Python inválida');
+    }
+
+    const resultado = JSON.parse(jsonMatch[0]);
+
+    // Limpar frame temporário
+    try {
+      fs.unlinkSync(framePath);
+    } catch (unlinkErr) {
+      console.error('Erro ao remover frame temporário:', unlinkErr);
+    }
+
+    // Gerar feedback para UI
+    let feedback = 'Procurando folha ENEM...';
+    if (resultado.detectado) {
+      feedback = '✓ Folha detectada! Capture quando estiver estável.';
+    } else if (resultado.rois && Object.keys(resultado.rois).length > 0) {
+      feedback = 'Centralize melhor a folha';
+    }
+
+    res.status(200).json({
+      sucesso: resultado.sucesso,
+      detectado: resultado.detectado || false,
+      rois: resultado.rois || {},
+      feedback: feedback,
+      total_deteccoes: resultado.total_deteccoes || 0
+    });
+
+  } catch (err) {
+    console.error('Erro ao processar frame mobile:', err);
+
+    // Limpar arquivo temporário se houver erro
+    if (req.file && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkErr) {
+        console.error('Erro ao remover frame temporário:', unlinkErr);
+      }
+    }
+
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro ao processar frame',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
+/**
+ * Rota POST /api/respostas/capturar-enem-mobile
+ * Processamento completo: YOLO → OCR day → detecção de bolhas
+ * Para captura final no mobile
+ */
+router.post('/capturar-enem-mobile', uploadImagemTemp.single('imagem'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        sucesso: false,
+        erro: 'Imagem é obrigatória'
+      });
+    }
+
+    const imagemPath = req.file.path;
+    const imagemFilename = req.file.filename;
+
+    console.log('[CAPTURAR-ENEM-MOBILE] Processando captura mobile...');
+
+    // Executar pipeline completo ENEM
+    const scriptPath = path.join(__dirname, '../scripts/processar_respostas_enem_mobile.py');
+
+    if (!fs.existsSync(scriptPath)) {
+      throw new Error('Script de processamento ENEM não encontrado');
+    }
+
+    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+    const comando = `${pythonCommand} "${scriptPath}" "${imagemPath}"`;
+
+    const { stdout, stderr } = await execAsync(comando, {
+      maxBuffer: 10 * 1024 * 1024,
+      encoding: 'utf8',
+      timeout: 60000 // 60 segundos timeout
+    });
+
+    if (stderr && stderr.trim()) {
+      console.log('[CAPTURAR-ENEM-MOBILE] Stderr:', stderr);
+    }
+
+    // Parsear resultado JSON
+    const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Resposta do Python inválida');
+    }
+
+    const resultado = JSON.parse(jsonMatch[0]);
+
+    if (!resultado.sucesso) {
+      throw new Error(resultado.erro || 'Erro no processamento Python');
+    }
+
+    // Armazenar informações da imagem temporária
+    const imagemAnexada = {
+      nome: imagemFilename,
+      caminho: imagemPath,
+      caminhoRelativo: `/uploads/imagens/temp/${imagemFilename}`,
+      tamanho: req.file.size,
+      temporaria: true
+    };
+
+    // Construir mensagem
+    let mensagem = `Captura processada com sucesso! ${resultado.total_respostas} respostas extraídas.`;
+    mensagem += ` Dia ${resultado.dia_detectado} detectado (questões ${resultado.questao_inicial}-${resultado.questao_final}).`;
+
+    if (resultado.questoes_com_dupla_marcacao > 0) {
+      mensagem += ` ⚠ ${resultado.questoes_com_dupla_marcacao} questão(ões) com dupla marcação.`;
+    }
+
+    if (resultado.questoes_sem_marcacao > 0) {
+      mensagem += ` ○ ${resultado.questoes_sem_marcacao} em branco.`;
+    }
+
+    // Retornar resposta
+    res.status(200).json({
+      sucesso: true,
+      mensagem: mensagem,
+      dia_detectado: resultado.dia_detectado,
+      questao_inicial: resultado.questao_inicial,
+      questao_final: resultado.questao_final,
+      confianca_ocr: resultado.confianca_ocr,
+      imagem: imagemAnexada,
+      respostas: resultado.respostas || [],
+      total_respostas: resultado.total_respostas || 0,
+      detalhes: {
+        total_bolhas_detectadas: resultado.total_bolhas_detectadas || 0,
+        questoes_com_dupla_marcacao: resultado.questoes_com_dupla_marcacao || 0,
+        questoes_sem_marcacao: resultado.questoes_sem_marcacao || 0,
+        questoes_validas: resultado.questoes_validas || 0,
+        questoes_invalidas_detalhes: resultado.questoes_invalidas_detalhes || [],
+        avisos: resultado.avisos || [],
+        rois_detectadas: resultado.rois_detectadas || {},
+        tipo_deteccao: 'enem_mobile'
+      }
+    });
+
+  } catch (err) {
+    console.error('Erro ao capturar ENEM mobile:', err);
+
+    // Limpar arquivo temporário se houver erro
+    if (req.file && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkErr) {
+        console.error('Erro ao remover arquivo temporário:', unlinkErr);
+      }
+    }
+
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro ao processar captura ENEM',
       detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }

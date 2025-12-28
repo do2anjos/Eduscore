@@ -29,7 +29,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
     if (file.mimetype !== 'text/csv') {
@@ -47,9 +47,9 @@ router.post('/', async (req, res) => {
   const { nome, etapa } = req.body;
 
   if (!nome || !etapa) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       sucesso: false,
-      erro: 'Nome e etapa são obrigatórios' 
+      erro: 'Nome e etapa são obrigatórios'
     });
   }
 
@@ -60,15 +60,15 @@ router.post('/', async (req, res) => {
        RETURNING id, nome, etapa, criado_em`,
       [nome, etapa]
     );
-    
-    res.status(201).json({ 
+
+    res.status(201).json({
       sucesso: true,
       mensagem: 'Gabarito cadastrado com sucesso',
       gabarito: rows[0]
     });
   } catch (err) {
     console.error('Erro ao cadastrar gabarito:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       sucesso: false,
       erro: 'Erro ao cadastrar gabarito',
       detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -81,9 +81,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   const { gabarito_id } = req.body;
 
   if (!req.file || !gabarito_id) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       sucesso: false,
-      erro: 'Arquivo e ID do gabarito são obrigatórios' 
+      erro: 'Arquivo e ID do gabarito são obrigatórios'
     });
   }
 
@@ -93,15 +93,15 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     // Verificar se gabarito existe
     const gabaritoCheck = await db.query(
-      'SELECT id FROM gabaritos WHERE id = $1', 
+      'SELECT id FROM gabaritos WHERE id = $1',
       [gabarito_id]
     );
-    
+
     if (gabaritoCheck.rows.length === 0) {
       fs.unlinkSync(filePath); // Remove o arquivo
-      return res.status(404).json({ 
+      return res.status(404).json({
         sucesso: false,
-        erro: 'Gabarito não encontrado' 
+        erro: 'Gabarito não encontrado'
       });
     }
 
@@ -113,18 +113,18 @@ router.post('/upload', upload.single('file'), async (req, res) => {
           return row[name];
         }
       }
-      
+
       // Se não encontrou, faz busca case-insensitive
       const rowKeys = Object.keys(row);
       const normalizedPossibleNames = possibleNames.map(n => n.toLowerCase().trim());
-      
+
       for (const key of rowKeys) {
         const normalizedKey = key.toLowerCase().trim();
         if (normalizedPossibleNames.includes(normalizedKey)) {
           return row[key];
         }
       }
-      
+
       return null;
     };
 
@@ -133,19 +133,19 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const firstLine = fileContent.split('\n')[0];
     const hasSemicolon = firstLine.includes(';');
     const hasComma = firstLine.includes(',');
-    
+
     // Priorizar ponto e vírgula se ambos existirem (padrão Excel/português)
     const separator = hasSemicolon ? ';' : (hasComma ? ',' : ';');
-    
+
     // Ler os cabeçalhos da primeira linha para mapear índices
     const headers = firstLine.split(separator).map(h => h.trim().replace(/[\r\n]/g, ''));
     console.log('Cabeçalhos detectados:', headers);
     console.log('Separador detectado:', separator);
-    
+
     // Mapear índices de colunas para nomes esperados (fallback se cabeçalhos não forem reconhecidos)
     const getColumnIndex = (searchTerms) => {
       for (const term of searchTerms) {
-        const index = headers.findIndex(h => 
+        const index = headers.findIndex(h =>
           h.toLowerCase().trim() === term.toLowerCase().trim() ||
           h.toLowerCase().trim().includes(term.toLowerCase().trim()) ||
           term.toLowerCase().trim().includes(h.toLowerCase().trim())
@@ -154,13 +154,13 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       }
       return -1;
     };
-    
+
     const numeroIndex = getColumnIndex(['questão', 'questao', 'numero', 'número', 'num']);
     const respostaIndex = getColumnIndex(['resposta', 'resposta_correta', 'resp']);
     const disciplinaIndex = getColumnIndex(['disciplina', 'disciplina_id', 'disciplina id']);
-    
+
     console.log('Índices detectados:', { numeroIndex, respostaIndex, disciplinaIndex });
-    
+
     // Processar CSV - aceita tanto cabeçalhos em português quanto em inglês
     // Aceita tanto vírgula (,) quanto ponto e vírgula (;) como separador
     await new Promise((resolve, reject) => {
@@ -175,41 +175,41 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         }))
         .on('data', (row) => {
           linha++;
-          
+
           // Normalizar nomes das colunas (aceita português e inglês, case-insensitive)
           let numero = normalizeColumnName(row, [
             'numero', 'Numero', 'NÚMERO', 'numero_questao',
             'Questão', 'Questao', 'questão', 'questao',
             'Número', 'número'
           ]);
-          
+
           let resposta = normalizeColumnName(row, [
             'resposta_correta', 'Resposta_correta', 'RESPOSTA_CORRETA',
             'Resposta', 'resposta', 'RESPOSTA',
             'respostaCorreta', 'Resposta Correta', 'resposta correta'
           ]);
-          
+
           // Se não encontrou pelos nomes, tenta pelos índices (fallback)
           const rowKeys = Object.keys(row);
           const rowValues = Object.values(row);
-          
+
           if (!numero && numeroIndex >= 0 && rowValues[numeroIndex]) {
             numero = rowValues[numeroIndex];
           } else if (!numero && rowKeys.includes('_0')) {
             numero = row['_0'] || row[0];
           }
-          
+
           if (!resposta && respostaIndex >= 0 && rowValues[respostaIndex]) {
             resposta = rowValues[respostaIndex];
           } else if (!resposta && rowKeys.includes('_1')) {
             resposta = row['_1'] || row[1];
           }
-          
+
           const disciplinaId = normalizeColumnName(row, [
             'disciplina_id', 'Disciplina_id', 'disciplinaId',
             'Disciplina ID', 'disciplina id', 'Disciplina', 'disciplina'
           ]) || (disciplinaIndex >= 0 && rowValues[disciplinaIndex] ? rowValues[disciplinaIndex] : null);
-          
+
           // Validar campos obrigatórios
           if (!numero || !resposta) {
             const camposEncontrados = Object.keys(row).join(', ');
@@ -233,12 +233,12 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             const numLower = String(numero).toLowerCase().trim();
             const respLower = respostaNormalizada.toLowerCase().trim();
             const cabecalhos = ['questão', 'questao', 'numero', 'número', 'num', 'resposta', 'resposta_correta', 'resp'];
-            
+
             if (cabecalhos.includes(numLower) || cabecalhos.includes(respLower)) {
               console.log(`[GABARITO_UPLOAD] Pulando linha ${linha + 1}: parece ser cabeçalho`);
               return; // Pula esta linha (é cabeçalho)
             }
-            
+
             // Se não for cabeçalho, mas tem número inválido, rejeitar
             reject(new Error(
               `Formato do CSV inválido na linha ${linha + 1} - o número da questão deve ser um número entre 1 e 60. ` +
@@ -246,7 +246,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             ));
             return;
           }
-          
+
           // Validar se a resposta é uma alternativa válida (A, B, C, D, E)
           if (!['A', 'B', 'C', 'D', 'E'].includes(respostaNormalizada)) {
             reject(new Error(
@@ -277,7 +277,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
                 if (!q.disciplina_id) {
                   const disciplinaId = await obterDisciplinaIdPorNumero(q.numero);
                   q.disciplina_id = disciplinaId;
-                  
+
                   if (!disciplinaId) {
                     console.warn(`[GABARITO_UPLOAD] Não foi possível classificar automaticamente a questão ${q.numero}. A questão será criada sem disciplina_id.`);
                   } else {
@@ -321,8 +321,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     } catch (transactionErr) {
       throw new Error(`Erro na transação: ${transactionErr.message}`);
     }
-    
-    res.json({ 
+
+    res.json({
       sucesso: true,
       mensagem: 'Questões importadas com sucesso',
       total: questions.length
@@ -330,11 +330,11 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   } catch (err) {
     console.error('Erro ao processar CSV:', err);
     console.error('Stack trace:', err.stack);
-    
+
     // Sempre retorna detalhes do erro em desenvolvimento ou para erros de validação
     const isValidationError = err.message.includes('Formato') || err.message.includes('vazio') || err.message.includes('linha');
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       sucesso: false,
       erro: 'Erro ao processar arquivo CSV',
       detalhes: (process.env.NODE_ENV === 'development' || isValidationError) ? err.message : 'Verifique o formato do arquivo CSV'
@@ -361,15 +361,15 @@ router.get('/', async (req, res) => {
        GROUP BY g.id
        ORDER BY g.criado_em DESC`
     );
-    
-    res.json({ 
+
+    res.json({
       sucesso: true,
       total: rows.length,
       gabaritos: rows
     });
   } catch (err) {
     console.error('Erro ao listar gabaritos:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       sucesso: false,
       erro: 'Erro ao listar gabaritos',
       detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -390,9 +390,9 @@ router.get('/:id', async (req, res) => {
     );
 
     if (gabarito.rows.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         sucesso: false,
-        erro: 'Gabarito não encontrado' 
+        erro: 'Gabarito não encontrado'
       });
     }
 
@@ -414,7 +414,7 @@ router.get('/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Erro ao buscar gabarito:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       sucesso: false,
       erro: 'Erro ao buscar gabarito',
       detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -428,9 +428,9 @@ router.put('/:id', async (req, res) => {
   const { nome, etapa } = req.body;
 
   if (!nome || !etapa) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       sucesso: false,
-      erro: 'Nome e etapa são obrigatórios' 
+      erro: 'Nome e etapa são obrigatórios'
     });
   }
 
@@ -444,20 +444,20 @@ router.put('/:id', async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         sucesso: false,
-        erro: 'Gabarito não encontrado' 
+        erro: 'Gabarito não encontrado'
       });
     }
 
-    res.json({ 
+    res.json({
       sucesso: true,
       mensagem: 'Gabarito atualizado com sucesso',
       gabarito: rows[0]
     });
   } catch (err) {
     console.error('Erro ao atualizar gabarito:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       sucesso: false,
       erro: 'Erro ao atualizar gabarito',
       detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -471,39 +471,88 @@ router.delete('/:id', async (req, res) => {
 
   try {
     let rowCount = 0;
-    
+
     await withTransaction(async (db) => {
       // Primeiro remove as questões associadas
       await db.query(
         'DELETE FROM questoes WHERE gabarito_id = $1',
         [id]
       );
-      
+
       // Depois remove o gabarito
       const result = await db.query(
         'DELETE FROM gabaritos WHERE id = $1',
         [id]
       );
-      
+
       rowCount = result.rowCount;
     });
 
     if (rowCount === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         sucesso: false,
-        erro: 'Gabarito não encontrado' 
+        erro: 'Gabarito não encontrado'
       });
     }
 
-    res.json({ 
+    res.json({
       sucesso: true,
       mensagem: 'Gabarito e questões associadas removidos com sucesso'
     });
   } catch (err) {
     console.error('Erro ao remover gabarito:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       sucesso: false,
       erro: 'Erro ao remover gabarito',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+});
+
+/**
+ * Rota GET /api/gabaritos/por-dia/:dia
+ * Busca gabaritos do ENEM por dia (1 ou 2)
+ * Para sugestão automática de gabarito após detecção do dia no mobile
+ */
+router.get('/por-dia/:dia', async (req, res) => {
+  const { dia } = req.params;
+
+  // Validar dia
+  const diaNum = parseInt(dia);
+  if (isNaN(diaNum) || (diaNum !== 1 && diaNum !== 2)) {
+    return res.status(400).json({
+      sucesso: false,
+      erro: 'Dia inválido. Deve ser 1 ou 2.'
+    });
+  }
+
+  try {
+    const { rows } = await db.query(
+      `SELECT g.id, g.nome, g.etapa, g.dia_enem, g.criado_em,
+              COUNT(q.id) as total_questoes
+       FROM gabaritos g
+       LEFT JOIN questoes q ON q.gabarito_id = g.id
+       WHERE g.dia_enem = $1
+       GROUP BY g.id
+       ORDER BY g.criado_em DESC`,
+      [diaNum]
+    );
+
+    res.json({
+      sucesso: true,
+      dia: diaNum,
+      total: rows.length,
+      gabaritos: rows,
+      mensagem: rows.length === 0
+        ? `Nenhum gabarito cadastrado para o Dia ${diaNum} do ENEM`
+        : `${rows.length} gabarito(s) encontrado(s) para o Dia ${diaNum}`
+    });
+
+  } catch (err) {
+    console.error('Erro ao buscar gabaritos por dia:', err);
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro ao buscar gabaritos por dia',
       detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
