@@ -17,8 +17,8 @@ from pathlib import Path
 # Configurações do modelo
 MODEL_PATH = Path(__file__).parent / "best_yolo11s_optimized.onnx"
 INPUT_SIZE = (640, 640)  # Tamanho de entrada padrão YOLO11
-CONFIDENCE_THRESHOLD = 0.25  # ⚡ Reduzido de 0.5 para 0.25 para detectar mais
-NMS_THRESHOLD = 0.3  # ⚡ Reduzido de 0.4 para 0.3 para menos supressão
+CONFIDENCE_THRESHOLD = 0.25  # Reduzido de 0.5 para detectar mais (menos conservador)
+NMS_THRESHOLD = 0.3  # Reduzido de 0.4 para permitir mais detecções próximas
 
 # Classes detectadas pelo modelo (ajustar conforme seu treinamento)
 CLASS_NAMES = {

@@ -964,7 +964,7 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
 
 /**
  * Rota POST /api/respostas/capturar-enem-mobile
- * Processamento completo: YOLO → OCR day → detecção de bolhas
+ * Processamento completo via HuggingFace: YOLO → OCR day → detecção de bolhas
  * Para captura final no mobile
  */
 router.post('/capturar-enem-mobile', uploadImagemTemp.single('imagem'), async (req, res) => {
@@ -977,104 +977,50 @@ router.post('/capturar-enem-mobile', uploadImagemTemp.single('imagem'), async (r
     }
 
     const imagemPath = req.file.path;
-    const imagemFilename = req.file.filename;
-
-    console.log('[CAPTURAR-ENEM-MOBILE] Processando captura mobile...');
-
-    // Executar pipeline completo ENEM
-    const scriptPath = path.join(__dirname, '../scripts/processar_respostas_enem_mobile.py');
-
-    if (!fs.existsSync(scriptPath)) {
-      throw new Error('Script de processamento ENEM não encontrado');
-    }
-
-    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
-    const comando = `${pythonCommand} "${scriptPath}" "${imagemPath}"`;
-
-    const { stdout, stderr } = await execAsync(comando, {
-      maxBuffer: 10 * 1024 * 1024,
-      encoding: 'utf8',
-      timeout: 60000 // 60 segundos timeout
-    });
-
-    if (stderr && stderr.trim()) {
-      console.log('[CAPTURAR-ENEM-MOBILE] Stderr:', stderr);
-    }
-
-    // Parsear resultado JSON
-    const jsonMatch = stdout.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Resposta do Python inválida');
-    }
-
-    const resultado = JSON.parse(jsonMatch[0]);
-
-    if (!resultado.sucesso) {
-      throw new Error(resultado.erro || 'Erro no processamento Python');
-    }
-
-    // Armazenar informações da imagem temporária
-    const imagemAnexada = {
-      nome: imagemFilename,
-      caminho: imagemPath,
-      caminhoRelativo: `/uploads/imagens/temp/${imagemFilename}`,
-      tamanho: req.file.size,
-      temporaria: true
-    };
-
-    // Construir mensagem
-    let mensagem = `Captura processada com sucesso! ${resultado.total_respostas} respostas extraídas.`;
-    mensagem += ` Dia ${resultado.dia_detectado} detectado (questões ${resultado.questao_inicial}-${resultado.questao_final}).`;
-
-    if (resultado.questoes_com_dupla_marcacao > 0) {
-      mensagem += ` ⚠ ${resultado.questoes_com_dupla_marcacao} questão(ões) com dupla marcação.`;
-    }
-
-    if (resultado.questoes_sem_marcacao > 0) {
-      mensagem += ` ○ ${resultado.questoes_sem_marcacao} em branco.`;
-    }
+    mensagem += ` ○ ${resultado.questoes_sem_marcacao} em branco.`;
+  }
 
     // Retornar resposta
     res.status(200).json({
-      sucesso: true,
-      mensagem: mensagem,
-      dia_detectado: resultado.dia_detectado,
-      questao_inicial: resultado.questao_inicial,
-      questao_final: resultado.questao_final,
-      confianca_ocr: resultado.confianca_ocr,
-      imagem: imagemAnexada,
-      respostas: resultado.respostas || [],
-      total_respostas: resultado.total_respostas || 0,
-      detalhes: {
-        total_bolhas_detectadas: resultado.total_bolhas_detectadas || 0,
-        questoes_com_dupla_marcacao: resultado.questoes_com_dupla_marcacao || 0,
-        questoes_sem_marcacao: resultado.questoes_sem_marcacao || 0,
-        questoes_validas: resultado.questoes_validas || 0,
-        questoes_invalidas_detalhes: resultado.questoes_invalidas_detalhes || [],
-        avisos: resultado.avisos || [],
-        rois_detectadas: resultado.rois_detectadas || {},
-        tipo_deteccao: 'enem_mobile'
-      }
-    });
-
-  } catch (err) {
-    console.error('Erro ao capturar ENEM mobile:', err);
-
-    // Limpar arquivo temporário se houver erro
-    if (req.file && fs.existsSync(req.file.path)) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (unlinkErr) {
-        console.error('Erro ao remover arquivo temporário:', unlinkErr);
-      }
+    sucesso: true,
+    mensagem: mensagem,
+    dia_detectado: resultado.dia_detectado,
+    questao_inicial: resultado.questao_inicial,
+    questao_final: resultado.questao_final,
+    confianca_ocr: resultado.confianca_ocr,
+    imagem: imagemAnexada,
+    respostas: resultado.respostas || [],
+    total_respostas: resultado.total_respostas || 0,
+    detalhes: {
+      total_bolhas_detectadas: resultado.total_bolhas_detectadas || 0,
+      questoes_com_dupla_marcacao: resultado.questoes_com_dupla_marcacao || 0,
+      questoes_sem_marcacao: resultado.questoes_sem_marcacao || 0,
+      questoes_validas: resultado.questoes_validas || 0,
+      questoes_invalidas_detalhes: resultado.questoes_invalidas_detalhes || [],
+      avisos: resultado.avisos || [],
+      rois_detectadas: resultado.rois_detectadas || {},
+      tipo_deteccao: 'enem_mobile'
     }
+  });
 
-    res.status(500).json({
-      sucesso: false,
-      erro: 'Erro ao processar captura ENEM',
-      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+} catch (err) {
+  console.error('Erro ao capturar ENEM mobile:', err);
+
+  // Limpar arquivo temporário se houver erro
+  if (req.file && fs.existsSync(req.file.path)) {
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (unlinkErr) {
+      console.error('Erro ao remover arquivo temporário:', unlinkErr);
+    }
   }
+
+  res.status(500).json({
+    sucesso: false,
+    erro: 'Erro ao processar captura ENEM',
+    detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+}
 });
 
 module.exports = router;
