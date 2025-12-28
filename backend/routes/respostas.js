@@ -868,7 +868,10 @@ router.post('/confirmar-imagem', async (req, res) => {
  */
 router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (req, res) => {
   try {
+    console.log('[FRAME-MOBILE] Recebido frame para detecção');
+
     if (!req.file) {
+      console.log('[FRAME-MOBILE] ERRO: Nenhum arquivo enviado');
       return res.status(400).json({
         sucesso: false,
         erro: 'Frame é obrigatório'
@@ -876,24 +879,20 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
     }
 
     const framePath = req.file.path;
+    console.log('[FRAME-MOBILE] Frame salvo em:', framePath);
 
     // Executar apenas detecção YOLO (rápido, sem processar bolhas)
     const scriptPath = path.join(__dirname, '../scripts/detector_yolo_enem.py');
 
     if (!fs.existsSync(scriptPath)) {
+      console.log('[FRAME-MOBILE] ERRO: Script não encontrado:', scriptPath);
       throw new Error('Script de detecção YOLO não encontrado');
     }
 
     const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
     const comando = `${pythonCommand} "${scriptPath}" "${framePath}"`;
 
-    console.log('[FRAME-MOBILE] Executando detecção YOLO...', {
-      scriptPath,
-      framePath,
-      scriptExists: fs.existsSync(scriptPath),
-      frameExists: fs.existsSync(framePath),
-      comando
-    });
+    console.log('[FRAME-MOBILE] Executando comando:', comando);
 
     const { stdout, stderr } = await execAsync(comando, {
       maxBuffer: 10 * 1024 * 1024,
@@ -904,32 +903,17 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
       console.log('[FRAME-MOBILE] Stderr:', stderr);
     }
 
-    console.log('[FRAME-MOBILE] Stdout completo:', stdout);
+    console.log('[FRAME-MOBILE] Stdout:', stdout.substring(0, 200));
 
     // Parsear resultado JSON
     const jsonMatch = stdout.match(/\{[\s\S]*\}/);
-
     if (!jsonMatch) {
-      console.error('[FRAME-MOBILE] Nenhum JSON encontrado na saída:', stdout);
-
-      // Limpar arquivo temporário
-      try {
-        if (fs.existsSync(framePath)) fs.unlinkSync(framePath);
-      } catch (cleanupErr) {
-        console.error('[FRAME-MOBILE] Erro ao limpar frame temp:', cleanupErr);
-      }
-
-      return res.status(200).json({
-        sucesso: false,
-        detectado: false,
-        rois: [],
-        erro: 'Modelo YOLO não retornou dados válidos'
-      });
+      console.log('[FRAME-MOBILE] ERRO: Resposta Python inválida. Stdout completo:', stdout);
+      throw new Error('Resposta do Python inválida');
     }
 
-
     const resultado = JSON.parse(jsonMatch[0]);
-    console.log('[FRAME-MOBILE] Resultado parseado:', resultado);
+    console.log('[FRAME-MOBILE] Resultado parseado:', JSON.stringify(resultado, null, 2));
 
     // Limpar frame temporário
     try {
@@ -942,36 +926,41 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
     let feedback = 'Procurando folha ENEM...';
     if (resultado.detectado) {
       feedback = '✓ Folha detectada! Capture quando estiver estável.';
+      console.log('[FRAME-MOBILE] ✅ Detecção bem-sucedida!');
     } else if (resultado.rois && Object.keys(resultado.rois).length > 0) {
       feedback = 'Centralize melhor a folha';
+      console.log('[FRAME-MOBILE] ⚠️ ROIs parciais detectadas');
+    } else {
+      console.log('[FRAME-MOBILE] ❌ Nenhuma detecção');
     }
+  }
 
     res.status(200).json({
-      sucesso: resultado.sucesso,
-      detectado: resultado.detectado || false,
-      rois: resultado.rois || {},
-      feedback: feedback,
-      total_deteccoes: resultado.total_deteccoes || 0
-    });
+    sucesso: resultado.sucesso,
+    detectado: resultado.detectado || false,
+    rois: resultado.rois || {},
+    feedback: feedback,
+    total_deteccoes: resultado.total_deteccoes || 0
+  });
 
-  } catch (err) {
-    console.error('Erro ao processar frame mobile:', err);
+} catch (err) {
+  console.error('Erro ao processar frame mobile:', err);
 
-    // Limpar arquivo temporário se houver erro
-    if (req.file && fs.existsSync(req.file.path)) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (unlinkErr) {
-        console.error('Erro ao remover frame temporário:', unlinkErr);
-      }
+  // Limpar arquivo temporário se houver erro
+  if (req.file && fs.existsSync(req.file.path)) {
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (unlinkErr) {
+      console.error('Erro ao remover frame temporário:', unlinkErr);
     }
-
-    res.status(500).json({
-      sucesso: false,
-      erro: 'Erro ao processar frame',
-      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
   }
+
+  res.status(500).json({
+    sucesso: false,
+    erro: 'Erro ao processar frame',
+    detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+}
 });
 
 /**
