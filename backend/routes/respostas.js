@@ -933,34 +933,33 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
     } else {
       console.log('[FRAME-MOBILE] ❌ Nenhuma detecção');
     }
-  }
 
     res.status(200).json({
-    sucesso: resultado.sucesso,
-    detectado: resultado.detectado || false,
-    rois: resultado.rois || {},
-    feedback: feedback,
-    total_deteccoes: resultado.total_deteccoes || 0
-  });
+      sucesso: resultado.sucesso,
+      detectado: resultado.detectado || false,
+      rois: resultado.rois || {},
+      feedback: feedback,
+      total_deteccoes: resultado.total_deteccoes || 0
+    });
 
-} catch (err) {
-  console.error('Erro ao processar frame mobile:', err);
+  } catch (err) {
+    console.error('Erro ao processar frame mobile:', err);
 
-  // Limpar arquivo temporário se houver erro
-  if (req.file && fs.existsSync(req.file.path)) {
-    try {
-      fs.unlinkSync(req.file.path);
-    } catch (unlinkErr) {
-      console.error('Erro ao remover frame temporário:', unlinkErr);
+    // Limpar arquivo temporário se houver erro
+    if (req.file && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkErr) {
+        console.error('Erro ao remover frame temporário:', unlinkErr);
+      }
     }
-  }
 
-  res.status(500).json({
-    sucesso: false,
-    erro: 'Erro ao processar frame',
-    detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-}
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro ao processar frame',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
 });
 
 /**
