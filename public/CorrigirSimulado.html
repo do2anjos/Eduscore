@@ -496,802 +496,828 @@
             const data = await response.json();
             console.log(`[DETECTION] Resposta do backend:`, data);
 
-            // Limpar canvas
-            cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
-          }
+            // Atualizar feedback visual
+            const feedbackDiv = document.getElementById('detectionFeedback');
+            const btnCapturar = document.getElementById('btnCapturarCamera');
+
+            if (data.detectado) {
+              feedbackDiv.textContent = '🟢 Folha detectada! Capture agora.';
+              feedbackDiv.style.background = '#51cf66';
+              btnCapturar.disabled = false;
+              btnCapturar.style.opacity = '1';
+              console.log('[DETECTION] ✓ Folha ENEM detectada!');
+            } else if (data.erro) {
+              feedbackDiv.textContent = `⚠️ ${data.erro}`;
+              feedbackDiv.style.background = '#ff6b6b';
+              btnCapturar.disabled = true;
+              btnCapturar.style.opacity = '0.5';
+              console.warn('[DETECTION] Erro:', data.erro);
+            } else {
+              feedbackDiv.textContent = '🔍 Procurando folha ENEM...';
+              feedbackDiv.style.background = '#f03e3e';
+              btnCapturar.disabled = true;
+              btnCapturar.style.opacity = '0.5';
+            }
+
+            // Desenhar ROIs se houver
+            if (data.rois && Object.keys(data.rois).length > 0) {
+              desenharROIsCamera(data.rois);
+            }
 
           } catch (error) {
-          console.error('Erro na detecção:', error);
-        }
-      }, 800);
-    }
-
-    async function capturarFrameAtualCamera() {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = cameraVideo.videoWidth;
-      tempCanvas.height = cameraVideo.videoHeight;
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCtx.drawImage(cameraVideo, 0, 0);
-
-      return new Promise((resolve) => {
-        tempCanvas.toBlob(resolve, 'image/jpeg', 0.95);
-      });
-    }
-
-    function desenharROIsCamera(rois) {
-      cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
-
-      const scaleX = cameraCanvas.width / cameraVideo.videoWidth;
-      const scaleY = cameraCanvas.height / cameraVideo.videoHeight;
-
-      Object.entries(rois).forEach(([nome, deteccoes]) => {
-        if (!deteccoes || deteccoes.length === 0) return;
-
-        deteccoes.forEach(deteccao => {
-          const [x, y, w, h] = deteccao.bbox;
-          const scaledX = x * scaleX;
-          const scaledY = y * scaleY;
-          const scaledW = w * scaleX;
-          const scaledH = h * scaleY;
-
-          const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
-
-          cameraCtx.strokeStyle = cor;
-          cameraCtx.lineWidth = 4;
-          cameraCtx.strokeRect(scaledX, scaledY, scaledW, scaledH);
-
-          cameraCtx.fillStyle = cor;
-          cameraCtx.font = '16px Atkinson Hyperlegible, sans-serif';
-          cameraCtx.fillText(nome.replace('_', ' '), scaledX, scaledY - 8);
-        });
-      });
-    }
-
-    async function capturarDaCamera() {
-      try {
-        // Pausar detecção
-        if (detectionInterval) {
-          clearInterval(detectionInterval);
-          detectionInterval = null;
-        }
-
-        showLoading('Processando captura...');
-
-        // Capturar imagem final
-        const imageBlob = await capturarFrameAtualCamera();
-
-        // Enviar para processamento completo
-        const token = localStorage.getItem('token');
-        const formData = new FormData();
-        formData.append('imagem', imageBlob, 'captura_enem.jpg');
-
-        const response = await apiFetch('/api/respostas/capturar-enem-mobile', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData
-        });
-
-        const data = await response.json();
-        hideLoading();
-
-        if (!data.sucesso) {
-          throw new Error(data.erro || 'Erro ao processar captura');
-        }
-
-        // Fechar camera
-        fecharCameraMobile();
-
-        // Processar respostas capturadas
-        mostrarResultadoCaptura(data);
-
-      } catch (error) {
-        console.error('Erro ao capturar:', error);
-        hideLoading();
-        showToast(`Erro ao processar captura: ${error.message}`, 'error');
-        iniciarLiveDetection(); // Reiniciar detecção
-      }
-    }
-
-    async function mostrarResultadoCaptura(data) {
-      showToast(`Captura ENEM Dia ${data.dia_detectado} processada! ${data.total_respostas} respostas extraídas.`, 'success');
-
-      // Armazenar respostas temporárias
-      if (data.respostas && Array.isArray(data.respostas)) {
-        Object.keys(respostasAluno).forEach(key => {
-          if (key.startsWith('temp_')) delete respostasAluno[key];
-        });
-
-        data.respostas.forEach(item => {
-          const questaoNumero = parseInt(item.Questão || item.Questao || item.questao);
-          if (!isNaN(questaoNumero) && questaoNumero > 0) {
-            const resposta = item.Resposta || item.resposta || '';
-            respostasAluno[`temp_${questaoNumero}`] = resposta;
+            console.error('[DETECTION] Erro no loop:', error);
           }
+        }, 100); // Verificar a cada 100ms (mas só processa a cada 800ms)
+
+        console.log('[DETECTION] Loop de detecção iniciado');
+      }
+
+      async function capturarFrameAtualCamera() {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = cameraVideo.videoWidth;
+        tempCanvas.height = cameraVideo.videoHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(cameraVideo, 0, 0);
+
+        return new Promise((resolve) => {
+          tempCanvas.toBlob(resolve, 'image/jpeg', 0.95);
         });
       }
 
-      // Buscar gabaritos por dia e ir para próximo step
-      if (data.dia_detectado) {
-        await buscarGabaritosPorDia(data.dia_detectado);
-      }
+      function desenharROIsCamera(rois) {
+        cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
-      // Ir para step3_5 (respostas capturadas)
-      await selecionarAluno(alunoSelecionado);
+        const scaleX = cameraCanvas.width / cameraVideo.videoWidth;
+        const scaleY = cameraCanvas.height / cameraVideo.videoHeight;
 
-    }
+        Object.entries(rois).forEach(([nome, deteccoes]) => {
+          if (!deteccoes || deteccoes.length === 0) return;
 
-    async function buscarGabaritosPorDia(dia) {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+          deteccoes.forEach(deteccao => {
+            const [x, y, w, h] = deteccao.bbox;
+            const scaledX = x * scaleX;
+            const scaledY = y * scaleY;
+            const scaledW = w * scaleX;
+            const scaledH = h * scaleY;
 
-      try {
-        showLoading(`Buscando gabaritos do Dia ${dia}...`);
+            const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
 
-        const response = await apiFetch(`/api/gabaritos/por-dia/${dia}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+            cameraCtx.strokeStyle = cor;
+            cameraCtx.lineWidth = 4;
+            cameraCtx.strokeRect(scaledX, scaledY, scaledW, scaledH);
+
+            cameraCtx.fillStyle = cor;
+            cameraCtx.font = '16px Atkinson Hyperlegible, sans-serif';
+            cameraCtx.fillText(nome.replace('_', ' '), scaledX, scaledY - 8);
+          });
         });
-
-        const data = await response.json();
-
-        if (data.sucesso && data.gabaritos && data.gabaritos.length > 0) {
-          // Substituir lista de gabaritos pela lista filtrada
-          gabaritos = data.gabaritos;
-          renderizarGabaritos();
-
-          showToast(`${data.gabaritos.length} gabarito(s) encontrado(s) para o Dia ${dia} do ENEM`, 'info');
-        } else {
-          showToast(`Nenhum gabarito cadastrado para o Dia ${dia}. Mostrando todos os gabaritos.`, 'warning');
-          // Manter todos os gabaritos caso não encontre nenhum para o dia
-        }
-
-      } catch (error) {
-        console.error('Erro ao buscar gabaritos por dia:', error);
-        showToast('Erro ao buscar gabaritos. Mostrando todos disponíveis.', 'warning');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    async function loadUserData() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
-    }
-
-    async function carregarAlunos() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      try {
-        showLoading('Carregando alunos...');
-        const response = await apiFetch('/api/alunos', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.sucesso || Array.isArray(data)) {
-          alunos = data.alunos || data;
-        }
-      } catch (error) {
-        console.error('Erro ao carregar alunos:', error);
-        showToast('Erro ao carregar lista de alunos', 'error');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    async function carregarGabaritos() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      try {
-        showLoading('Carregando gabaritos...');
-        const response = await apiFetch('/api/gabaritos', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.sucesso || Array.isArray(data)) {
-          gabaritos = data.gabaritos || data;
-          renderizarGabaritos();
-        }
-      } catch (error) {
-        console.error('Erro ao carregar gabaritos:', error);
-        showToast('Erro ao carregar lista de gabaritos', 'error');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function renderizarGabaritos() {
-      const container = document.getElementById('gabaritoList');
-      if (!container) return;
-
-      container.innerHTML = '';
-      gabaritos.forEach(gabarito => {
-        const div = document.createElement('div');
-        div.onclick = () => selectItem(div, gabarito.id);
-        div.textContent = `${gabarito.nome} (${gabarito.etapa})`;
-        div.dataset.gabaritoId = gabarito.id;
-        container.appendChild(div);
-      });
-    }
-
-    async function nextStep() {
-      // Carregar lista de alunos quando avançar para step 3
-      if (currentStep === 2) {
-        await carregarListaAlunos();
       }
 
-      document.getElementById(`step${currentStep}`).classList.remove('active');
-      if (currentStep === '3_5') {
-        currentStep = 4;
-      } else {
-        currentStep++;
-      }
-      document.getElementById(`step${currentStep}`).classList.add('active');
-      atualizarBotaoVoltar();
-    }
-
-    function previousStep() {
-      document.getElementById(`step${currentStep}`).classList.remove('active');
-      if (currentStep === 4) {
-        currentStep = '3_5';
-      } else if (currentStep === '3_5') {
-        currentStep = 3;
-      } else {
-        currentStep--;
-      }
-      document.getElementById(`step${currentStep}`).classList.add('active');
-      atualizarBotaoVoltar();
-    }
-
-    function atualizarBotaoVoltar() {
-      const btn = document.getElementById("voltarBtn");
-      if (currentStep === 1 || currentStep === 5) {
-        btn.style.display = "none";
-      } else {
-        btn.style.display = "block";
-      }
-    }
-
-    async function carregarListaAlunos() {
-      const container = document.getElementById('listaAlunos');
-      if (!container) return;
-
-      container.innerHTML = '';
-
-      // Mostrar apenas o aluno selecionado no Step 1
-      if (!alunoSelecionado) {
-        container.innerHTML = '<p style="text-align: center; color: var(--color-error); padding: var(--spacing-lg);">Nenhum aluno selecionado. Por favor, volte ao passo anterior e identifique o aluno.</p>';
-        return;
-      }
-
-      // Mostrar apenas o aluno selecionado
-      const div = document.createElement('div');
-      div.onclick = () => selecionarAluno(alunoSelecionado);
-      div.textContent = `${alunoSelecionado.nome_completo} - ${alunoSelecionado.matricula}`;
-      div.style.cursor = 'pointer';
-      container.appendChild(div);
-
-      // Auto-selecionar o aluno e avançar automaticamente para step3_5
-      setTimeout(() => {
-        selecionarAluno(alunoSelecionado);
-      }, 100);
-    }
-
-    async function selecionarAluno(aluno) {
-      alunoSelecionado = aluno;
-      document.getElementById('step3').classList.remove('active');
-      document.getElementById('step3_5').classList.add('active');
-      document.getElementById('alunoSelecionado').innerText = `Confira as alternativas marcadas para o aluno: ${aluno.nome_completo}`;
-      document.getElementById('alunoInfo').innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
-
-      // Carregar respostas existentes do aluno se houver (preserva respostas temporárias)
-      await carregarRespostasAluno(aluno.id);
-
-      // Aguardar um pouco para garantir que as respostas foram preservadas
-      setTimeout(() => {
-        preencherRespostasCapturadas();
-      }, 100);
-
-      currentStep = '3_5';
-      atualizarBotaoVoltar();
-    }
-
-    async function carregarRespostasAluno(alunoId) {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      try {
-        // Salvar respostas temporárias existentes antes de carregar do banco
-        const respostasTemporarias = {};
-        Object.keys(respostasAluno).forEach(key => {
-          if (key.startsWith('temp_')) {
-            respostasTemporarias[key] = respostasAluno[key];
+      async function capturarDaCamera() {
+        try {
+          // Pausar detecção
+          if (detectionInterval) {
+            clearInterval(detectionInterval);
+            detectionInterval = null;
           }
-        });
 
-        const response = await apiFetch('/api/respostas', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
+          showLoading('Processando captura...');
 
-        const respostasArray = data.respostas || (Array.isArray(data) ? data : []);
-        // Filtrar respostas do aluno
-        const respostasDoAluno = respostasArray.filter(r => r.aluno_id === alunoId);
+          // Capturar imagem final
+          const imageBlob = await capturarFrameAtualCamera();
 
-        // Mesclar respostas do banco com respostas temporárias
-        // Respostas temporárias têm prioridade (são as mais recentes)
-        respostasAluno = {};
-        respostasDoAluno.forEach(r => {
-          respostasAluno[r.questao_id] = r.resposta_aluno;
-        });
+          // Enviar para processamento completo
+          const token = localStorage.getItem('token');
+          const formData = new FormData();
+          formData.append('imagem', imageBlob, 'captura_enem.jpg');
 
-        // Restaurar respostas temporárias (sobrescrever se houver conflito)
-        Object.keys(respostasTemporarias).forEach(key => {
-          respostasAluno[key] = respostasTemporarias[key];
-        });
-      } catch (error) {
-        console.error('Erro ao carregar respostas:', error);
-      }
-    }
-
-    function preencherRespostasCapturadas() {
-      const container = document.getElementById('respostasCapturadas');
-      if (!container) return;
-
-      container.innerHTML = "";
-
-      // Contar apenas respostas temporárias (do processamento atual) e respostas do banco já mapeadas
-      const respostasTemporarias = Object.keys(respostasAluno).filter(k => k.startsWith('temp_'));
-
-      if (respostasTemporarias.length === 0 && Object.keys(respostasAluno).length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-lg);">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
-        return;
-      }
-
-      // Preparar lista de respostas para exibição
-      const questoesOrdenadas = [];
-
-      // Primeiro, adicionar respostas que já estão mapeadas por questao_id (se gabarito foi carregado)
-      if (questoesGabarito.length > 0) {
-        questoesGabarito.forEach(q => {
-          const resposta = respostasAluno[q.id];
-          if (resposta !== undefined && resposta !== null) {
-            // Incluir resposta mesmo se for vazia (indica não marcado)
-            questoesOrdenadas.push({ id: q.id, numero: q.numero, resposta: resposta || '' });
-          }
-        });
-      }
-
-      // Adicionar respostas temporárias (temp_${numero}) que ainda não foram mapeadas
-      Object.keys(respostasAluno).forEach(key => {
-        if (key.startsWith('temp_')) {
-          const questaoNumero = parseInt(key.replace('temp_', ''));
-          // Verificar se já não foi adicionada
-          if (!questoesOrdenadas.find(q => q.numero === questaoNumero)) {
-            const resposta = respostasAluno[key];
-            // Incluir resposta temporária mesmo se for vazia
-            questoesOrdenadas.push({ id: key, numero: questaoNumero, resposta: resposta || '' });
-          }
-        }
-      });
-
-      // Ordenar por número da questão
-      questoesOrdenadas.sort((a, b) => a.numero - b.numero);
-
-      if (questoesOrdenadas.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-lg);">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
-        return;
-      }
-
-      questoesOrdenadas.forEach((item, index) => {
-        const div = document.createElement('div');
-        const respostaTexto = item.resposta.trim() === ''
-          ? '<span style="color: var(--color-text-lighter); font-style: italic;">Não marcado</span>'
-          : item.resposta.includes(',')
-            ? `<span style="color: var(--color-error); font-weight: 600;">${item.resposta} (dupla marcação - inválida)</span>`
-            : item.resposta;
-        div.innerHTML = `<strong>Questão ${String(item.numero).padStart(2, '0')}:</strong> ${respostaTexto}`;
-        container.appendChild(div);
-      });
-    }
-
-    function selectItem(el, gabaritoId) {
-      document.querySelectorAll('#gabaritoList div').forEach(div => div.classList.remove('selected'));
-      el.classList.add('selected');
-      gabaritoSelecionado = gabaritoId;
-      carregarQuestoesGabarito(gabaritoId);
-    }
-
-    async function carregarQuestoesGabarito(gabaritoId) {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      try {
-        const response = await apiFetch(`/api/questoes/gabarito/${gabaritoId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.sucesso) {
-          questoesGabarito = data.questoes || [];
-        }
-      } catch (error) {
-        console.error('Erro ao carregar questões:', error);
-      }
-    }
-
-    let imagemAnexada = null;
-
-    async function handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      // Validar tipo de arquivo
-      if (!file.type.startsWith('image/')) {
-        showToast('Por favor, selecione uma imagem válida', 'error');
-        return;
-      }
-
-      // Validar tamanho (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        showToast('A imagem deve ter no máximo 10MB', 'error');
-        return;
-      }
-
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
-
-      try {
-        showLoading('Processando imagem...');
-        showUploadProgress(0);
-
-        // Criar FormData para enviar a imagem
-        const formData = new FormData();
-        formData.append('imagem', file);
-
-        // Simular progresso durante upload (já que fetch não suporta progress nativamente)
-        showUploadProgress(30);
-
-        // Enviar imagem para o backend para processamento
-        const response = await apiFetch('/api/respostas/processar-imagem', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          body: formData
-        });
-
-        showUploadProgress(70);
-
-        showUploadProgress(90);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.erro || data.detalhes || 'Erro ao processar imagem');
-        }
-
-        if (!data.sucesso) {
-          throw new Error(data.erro || data.detalhes || 'Erro ao processar imagem');
-        }
-
-        showUploadProgress(100);
-
-        // Armazenar a imagem anexada (caminho temporário até finalizar correção)
-        imagemAnexada = {
-          nome: data.imagem?.nome, // Nome temporário: temp_resposta_...
-          caminho: data.imagem?.caminho, // Caminho completo temporário
-          caminhoRelativo: `/uploads/imagens/temp/${data.imagem?.nome}`, // Caminho relativo temporário
-          tamanho: data.imagem?.tamanho,
-          temporaria: data.imagem?.temporaria || true // Flag indicando que é temporária
-        };
-
-        // Processar respostas extraídas
-        const respostasExtraidas = data.respostas || [];
-        const detalhes = data.detalhes || {};
-
-        if (respostasExtraidas.length > 0) {
-          // Limpar respostas temporárias anteriores para evitar conflito
-          Object.keys(respostasAluno).forEach(key => {
-            if (key.startsWith('temp_')) {
-              delete respostasAluno[key];
-            }
+          const response = await apiFetch('/api/respostas/capturar-enem-mobile', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
           });
 
-          // Armazenar com o número da questão como chave temporária
-          respostasExtraidas.forEach((item) => {
-            // Buscar dinamicamente pelos campos (resolver problema de encoding com acentos)
-            const keys = Object.keys(item);
-            const questKey = keys.find(k => k.toLowerCase().includes('quest') || k.toLowerCase().includes('num'));
-            const respKey = keys.find(k => k.toLowerCase().includes('resposta') || k.toLowerCase().includes('resp'));
-
-            const questaoNumero = questKey ? item[questKey] : (item['Questão'] || item.Questão || item.Questao || item.questao || item.numero);
-            const resposta = respKey ? item[respKey] : (item['Resposta'] || item.Resposta || item.resposta || item.resposta_aluno || '');
-
-            if (questaoNumero !== undefined && questaoNumero !== null && questaoNumero !== '') {
-              // Converter para número se for string
-              const numQuestao = typeof questaoNumero === 'string' ? parseInt(questaoNumero.trim()) : questaoNumero;
-
-              if (!isNaN(numQuestao) && numQuestao > 0) {
-                // Armazenar temporariamente usando número da questão
-                respostasAluno[`temp_${numQuestao}`] = resposta || '';
-              }
-            }
-          });
-
-          // Construir mensagem detalhada
-          let mensagem = `${respostasExtraidas.length} respostas extraídas!`;
-
-          if (detalhes.questoes_validas > 0) {
-            mensagem += `\n✓ ${detalhes.questoes_validas} válida(s)`;
-          }
-
-          if (detalhes.questoes_com_dupla_marcacao > 0) {
-            mensagem += `\n⚠ ${detalhes.questoes_com_dupla_marcacao} com dupla marcação (inválidas)`;
-            showToast(mensagem, 'warning');
-          } else if (detalhes.questoes_sem_marcacao > 0) {
-            mensagem += `\n○ ${detalhes.questoes_sem_marcacao} em branco`;
-            showToast(mensagem, 'info');
-          } else {
-            showToast(mensagem, 'success');
-          }
-
-          // Exibir avisos se houver
-          if (detalhes.avisos && detalhes.avisos.length > 0) {
-            detalhes.avisos.forEach(aviso => {
-              setTimeout(() => {
-                showToast(aviso, detalhes.questoes_com_dupla_marcacao > 0 ? 'warning' : 'info');
-              }, 1000);
-            });
-          }
-        } else {
-          showToast('Imagem processada, mas nenhuma resposta foi encontrada.', 'warning');
-        }
-
-        // Avançar para o próximo passo
-        setTimeout(() => {
-          nextStep();
-        }, 500);
-
-      } catch (error) {
-        console.error('Erro ao processar imagem:', error);
-        showToast(`Erro ao processar imagem: ${error.message}`, 'error', 5000);
-      } finally {
-        hideLoading();
-        hideUploadProgress();
-      }
-    }
-
-    async function verificarCodigo() {
-      const input = document.getElementById("codigoAlunoInput").value.trim();
-      const infoSpan = document.getElementById("alunoInfo");
-      const btn = document.getElementById("btnProximoAluno");
-
-      if (!input) {
-        infoSpan.innerText = "Ler código!";
-        btn.style.display = "none";
-        alunoSelecionado = null;
-        return;
-      }
-
-      // Buscar aluno por matrícula ou ID
-      const aluno = alunos.find(a => a.matricula === input || a.id === input);
-
-      if (aluno) {
-        infoSpan.innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
-        btn.style.display = "inline-block";
-        alunoSelecionado = aluno;
-      } else {
-        infoSpan.innerText = "Aluno não encontrado!";
-        btn.style.display = "none";
-        alunoSelecionado = null;
-        showToast('Aluno não encontrado. Verifique a matrícula.', 'warning');
-      }
-    }
-
-    async function finalizar() {
-      if (!alunoSelecionado) {
-        showToast('Selecione um aluno primeiro', 'warning');
-        return;
-      }
-
-      if (!gabaritoSelecionado) {
-        showToast('Selecione um gabarito primeiro', 'warning');
-        return;
-      }
-
-      if (questoesGabarito.length === 0) {
-        showToast('Carregue as questões do gabarito primeiro', 'warning');
-        return;
-      }
-
-      // Mapear respostas temporárias (temp_${numero}) para questao_id quando gabarito é selecionado
-      const respostasMapeadas = {};
-
-      // Primeiro, copiar respostas que já estão mapeadas por questao_id
-      Object.keys(respostasAluno).forEach(key => {
-        if (!key.startsWith('temp_')) {
-          respostasMapeadas[key] = respostasAluno[key];
-        }
-      });
-
-      // Mapear respostas temporárias para questao_id baseado no número da questão
-      Object.keys(respostasAluno).forEach(key => {
-        if (key.startsWith('temp_')) {
-          const questaoNumero = parseInt(key.replace('temp_', ''));
-          // Encontrar questão no gabarito pelo número
-          const questao = questoesGabarito.find(q => q.numero === questaoNumero);
-          if (questao) {
-            respostasMapeadas[questao.id] = respostasAluno[key];
-          }
-        }
-      });
-
-      // Se não houver respostas após mapeamento, mostrar aviso
-      if (Object.keys(respostasMapeadas).length === 0) {
-        showToast('Nenhuma resposta capturada. Use a câmera ou anexe foto para capturar as respostas.', 'warning');
-        return;
-      }
-
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
-
-      try {
-        showLoading('Corrigindo simulado e salvando respostas...');
-
-        // Comparar respostas do aluno com o gabarito e salvar
-        // IMPORTANTE: Processar apenas questões que foram capturadas (têm resposta mapeada)
-        let respostasSalvas = 0;
-        let acertos = 0;
-        let erros = 0;
-        let questoesVazias = 0;
-        let questoesDuplaMarcacao = 0;
-
-        // Obter apenas as questões que foram capturadas (têm resposta mapeada)
-        const questoesCapturadas = questoesGabarito.filter(questao => {
-          return respostasMapeadas.hasOwnProperty(questao.id);
-        });
-
-        // Se não houver questões capturadas, mostrar aviso
-        if (questoesCapturadas.length === 0) {
-          showToast('Nenhuma questão foi capturada. Use a câmera ou anexe foto para capturar as respostas.', 'warning');
+          const data = await response.json();
           hideLoading();
+
+          if (!data.sucesso) {
+            throw new Error(data.erro || 'Erro ao processar captura');
+          }
+
+          // Fechar camera
+          fecharCameraMobile();
+
+          // Processar respostas capturadas
+          mostrarResultadoCaptura(data);
+
+        } catch (error) {
+          console.error('Erro ao capturar:', error);
+          hideLoading();
+          showToast(`Erro ao processar captura: ${error.message}`, 'error');
+          iniciarLiveDetection(); // Reiniciar detecção
+        }
+      }
+
+      async function mostrarResultadoCaptura(data) {
+        showToast(`Captura ENEM Dia ${data.dia_detectado} processada! ${data.total_respostas} respostas extraídas.`, 'success');
+
+        // Armazenar respostas temporárias
+        if (data.respostas && Array.isArray(data.respostas)) {
+          Object.keys(respostasAluno).forEach(key => {
+            if (key.startsWith('temp_')) delete respostasAluno[key];
+          });
+
+          data.respostas.forEach(item => {
+            const questaoNumero = parseInt(item.Questão || item.Questao || item.questao);
+            if (!isNaN(questaoNumero) && questaoNumero > 0) {
+              const resposta = item.Resposta || item.resposta || '';
+              respostasAluno[`temp_${questaoNumero}`] = resposta;
+            }
+          });
+        }
+
+        // Buscar gabaritos por dia e ir para próximo step
+        if (data.dia_detectado) {
+          await buscarGabaritosPorDia(data.dia_detectado);
+        }
+
+        // Ir para step3_5 (respostas capturadas)
+        await selecionarAluno(alunoSelecionado);
+
+      }
+
+      async function buscarGabaritosPorDia(dia) {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+          showLoading(`Buscando gabaritos do Dia ${dia}...`);
+
+          const response = await apiFetch(`/api/gabaritos/por-dia/${dia}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          const data = await response.json();
+
+          if (data.sucesso && data.gabaritos && data.gabaritos.length > 0) {
+            // Substituir lista de gabaritos pela lista filtrada
+            gabaritos = data.gabaritos;
+            renderizarGabaritos();
+
+            showToast(`${data.gabaritos.length} gabarito(s) encontrado(s) para o Dia ${dia} do ENEM`, 'info');
+          } else {
+            showToast(`Nenhum gabarito cadastrado para o Dia ${dia}. Mostrando todos os gabaritos.`, 'warning');
+            // Manter todos os gabaritos caso não encontre nenhum para o dia
+          }
+
+        } catch (error) {
+          console.error('Erro ao buscar gabaritos por dia:', error);
+          showToast('Erro ao buscar gabaritos. Mostrando todos disponíveis.', 'warning');
+        } finally {
+          hideLoading();
+        }
+      }
+
+      async function loadUserData() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login.html';
+          return;
+        }
+      }
+
+      async function carregarAlunos() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+          showLoading('Carregando alunos...');
+          const response = await apiFetch('/api/alunos', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          if (data.sucesso || Array.isArray(data)) {
+            alunos = data.alunos || data;
+          }
+        } catch (error) {
+          console.error('Erro ao carregar alunos:', error);
+          showToast('Erro ao carregar lista de alunos', 'error');
+        } finally {
+          hideLoading();
+        }
+      }
+
+      async function carregarGabaritos() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+          showLoading('Carregando gabaritos...');
+          const response = await apiFetch('/api/gabaritos', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          if (data.sucesso || Array.isArray(data)) {
+            gabaritos = data.gabaritos || data;
+            renderizarGabaritos();
+          }
+        } catch (error) {
+          console.error('Erro ao carregar gabaritos:', error);
+          showToast('Erro ao carregar lista de gabaritos', 'error');
+        } finally {
+          hideLoading();
+        }
+      }
+
+      function renderizarGabaritos() {
+        const container = document.getElementById('gabaritoList');
+        if (!container) return;
+
+        container.innerHTML = '';
+        gabaritos.forEach(gabarito => {
+          const div = document.createElement('div');
+          div.onclick = () => selectItem(div, gabarito.id);
+          div.textContent = `${gabarito.nome} (${gabarito.etapa})`;
+          div.dataset.gabaritoId = gabarito.id;
+          container.appendChild(div);
+        });
+      }
+
+      async function nextStep() {
+        // Carregar lista de alunos quando avançar para step 3
+        if (currentStep === 2) {
+          await carregarListaAlunos();
+        }
+
+        document.getElementById(`step${currentStep}`).classList.remove('active');
+        if (currentStep === '3_5') {
+          currentStep = 4;
+        } else {
+          currentStep++;
+        }
+        document.getElementById(`step${currentStep}`).classList.add('active');
+        atualizarBotaoVoltar();
+      }
+
+      function previousStep() {
+        document.getElementById(`step${currentStep}`).classList.remove('active');
+        if (currentStep === 4) {
+          currentStep = '3_5';
+        } else if (currentStep === '3_5') {
+          currentStep = 3;
+        } else {
+          currentStep--;
+        }
+        document.getElementById(`step${currentStep}`).classList.add('active');
+        atualizarBotaoVoltar();
+      }
+
+      function atualizarBotaoVoltar() {
+        const btn = document.getElementById("voltarBtn");
+        if (currentStep === 1 || currentStep === 5) {
+          btn.style.display = "none";
+        } else {
+          btn.style.display = "block";
+        }
+      }
+
+      async function carregarListaAlunos() {
+        const container = document.getElementById('listaAlunos');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // Mostrar apenas o aluno selecionado no Step 1
+        if (!alunoSelecionado) {
+          container.innerHTML = '<p style="text-align: center; color: var(--color-error); padding: var(--spacing-lg);">Nenhum aluno selecionado. Por favor, volte ao passo anterior e identifique o aluno.</p>';
           return;
         }
 
-        // Processar apenas questões capturadas
-        for (const questao of questoesCapturadas) {
-          const respostaAluno = respostasMapeadas[questao.id] || ''; // String vazia se não houver resposta
+        // Mostrar apenas o aluno selecionado
+        const div = document.createElement('div');
+        div.onclick = () => selecionarAluno(alunoSelecionado);
+        div.textContent = `${alunoSelecionado.nome_completo} - ${alunoSelecionado.matricula}`;
+        div.style.cursor = 'pointer';
+        container.appendChild(div);
 
-          // Verificar tipo de resposta
-          const respostaTrim = respostaAluno.trim();
-          const temDuplaMarcacao = respostaTrim.includes(',');
-          const estaVazia = respostaTrim === '';
+        // Auto-selecionar o aluno e avançar automaticamente para step3_5
+        setTimeout(() => {
+          selecionarAluno(alunoSelecionado);
+        }, 100);
+      }
 
-          // Contabilizar tipos
-          if (estaVazia) {
-            questoesVazias++;
-          } else if (temDuplaMarcacao) {
-            questoesDuplaMarcacao++;
-          }
+      async function selecionarAluno(aluno) {
+        alunoSelecionado = aluno;
+        document.getElementById('step3').classList.remove('active');
+        document.getElementById('step3_5').classList.add('active');
+        document.getElementById('alunoSelecionado').innerText = `Confira as alternativas marcadas para o aluno: ${aluno.nome_completo}`;
+        document.getElementById('alunoInfo').innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
 
-          // Se for dupla marcação ou vazio, não conta como acerto
-          // Dupla marcação = inválida (acertou = false)
-          // Vazio = não marcado (acertou = false)
-          let acertou = false;
+        // Carregar respostas existentes do aluno se houver (preserva respostas temporárias)
+        await carregarRespostasAluno(aluno.id);
 
-          if (!temDuplaMarcacao && !estaVazia) {
-            // Apenas verifica acerto se houver resposta única válida
-            acertou = respostaTrim.toUpperCase() === questao.resposta_correta.toUpperCase().trim();
-            if (acertou) {
-              acertos++;
-            } else {
-              erros++;
+        // Aguardar um pouco para garantir que as respostas foram preservadas
+        setTimeout(() => {
+          preencherRespostasCapturadas();
+        }, 100);
+
+        currentStep = '3_5';
+        atualizarBotaoVoltar();
+      }
+
+      async function carregarRespostasAluno(alunoId) {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+          // Salvar respostas temporárias existentes antes de carregar do banco
+          const respostasTemporarias = {};
+          Object.keys(respostasAluno).forEach(key => {
+            if (key.startsWith('temp_')) {
+              respostasTemporarias[key] = respostasAluno[key];
             }
-          }
+          });
 
-          try {
-            const response = await apiFetch('/api/respostas', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                aluno_id: alunoSelecionado.id,
-                questao_id: questao.id,
-                gabarito_id: gabaritoSelecionado,
-                resposta_aluno: respostaAluno,
-                acertou: acertou
-                // Não incluir imagem aqui - será confirmada apenas ao finalizar todas as respostas
-              })
-            });
+          const response = await apiFetch('/api/respostas', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
 
-            const data = await response.json();
+          const respostasArray = data.respostas || (Array.isArray(data) ? data : []);
+          // Filtrar respostas do aluno
+          const respostasDoAluno = respostasArray.filter(r => r.aluno_id === alunoId);
 
-            if (response.ok && data.sucesso) {
-              respostasSalvas++;
-            }
-          } catch (error) {
-            console.error(`Erro ao salvar resposta da questão ${questao.numero}:`, error);
-          }
+          // Mesclar respostas do banco com respostas temporárias
+          // Respostas temporárias têm prioridade (são as mais recentes)
+          respostasAluno = {};
+          respostasDoAluno.forEach(r => {
+            respostasAluno[r.questao_id] = r.resposta_aluno;
+          });
+
+          // Restaurar respostas temporárias (sobrescrever se houver conflito)
+          Object.keys(respostasTemporarias).forEach(key => {
+            respostasAluno[key] = respostasTemporarias[key];
+          });
+        } catch (error) {
+          console.error('Erro ao carregar respostas:', error);
+        }
+      }
+
+      function preencherRespostasCapturadas() {
+        const container = document.getElementById('respostasCapturadas');
+        if (!container) return;
+
+        container.innerHTML = "";
+
+        // Contar apenas respostas temporárias (do processamento atual) e respostas do banco já mapeadas
+        const respostasTemporarias = Object.keys(respostasAluno).filter(k => k.startsWith('temp_'));
+
+        if (respostasTemporarias.length === 0 && Object.keys(respostasAluno).length === 0) {
+          container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-lg);">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
+          return;
         }
 
-        if (respostasSalvas > 0) {
-          // Confirmar e salvar a imagem permanentemente apenas após salvar todas as respostas
-          if (imagemAnexada && imagemAnexada.temporaria) {
+        // Preparar lista de respostas para exibição
+        const questoesOrdenadas = [];
+
+        // Primeiro, adicionar respostas que já estão mapeadas por questao_id (se gabarito foi carregado)
+        if (questoesGabarito.length > 0) {
+          questoesGabarito.forEach(q => {
+            const resposta = respostasAluno[q.id];
+            if (resposta !== undefined && resposta !== null) {
+              // Incluir resposta mesmo se for vazia (indica não marcado)
+              questoesOrdenadas.push({ id: q.id, numero: q.numero, resposta: resposta || '' });
+            }
+          });
+        }
+
+        // Adicionar respostas temporárias (temp_${numero}) que ainda não foram mapeadas
+        Object.keys(respostasAluno).forEach(key => {
+          if (key.startsWith('temp_')) {
+            const questaoNumero = parseInt(key.replace('temp_', ''));
+            // Verificar se já não foi adicionada
+            if (!questoesOrdenadas.find(q => q.numero === questaoNumero)) {
+              const resposta = respostasAluno[key];
+              // Incluir resposta temporária mesmo se for vazia
+              questoesOrdenadas.push({ id: key, numero: questaoNumero, resposta: resposta || '' });
+            }
+          }
+        });
+
+        // Ordenar por número da questão
+        questoesOrdenadas.sort((a, b) => a.numero - b.numero);
+
+        if (questoesOrdenadas.length === 0) {
+          container.innerHTML = '<p style="text-align: center; color: var(--color-text-light); padding: var(--spacing-lg);">Nenhuma resposta capturada ainda. Use a câmera ou anexe foto para capturar as respostas.</p>';
+          return;
+        }
+
+        questoesOrdenadas.forEach((item, index) => {
+          const div = document.createElement('div');
+          const respostaTexto = item.resposta.trim() === ''
+            ? '<span style="color: var(--color-text-lighter); font-style: italic;">Não marcado</span>'
+            : item.resposta.includes(',')
+              ? `<span style="color: var(--color-error); font-weight: 600;">${item.resposta} (dupla marcação - inválida)</span>`
+              : item.resposta;
+          div.innerHTML = `<strong>Questão ${String(item.numero).padStart(2, '0')}:</strong> ${respostaTexto}`;
+          container.appendChild(div);
+        });
+      }
+
+      function selectItem(el, gabaritoId) {
+        document.querySelectorAll('#gabaritoList div').forEach(div => div.classList.remove('selected'));
+        el.classList.add('selected');
+        gabaritoSelecionado = gabaritoId;
+        carregarQuestoesGabarito(gabaritoId);
+      }
+
+      async function carregarQuestoesGabarito(gabaritoId) {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        try {
+          const response = await apiFetch(`/api/questoes/gabarito/${gabaritoId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          if (data.sucesso) {
+            questoesGabarito = data.questoes || [];
+          }
+        } catch (error) {
+          console.error('Erro ao carregar questões:', error);
+        }
+      }
+
+      let imagemAnexada = null;
+
+      async function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validar tipo de arquivo
+        if (!file.type.startsWith('image/')) {
+          showToast('Por favor, selecione uma imagem válida', 'error');
+          return;
+        }
+
+        // Validar tamanho (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          showToast('A imagem deve ter no máximo 10MB', 'error');
+          return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        try {
+          showLoading('Processando imagem...');
+          showUploadProgress(0);
+
+          // Criar FormData para enviar a imagem
+          const formData = new FormData();
+          formData.append('imagem', file);
+
+          // Simular progresso durante upload (já que fetch não suporta progress nativamente)
+          showUploadProgress(30);
+
+          // Enviar imagem para o backend para processamento
+          const response = await apiFetch('/api/respostas/processar-imagem', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          showUploadProgress(70);
+
+          showUploadProgress(90);
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.erro || data.detalhes || 'Erro ao processar imagem');
+          }
+
+          if (!data.sucesso) {
+            throw new Error(data.erro || data.detalhes || 'Erro ao processar imagem');
+          }
+
+          showUploadProgress(100);
+
+          // Armazenar a imagem anexada (caminho temporário até finalizar correção)
+          imagemAnexada = {
+            nome: data.imagem?.nome, // Nome temporário: temp_resposta_...
+            caminho: data.imagem?.caminho, // Caminho completo temporário
+            caminhoRelativo: `/uploads/imagens/temp/${data.imagem?.nome}`, // Caminho relativo temporário
+            tamanho: data.imagem?.tamanho,
+            temporaria: data.imagem?.temporaria || true // Flag indicando que é temporária
+          };
+
+          // Processar respostas extraídas
+          const respostasExtraidas = data.respostas || [];
+          const detalhes = data.detalhes || {};
+
+          if (respostasExtraidas.length > 0) {
+            // Limpar respostas temporárias anteriores para evitar conflito
+            Object.keys(respostasAluno).forEach(key => {
+              if (key.startsWith('temp_')) {
+                delete respostasAluno[key];
+              }
+            });
+
+            // Armazenar com o número da questão como chave temporária
+            respostasExtraidas.forEach((item) => {
+              // Buscar dinamicamente pelos campos (resolver problema de encoding com acentos)
+              const keys = Object.keys(item);
+              const questKey = keys.find(k => k.toLowerCase().includes('quest') || k.toLowerCase().includes('num'));
+              const respKey = keys.find(k => k.toLowerCase().includes('resposta') || k.toLowerCase().includes('resp'));
+
+              const questaoNumero = questKey ? item[questKey] : (item['Questão'] || item.Questão || item.Questao || item.questao || item.numero);
+              const resposta = respKey ? item[respKey] : (item['Resposta'] || item.Resposta || item.resposta || item.resposta_aluno || '');
+
+              if (questaoNumero !== undefined && questaoNumero !== null && questaoNumero !== '') {
+                // Converter para número se for string
+                const numQuestao = typeof questaoNumero === 'string' ? parseInt(questaoNumero.trim()) : questaoNumero;
+
+                if (!isNaN(numQuestao) && numQuestao > 0) {
+                  // Armazenar temporariamente usando número da questão
+                  respostasAluno[`temp_${numQuestao}`] = resposta || '';
+                }
+              }
+            });
+
+            // Construir mensagem detalhada
+            let mensagem = `${respostasExtraidas.length} respostas extraídas!`;
+
+            if (detalhes.questoes_validas > 0) {
+              mensagem += `\n✓ ${detalhes.questoes_validas} válida(s)`;
+            }
+
+            if (detalhes.questoes_com_dupla_marcacao > 0) {
+              mensagem += `\n⚠ ${detalhes.questoes_com_dupla_marcacao} com dupla marcação (inválidas)`;
+              showToast(mensagem, 'warning');
+            } else if (detalhes.questoes_sem_marcacao > 0) {
+              mensagem += `\n○ ${detalhes.questoes_sem_marcacao} em branco`;
+              showToast(mensagem, 'info');
+            } else {
+              showToast(mensagem, 'success');
+            }
+
+            // Exibir avisos se houver
+            if (detalhes.avisos && detalhes.avisos.length > 0) {
+              detalhes.avisos.forEach(aviso => {
+                setTimeout(() => {
+                  showToast(aviso, detalhes.questoes_com_dupla_marcacao > 0 ? 'warning' : 'info');
+                }, 1000);
+              });
+            }
+          } else {
+            showToast('Imagem processada, mas nenhuma resposta foi encontrada.', 'warning');
+          }
+
+          // Avançar para o próximo passo
+          setTimeout(() => {
+            nextStep();
+          }, 500);
+
+        } catch (error) {
+          console.error('Erro ao processar imagem:', error);
+          showToast(`Erro ao processar imagem: ${error.message}`, 'error', 5000);
+        } finally {
+          hideLoading();
+          hideUploadProgress();
+        }
+      }
+
+      async function verificarCodigo() {
+        const input = document.getElementById("codigoAlunoInput").value.trim();
+        const infoSpan = document.getElementById("alunoInfo");
+        const btn = document.getElementById("btnProximoAluno");
+
+        if (!input) {
+          infoSpan.innerText = "Ler código!";
+          btn.style.display = "none";
+          alunoSelecionado = null;
+          return;
+        }
+
+        // Buscar aluno por matrícula ou ID
+        const aluno = alunos.find(a => a.matricula === input || a.id === input);
+
+        if (aluno) {
+          infoSpan.innerText = `${aluno.nome_completo} - ${aluno.matricula}`;
+          btn.style.display = "inline-block";
+          alunoSelecionado = aluno;
+        } else {
+          infoSpan.innerText = "Aluno não encontrado!";
+          btn.style.display = "none";
+          alunoSelecionado = null;
+          showToast('Aluno não encontrado. Verifique a matrícula.', 'warning');
+        }
+      }
+
+      async function finalizar() {
+        if (!alunoSelecionado) {
+          showToast('Selecione um aluno primeiro', 'warning');
+          return;
+        }
+
+        if (!gabaritoSelecionado) {
+          showToast('Selecione um gabarito primeiro', 'warning');
+          return;
+        }
+
+        if (questoesGabarito.length === 0) {
+          showToast('Carregue as questões do gabarito primeiro', 'warning');
+          return;
+        }
+
+        // Mapear respostas temporárias (temp_${numero}) para questao_id quando gabarito é selecionado
+        const respostasMapeadas = {};
+
+        // Primeiro, copiar respostas que já estão mapeadas por questao_id
+        Object.keys(respostasAluno).forEach(key => {
+          if (!key.startsWith('temp_')) {
+            respostasMapeadas[key] = respostasAluno[key];
+          }
+        });
+
+        // Mapear respostas temporárias para questao_id baseado no número da questão
+        Object.keys(respostasAluno).forEach(key => {
+          if (key.startsWith('temp_')) {
+            const questaoNumero = parseInt(key.replace('temp_', ''));
+            // Encontrar questão no gabarito pelo número
+            const questao = questoesGabarito.find(q => q.numero === questaoNumero);
+            if (questao) {
+              respostasMapeadas[questao.id] = respostasAluno[key];
+            }
+          }
+        });
+
+        // Se não houver respostas após mapeamento, mostrar aviso
+        if (Object.keys(respostasMapeadas).length === 0) {
+          showToast('Nenhuma resposta capturada. Use a câmera ou anexe foto para capturar as respostas.', 'warning');
+          return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        try {
+          showLoading('Corrigindo simulado e salvando respostas...');
+
+          // Comparar respostas do aluno com o gabarito e salvar
+          // IMPORTANTE: Processar apenas questões que foram capturadas (têm resposta mapeada)
+          let respostasSalvas = 0;
+          let acertos = 0;
+          let erros = 0;
+          let questoesVazias = 0;
+          let questoesDuplaMarcacao = 0;
+
+          // Obter apenas as questões que foram capturadas (têm resposta mapeada)
+          const questoesCapturadas = questoesGabarito.filter(questao => {
+            return respostasMapeadas.hasOwnProperty(questao.id);
+          });
+
+          // Se não houver questões capturadas, mostrar aviso
+          if (questoesCapturadas.length === 0) {
+            showToast('Nenhuma questão foi capturada. Use a câmera ou anexe foto para capturar as respostas.', 'warning');
+            hideLoading();
+            return;
+          }
+
+          // Processar apenas questões capturadas
+          for (const questao of questoesCapturadas) {
+            const respostaAluno = respostasMapeadas[questao.id] || ''; // String vazia se não houver resposta
+
+            // Verificar tipo de resposta
+            const respostaTrim = respostaAluno.trim();
+            const temDuplaMarcacao = respostaTrim.includes(',');
+            const estaVazia = respostaTrim === '';
+
+            // Contabilizar tipos
+            if (estaVazia) {
+              questoesVazias++;
+            } else if (temDuplaMarcacao) {
+              questoesDuplaMarcacao++;
+            }
+
+            // Se for dupla marcação ou vazio, não conta como acerto
+            // Dupla marcação = inválida (acertou = false)
+            // Vazio = não marcado (acertou = false)
+            let acertou = false;
+
+            if (!temDuplaMarcacao && !estaVazia) {
+              // Apenas verifica acerto se houver resposta única válida
+              acertou = respostaTrim.toUpperCase() === questao.resposta_correta.toUpperCase().trim();
+              if (acertou) {
+                acertos++;
+              } else {
+                erros++;
+              }
+            }
+
             try {
-              const confirmResponse = await apiFetch('/api/respostas/confirmar-imagem', {
+              const response = await apiFetch('/api/respostas', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${token}`,
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                  caminho_imagem_temp: imagemAnexada.caminho,
                   aluno_id: alunoSelecionado.id,
-                  gabarito_id: gabaritoSelecionado
+                  questao_id: questao.id,
+                  gabarito_id: gabaritoSelecionado,
+                  resposta_aluno: respostaAluno,
+                  acertou: acertou
+                  // Não incluir imagem aqui - será confirmada apenas ao finalizar todas as respostas
                 })
               });
 
-              const confirmData = await confirmResponse.json();
-              if (confirmData.sucesso) {
-                // Atualizar referência da imagem para o caminho permanente
-                imagemAnexada.caminho = confirmData.imagem.caminho;
-                imagemAnexada.nome = confirmData.imagem.nome;
-                imagemAnexada.caminhoRelativo = confirmData.imagem.caminho;
-                imagemAnexada.temporaria = false;
-                console.log('[FINALIZAR] Imagem confirmada e movida para permanente:', confirmData.imagem.caminho);
-              } else {
-                console.warn('[FINALIZAR] Aviso ao confirmar imagem:', confirmData.erro || confirmData.aviso);
+              const data = await response.json();
+
+              if (response.ok && data.sucesso) {
+                respostasSalvas++;
               }
-            } catch (confirmErr) {
-              console.error('Erro ao confirmar imagem:', confirmErr);
-              // Não falhar toda a operação se apenas a confirmação da imagem falhar
-              showToast('Respostas salvas, mas houve um problema ao salvar a imagem. Verifique manualmente.', 'warning');
+            } catch (error) {
+              console.error(`Erro ao salvar resposta da questão ${questao.numero}:`, error);
             }
           }
 
-          let mensagem = `Simulado corrigido! ${respostasSalvas} questões processadas.`;
-          mensagem += `\n✓ Acertos: ${acertos}`;
-          mensagem += `\n✗ Erros: ${erros}`;
-          if (questoesVazias > 0) {
-            mensagem += `\n○ Não marcadas: ${questoesVazias}`;
-          }
-          if (questoesDuplaMarcacao > 0) {
-            mensagem += `\n⚠ Dupla marcação (inválidas): ${questoesDuplaMarcacao}`;
-          }
-          showToast(mensagem, 'success');
-          document.getElementById('step4').classList.remove('active');
-          document.getElementById('step5').classList.add('active');
-          document.getElementById('alunoInfo').innerText = "Ler código!";
-          atualizarBotaoVoltar();
+          if (respostasSalvas > 0) {
+            // Confirmar e salvar a imagem permanentemente apenas após salvar todas as respostas
+            if (imagemAnexada && imagemAnexada.temporaria) {
+              try {
+                const confirmResponse = await apiFetch('/api/respostas/confirmar-imagem', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    caminho_imagem_temp: imagemAnexada.caminho,
+                    aluno_id: alunoSelecionado.id,
+                    gabarito_id: gabaritoSelecionado
+                  })
+                });
 
-          // Limpar dados
-          alunoSelecionado = null;
-          gabaritoSelecionado = null;
-          respostasAluno = {};
-          questoesGabarito = [];
-          imagemAnexada = null;
-          document.getElementById('codigoAlunoInput').value = '';
-        } else {
-          showToast('Erro ao salvar respostas', 'error');
+                const confirmData = await confirmResponse.json();
+                if (confirmData.sucesso) {
+                  // Atualizar referência da imagem para o caminho permanente
+                  imagemAnexada.caminho = confirmData.imagem.caminho;
+                  imagemAnexada.nome = confirmData.imagem.nome;
+                  imagemAnexada.caminhoRelativo = confirmData.imagem.caminho;
+                  imagemAnexada.temporaria = false;
+                  console.log('[FINALIZAR] Imagem confirmada e movida para permanente:', confirmData.imagem.caminho);
+                } else {
+                  console.warn('[FINALIZAR] Aviso ao confirmar imagem:', confirmData.erro || confirmData.aviso);
+                }
+              } catch (confirmErr) {
+                console.error('Erro ao confirmar imagem:', confirmErr);
+                // Não falhar toda a operação se apenas a confirmação da imagem falhar
+                showToast('Respostas salvas, mas houve um problema ao salvar a imagem. Verifique manualmente.', 'warning');
+              }
+            }
+
+            let mensagem = `Simulado corrigido! ${respostasSalvas} questões processadas.`;
+            mensagem += `\n✓ Acertos: ${acertos}`;
+            mensagem += `\n✗ Erros: ${erros}`;
+            if (questoesVazias > 0) {
+              mensagem += `\n○ Não marcadas: ${questoesVazias}`;
+            }
+            if (questoesDuplaMarcacao > 0) {
+              mensagem += `\n⚠ Dupla marcação (inválidas): ${questoesDuplaMarcacao}`;
+            }
+            showToast(mensagem, 'success');
+            document.getElementById('step4').classList.remove('active');
+            document.getElementById('step5').classList.add('active');
+            document.getElementById('alunoInfo').innerText = "Ler código!";
+            atualizarBotaoVoltar();
+
+            // Limpar dados
+            alunoSelecionado = null;
+            gabaritoSelecionado = null;
+            respostasAluno = {};
+            questoesGabarito = [];
+            imagemAnexada = null;
+            document.getElementById('codigoAlunoInput').value = '';
+          } else {
+            showToast('Erro ao salvar respostas', 'error');
+          }
+
+        } catch (error) {
+          console.error('Erro ao finalizar correção:', error);
+          showToast(`Erro ao finalizar correção: ${error.message}`, 'error');
+        } finally {
+          hideLoading();
         }
-
-      } catch (error) {
-        console.error('Erro ao finalizar correção:', error);
-        showToast(`Erro ao finalizar correção: ${error.message}`, 'error');
-      } finally {
-        hideLoading();
       }
-    }
 
   </script>
 </body>
