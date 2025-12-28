@@ -337,13 +337,11 @@
         cameraCtx = canvasOverlay.getContext('2d'); // Assign to global
 
         // Configurar acesso à camera (preferência por traseira e alta resolução)
-        // Adicionado focusMode para tentar focar melhor
         const constraints = {
           video: {
             facingMode: 'environment', // Camera traseira
-            width: { ideal: 1280 },    // Reduzi para HD (720p) para garantir fluidez e foco mais rápido
-            height: { ideal: 720 },
-            advanced: [{ focusMode: "continuous" }] // Tentar foco contínuo
+            width: { ideal: 1920 },    // Tentar Full HD para melhor detecção
+            height: { ideal: 1080 }
           }
         };
 
@@ -353,30 +351,11 @@
         // Guardar track para flash
         track = cameraStream.getVideoTracks()[0];
 
-        // Verificar suporte a flash (torch) de forma mais robusta
-        // Em alguns dispositivos, imageCapture pode ser necessário, mas getCapabilities é o padrão
-        try {
-          const capabilities = track.getCapabilities();
-          const settings = track.getSettings();
-
-          console.log('Camera Capabilities:', capabilities);
-          console.log('Camera Settings:', settings);
-
-          const btnFlash = document.getElementById('btnFlash');
-
-          // Verifica suporte a torch
-          if (capabilities.torch) {
-            btnFlash.style.display = 'flex'; // Usar flex para alinhar ícone
-          } else {
-            console.warn('Flash (torch) não suportado neste dispositivo/navegador.');
-            // Tentar forçar exibição para debug se for Android (às vezes capabilities mente)
-            const isAndroid = /Android/i.test(navigator.userAgent);
-            if (isAndroid) {
-              // btnFlash.style.display = 'flex'; // Descomente para forçar teste
-            }
-          }
-        } catch (e) {
-          console.error('Erro ao verificar capacidades da camera:', e);
+        // Verificar suporte a flash (torch)
+        const capabilities = track.getCapabilities();
+        const btnFlash = document.getElementById('btnFlash');
+        if (capabilities.torch) {
+          btnFlash.style.display = 'block';
         }
 
         // Aguardar video carregar
@@ -403,7 +382,7 @@
         if (error.name === 'NotAllowedError') {
           alert('Precisamos de permissão para acessar a câmera.');
         } else {
-          showToast(`Erro ao iniciar câmera: ${error.message}`, 'error');
+          showToast('Não foi possível iniciar a câmera. Verifique permissões.', 'error');
         }
         fecharCameraMobile();
       }
@@ -411,109 +390,117 @@
 
     let isFlashOn = false;
     async function toggleFlash() {
-      if (!track) return;
+      if (!track) {
+        console.warn('[FLASH] Track não disponível');
+        return;
+      }
 
       try {
         isFlashOn = !isFlashOn;
+        console.log(`[FLASH] Alterando para: ${isFlashOn ? 'ON' : 'OFF'}`);
+
         await track.applyConstraints({
           advanced: [{ torch: isFlashOn }]
         });
 
-        // Atualizar ícone
+        // Atualizar ícone (visual opcional)
         const btn = document.getElementById('btnFlash');
         btn.style.backgroundColor = isFlashOn ? 'rgba(255, 215, 0, 0.8)' : 'rgba(0,0,0,0.5)';
         btn.style.color = isFlashOn ? 'black' : 'white';
 
+        console.log('[FLASH] Flash alterado com sucesso');
+
       } catch (err) {
-        console.error('Erro ao alternar flash:', err);
-        showToast('Não foi possível ativar o flash. Tente novamente.', 'warning');
-        // Reverter estado visual se falhou
-        isFlashOn = !isFlashOn;
+        console.error('[FLASH] Erro ao alternar flash:', err);
+        showToast('Não foi possível ativar o flash neste dispositivo', 'warning');
       }
     }
 
     function fecharCameraMobile() {
-      // Parar camera
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-      }
+      console.log('[CAMERA] Fechando camera...');
 
       // Parar detecção
       if (detectionInterval) {
         clearInterval(detectionInterval);
         detectionInterval = null;
+        console.log('[CAMERA] Intervalo de detecção limpo');
       }
 
-      // Voltar para interface de upload
+      // Parar camera
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => {
+          track.stop();
+          console.log('[CAMERA] Track parado:', track.kind);
+        });
+        cameraStream = null;
+        track = null;
+      }
+
+      // Ocultar interface
       document.getElementById('cameraInterface').style.display = 'none';
-      document.getElementById('uploadInterface').style.display = 'block';
-    }
 
-    function iniciarLiveDetection() {
-      const feedbackEl = document.getElementById('detectionFeedback');
+      // Desabilitar botão de captura
       const btnCapturar = document.getElementById('btnCapturarCamera');
+      if (btnCapturar) {
+        btnCapturar.disabled = true;
+        btnCapturar.style.opacity = '0.5';
+      }
 
-      let isDetected = false;
+      console.log('[CAMERA] Camera fechada');
+      async function iniciarLiveDetection() {
+        console.log('[DETECTION] Iniciando live detection loop...');
 
-      // Loop de detecção a cada 800ms
-      detectionInterval = setInterval(async () => {
-        if (!cameraVideo || cameraVideo.readyState !== cameraVideo.HAVE_ENOUGH_DATA) {
-          return;
-        }
+        let frameCount = 0;
+        let lastDetectionTime = Date.now();
 
-        try {
-          // Capturar frame
-          const frameBlob = await capturarFrameAtualCamera();
+        detectionInterval = setInterval(async () => {
+          try {
+            frameCount++;
+            const now = Date.now();
+            const elapsed = now - lastDetectionTime;
 
-          // Enviar para backend
-          const token = localStorage.getItem('token');
-          const formData = new FormData();
-          formData.append('frame', frameBlob, 'frame.jpg');
+            if (elapsed < 800) {
+              // Ainda no cooldown
+              return;
+            }
 
-          const response = await apiFetch('/api/respostas/processar-frame-mobile', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
-          });
+            lastDetectionTime = now;
 
-          const data = await response.json();
+            console.log(`[DETECTION] Processando frame #${frameCount}...`);
 
-          if (data.sucesso && data.detectado) {
-            // Folha detectada!
-            isDetected = true;
-            feedbackEl.style.background = '#51cf66';
-            feedbackEl.textContent = data.feedback || '✓ Folha detectada! Capture agora.';
-            btnCapturar.disabled = false;
-            btnCapturar.style.opacity = '1';
+            // Capturar frame do video
+            const canvas = document.createElement('canvas');
+            canvas.width = cameraVideo.videoWidth;
+            canvas.height = cameraVideo.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(cameraVideo, 0, 0);
 
-            // Desenhar ROIs
-            desenharROIsCamera(data.rois);
+            // Converter para blob
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
 
-          } else if (data.rois && Object.keys(data.rois).length > 0) {
-            // Detectou parcialmente
-            isDetected = false;
-            feedbackEl.style.background = '#ffd43b';
-            feedbackEl.textContent = data.feedback || 'Centralize melhor a folha';
-            btnCapturar.disabled = true;
-            btnCapturar.style.opacity = '0.5';
+            console.log(`[DETECTION] Frame capturado. Tamanho: ${blob.size} bytes, Dimensões: ${canvas.width}x${canvas.height}`);
 
-            // Desenhar ROIs parciais
-            desenharROIsCamera(data.rois);
+            // Enviar para backend
+            const formData = new FormData();
+            formData.append('frame', blob, 'frame.jpg');
 
-          } else {
-            // Nada detectado
-            isDetected = false;
-            feedbackEl.style.background = '#f03e3e';
-            feedbackEl.textContent = data.feedback || '🔍 Procurando folha ENEM...';
-            btnCapturar.disabled = true;
-            btnCapturar.style.opacity = '0.5';
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/respostas/processar-frame-mobile', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
+              body: formData
+            });
+
+            const data = await response.json();
+            console.log(`[DETECTION] Resposta do backend:`, data);
 
             // Limpar canvas
             cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
           }
 
-        } catch (error) {
+          } catch (error) {
           console.error('Erro na detecção:', error);
         }
       }, 800);

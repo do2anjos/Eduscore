@@ -887,6 +887,14 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
     const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
     const comando = `${pythonCommand} "${scriptPath}" "${framePath}"`;
 
+    console.log('[FRAME-MOBILE] Executando detecção YOLO...', {
+      scriptPath,
+      framePath,
+      scriptExists: fs.existsSync(scriptPath),
+      frameExists: fs.existsSync(framePath),
+      comando
+    });
+
     const { stdout, stderr } = await execAsync(comando, {
       maxBuffer: 10 * 1024 * 1024,
       encoding: 'utf8'
@@ -896,13 +904,32 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
       console.log('[FRAME-MOBILE] Stderr:', stderr);
     }
 
+    console.log('[FRAME-MOBILE] Stdout completo:', stdout);
+
     // Parsear resultado JSON
     const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+
     if (!jsonMatch) {
-      throw new Error('Resposta do Python inválida');
+      console.error('[FRAME-MOBILE] Nenhum JSON encontrado na saída:', stdout);
+
+      // Limpar arquivo temporário
+      try {
+        if (fs.existsSync(framePath)) fs.unlinkSync(framePath);
+      } catch (cleanupErr) {
+        console.error('[FRAME-MOBILE] Erro ao limpar frame temp:', cleanupErr);
+      }
+
+      return res.status(200).json({
+        sucesso: false,
+        detectado: false,
+        rois: [],
+        erro: 'Modelo YOLO não retornou dados válidos'
+      });
     }
 
+
     const resultado = JSON.parse(jsonMatch[0]);
+    console.log('[FRAME-MOBILE] Resultado parseado:', resultado);
 
     // Limpar frame temporário
     try {
