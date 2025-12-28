@@ -977,50 +977,80 @@ router.post('/capturar-enem-mobile', uploadImagemTemp.single('imagem'), async (r
     }
 
     const imagemPath = req.file.path;
-    mensagem += ` ○ ${resultado.questoes_sem_marcacao} em branco.`;
-  }
+    const imagemFilename = req.file.filename;
+    console.log('[CAPTURAR-ENEM-MOBILE] Processando via HuggingFace...');
 
-    // Retornar resposta
+    // URL da API HuggingFace
+    const HUGGINGFACE_API_URL = process.env.HUGGINGFACE_API_URL || 'https://do2anjos-eduscore-yolo-api.hf.space';
+
+    const FormData = require('form-data');
+    const formData = new FormData();
+    formData.append('data', fs.createReadStream(imagemPath));
+    formData.append('fn_index', '1'); // Full Capture
+
+    const fetch = require('node-fetch');
+    const response = await fetch(`${HUGGINGFACE_API_URL}/api/predict`, {
+      method: 'POST',
+      body: formData,
+      headers: formData.getHeaders(),
+      timeout: 60000
+    });
+
+    if (!response.ok) {
+      throw new Error(`HuggingFace retornou ${response.status}`);
+    }
+
+    const resultado = await response.json();
+    const data = resultado.data && resultado.data[0] ? resultado.data[0] : resultado;
+
+    // Limpar arquivo temporário
+    try { fs.unlinkSync(imagemPath); } catch { }
+
+    if (!data.sucesso) {
+      return res.status(400).json({ sucesso: false, erro: data.erro });
+    }
+
+    const imagemAnexada = {
+      nome: imagemFilename,
+      caminho: imagemPath,
+      caminhoRelativo: `/uploads/imagens/temp/${imagemFilename}`,
+      tamanho: req.file.size,
+      temporaria: true
+    };
+
+    let mensagem = `Captura processada! ${data.total_respostas} respostas. Dia ${data.dia_detectado}.`;
+    if (data.questoes_com_dupla_marcacao > 0) mensagem += ` ⚠ ${data.questoes_com_dupla_marcacao} duplas.`;
+    if (data.questoes_sem_marcacao > 0) mensagem += ` ○ ${data.questoes_sem_marcacao} em branco.`;
+
     res.status(200).json({
-    sucesso: true,
-    mensagem: mensagem,
-    dia_detectado: resultado.dia_detectado,
-    questao_inicial: resultado.questao_inicial,
-    questao_final: resultado.questao_final,
-    confianca_ocr: resultado.confianca_ocr,
-    imagem: imagemAnexada,
-    respostas: resultado.respostas || [],
-    total_respostas: resultado.total_respostas || 0,
-    detalhes: {
-      total_bolhas_detectadas: resultado.total_bolhas_detectadas || 0,
-      questoes_com_dupla_marcacao: resultado.questoes_com_dupla_marcacao || 0,
-      questoes_sem_marcacao: resultado.questoes_sem_marcacao || 0,
-      questoes_validas: resultado.questoes_validas || 0,
-      questoes_invalidas_detalhes: resultado.questoes_invalidas_detalhes || [],
-      avisos: resultado.avisos || [],
-      rois_detectadas: resultado.rois_detectadas || {},
-      tipo_deteccao: 'enem_mobile'
-    }
-  });
+      sucesso: true,
+      mensagem,
+      dia_detectado: data.dia_detectado,
+      questao_inicial: data.questao_inicial,
+      questao_final: data.questao_final,
+      imagem: imagemAnexada,
+      respostas: data.respostas || [],
+      total_respostas: data.total_respostas || 0,
+      detalhes: {
+        total_bolhas_detectadas: data.total_bolhas_detectadas || 0,
+        questoes_com_dupla_marcacao: data.questoes_com_dupla_marcacao || 0,
+        questoes_sem_marcacao: data.questoes_sem_marcacao || 0,
+        questoes_validas: data.questoes_validas || 0,
+        avisos: data.avisos || []
+      }
+    });
 
-} catch (err) {
-  console.error('Erro ao capturar ENEM mobile:', err);
-
-  // Limpar arquivo temporário se houver erro
-  if (req.file && fs.existsSync(req.file.path)) {
-    try {
-      fs.unlinkSync(req.file.path);
-    } catch (unlinkErr) {
-      console.error('Erro ao remover arquivo temporário:', unlinkErr);
+  } catch (err) {
+    console.error('[CAPTURAR-ENEM-MOBILE] Erro:', err);
+    if (req.file && fs.existsSync(req.file.path)) {
+      try { fs.unlinkSync(req.file.path); } catch { }
     }
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro ao processar captura ENEM',
+      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
-
-  res.status(500).json({
-    sucesso: false,
-    erro: 'Erro ao processar captura ENEM',
-    detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-}
 });
 
 module.exports = router;
