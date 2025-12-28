@@ -336,42 +336,59 @@
         cameraCanvas = canvasOverlay; // Assign to global
         cameraCtx = canvasOverlay.getContext('2d'); // Assign to global
 
-        // Configurar acesso à camera (preferência por traseira e alta resolução)
+        // Configurar acesso à camera (Tentar forçar ALTA RESOLUÇÃO)
+        // Nota: Em mobile retrato, width/height podem estar invertidos.
         const constraints = {
           video: {
             facingMode: 'environment', // Camera traseira
-            width: { ideal: 1920 },    // Tentar Full HD para melhor detecção
-            height: { ideal: 1080 }
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 },
+            // Tentar configurações avançadas se suportado
+            advanced: [{ focusMode: "continuous" }]
           }
         };
 
-        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (resErr) {
+          console.warn('[CAMERA] Falha ao obter Full HD, tentando padrão...', resErr);
+          // Fallback para qualquer resolução
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }
+          });
+        }
+
         cameraVideo.srcObject = cameraStream;
 
         // Guardar track para flash
         track = cameraStream.getVideoTracks()[0];
         console.log('[CAMERA] Track obtido:', track);
 
-        // Verificar suporte a flash (torch)
+        // Lógica de Flash melhorada (exibir botão se houver suspeita de suporte)
+        const btnFlash = document.getElementById('btnFlash');
+        btnFlash.style.display = 'none'; // Reset inicial
+
         try {
-          const capabilities = track.getCapabilities();
+          const capabilities = track.getCapabilities ? track.getCapabilities() : {};
           console.log('[CAMERA] Capabilities:', capabilities);
 
-          const btnFlash = document.getElementById('btnFlash');
-          if (capabilities && capabilities.torch) {
-            console.log('[CAMERA] ✅ Flash suportado! Mostrando botão.');
+          // Se tiver suporte explícito a torch OU se não conseguirmos ler capabilities (iOS/alguns Androids)
+          // assumimos que pode ter flash e deixamos o usuário tentar.
+          const suportaTorch = capabilities.torch || 'torch' in capabilities || !track.getCapabilities;
+
+          if (suportaTorch) {
+            console.log('[CAMERA] Possível suporte a Flash. Mostrando botão.');
             btnFlash.style.display = 'block';
-          } else {
-            console.log('[CAMERA] ❌ Flash não suportado neste dispositivo.');
           }
         } catch (capErr) {
-          console.error('[CAMERA] Erro ao verificar capabilities:', capErr);
+          console.error('[CAMERA] Erro ao verificar capabilities, mas tentando mostrar botão:', capErr);
+          btnFlash.style.display = 'block'; // Tentar mostrar mesmo com erro
         }
 
         // Aguardar video carregar
         await new Promise(resolve => {
           cameraVideo.onloadedmetadata = () => {
-            console.log('[CAMERA] Video carregado. Dimensões:', cameraVideo.videoWidth, 'x', cameraVideo.videoHeight);
+            console.log('[CAMERA] Video carregado. Dimensões REAIS:', cameraVideo.videoWidth, 'x', cameraVideo.videoHeight);
             resolve();
           };
         });
@@ -405,18 +422,24 @@
 
       try {
         isFlashOn = !isFlashOn;
+
+        // Tentar método padrão
         await track.applyConstraints({
           advanced: [{ torch: isFlashOn }]
         });
 
-        // Atualizar ícone (visual opcional)
+        // Atualizar ícone
         const btn = document.getElementById('btnFlash');
         btn.style.backgroundColor = isFlashOn ? 'rgba(255, 215, 0, 0.8)' : 'rgba(0,0,0,0.5)';
         btn.style.color = isFlashOn ? 'black' : 'white';
 
       } catch (err) {
         console.error('Erro ao alternar flash:', err);
-        showToast('Não foi possível ativar o flash neste dispositivo', 'warning');
+        // Se falhar e estava tentando ligar, avisar
+        if (isFlashOn) {
+          isFlashOn = false; // Reverter estado
+          showToast('Flash não disponível ou erro ao ativar.', 'warning');
+        }
       }
     }
 
