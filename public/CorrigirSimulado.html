@@ -337,11 +337,13 @@
         cameraCtx = canvasOverlay.getContext('2d'); // Assign to global
 
         // Configurar acesso à camera (preferência por traseira e alta resolução)
+        // Adicionado focusMode para tentar focar melhor
         const constraints = {
           video: {
             facingMode: 'environment', // Camera traseira
-            width: { ideal: 1920 },    // Tentar Full HD para melhor detecção
-            height: { ideal: 1080 }
+            width: { ideal: 1280 },    // Reduzi para HD (720p) para garantir fluidez e foco mais rápido
+            height: { ideal: 720 },
+            advanced: [{ focusMode: "continuous" }] // Tentar foco contínuo
           }
         };
 
@@ -351,11 +353,30 @@
         // Guardar track para flash
         track = cameraStream.getVideoTracks()[0];
 
-        // Verificar suporte a flash (torch)
-        const capabilities = track.getCapabilities();
-        const btnFlash = document.getElementById('btnFlash');
-        if (capabilities.torch) {
-          btnFlash.style.display = 'block';
+        // Verificar suporte a flash (torch) de forma mais robusta
+        // Em alguns dispositivos, imageCapture pode ser necessário, mas getCapabilities é o padrão
+        try {
+          const capabilities = track.getCapabilities();
+          const settings = track.getSettings();
+
+          console.log('Camera Capabilities:', capabilities);
+          console.log('Camera Settings:', settings);
+
+          const btnFlash = document.getElementById('btnFlash');
+
+          // Verifica suporte a torch
+          if (capabilities.torch) {
+            btnFlash.style.display = 'flex'; // Usar flex para alinhar ícone
+          } else {
+            console.warn('Flash (torch) não suportado neste dispositivo/navegador.');
+            // Tentar forçar exibição para debug se for Android (às vezes capabilities mente)
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            if (isAndroid) {
+              // btnFlash.style.display = 'flex'; // Descomente para forçar teste
+            }
+          }
+        } catch (e) {
+          console.error('Erro ao verificar capacidades da camera:', e);
         }
 
         // Aguardar video carregar
@@ -382,7 +403,7 @@
         if (error.name === 'NotAllowedError') {
           alert('Precisamos de permissão para acessar a câmera.');
         } else {
-          showToast('Não foi possível iniciar a câmera. Verifique permissões.', 'error');
+          showToast(`Erro ao iniciar câmera: ${error.message}`, 'error');
         }
         fecharCameraMobile();
       }
@@ -398,14 +419,16 @@
           advanced: [{ torch: isFlashOn }]
         });
 
-        // Atualizar ícone (visual opcional)
+        // Atualizar ícone
         const btn = document.getElementById('btnFlash');
         btn.style.backgroundColor = isFlashOn ? 'rgba(255, 215, 0, 0.8)' : 'rgba(0,0,0,0.5)';
         btn.style.color = isFlashOn ? 'black' : 'white';
 
       } catch (err) {
         console.error('Erro ao alternar flash:', err);
-        showToast('Não foi possível ativar o flash neste dispositivo', 'warning');
+        showToast('Não foi possível ativar o flash. Tente novamente.', 'warning');
+        // Reverter estado visual se falhou
+        isFlashOn = !isFlashOn;
       }
     }
 
