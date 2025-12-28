@@ -8,25 +8,14 @@ Biblioteca: easyocr (conforme decisão do usuário)
 
 import cv2
 import numpy as np
-import easyocr
-import sys
-import json
-import os
-import re
-from pathlib import Path
+import pytesseract
+from PIL import Image
 
-# Inicializar EasyOCR reader (português)
-# Cache do reader para evitar recarregar a cada chamada
-_reader = None
-
-def get_reader():
-    """Obtém ou cria instância do EasyOCR reader"""
-    global _reader
-    if _reader is None:
-        # gpu=False para compatibilidade, gpu=True se tiver GPU disponível
-        _reader = easyocr.Reader(['pt'], gpu=False, verbose=False)
-    return _reader
-
+# Configurar caminho do Tesseract se estiver no Windows (Desenvolvimento Local)
+if os.name == 'nt':
+    # Tente encontrar o tesseract no path padrão ou variáveis de ambiente se necessário
+    # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    pass
 
 def preprocess_day_region(image):
     """
@@ -36,7 +25,7 @@ def preprocess_day_region(image):
         image: Imagem (numpy array) da região
         
     Returns:
-        numpy array: Imagem pré-processada
+        PIL Image: Imagem pré-processada pronta para Tesseract
     """
     # Converter para escala de cinza se necessário
     if len(image.shape) == 3:
@@ -44,28 +33,24 @@ def preprocess_day_region(image):
     else:
         gray = image.copy()
     
-    # Redimensionar se muito pequena (melhorar OCR)
+    # Redimensionar se muito pequena (Tesseract gosta de 300 DPI+)
     height, width = gray.shape
-    if height < 100:
-        scale = 100 / height
+    scale = 2.0  # Aumentar 2x
+    if height < 50: 
+        scale = 3.0 # Se muito pequeno aumentar mais
+        
+    if scale > 1:
         new_width = int(width * scale)
         new_height = int(height * scale)
         gray = cv2.resize(gray, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
     
-    # Aplicar equalização adaptativa de histograma (CLAHE)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    enhanced = clahe.apply(gray)
+    # Binarização simples (Tesseract funciona bem com binarização limpa)
+    # Threshold de Otsu
+    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     
-    # Binarização adaptativa
-    binary = cv2.adaptiveThreshold(
-        enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY, 11, 2
-    )
-    
-    # Denoise
-    denoised = cv2.fastNlMeansDenoising(binary, None, 10, 7, 21)
-    
-    return denoised
+    # Converter para PIL Image (formato nativo do pytesseract)
+    pil_img = Image.fromarray(binary)
+    return pil_img
 
 
 def detect_day_from_text(text):
@@ -83,24 +68,23 @@ def detect_day_from_text(text):
     
     # Normalizar texto: uppercase, remover acentos, remover caracteres especiais
     text_normalized = text.upper()
+    # Manter letras e números apenas
     text_normalized = re.sub(r'[^\w\s]', '', text_normalized)
     
     # Padrões para Dia 1
     patterns_dia1 = [
-        r'\b(1|PRIMEIRO|PRIMEIRA|UM|UMA)\s*(DIA|º DIA|° DIA)\b',
+        r'\b(1|PRIMEIRO|PRIMEIRA|UM|UMA)\s*(DIA|DIA|0IA)\b', # 0IA é erro comum OCR
         r'\bDIA\s*(1|PRIMEIRO|PRIMEIRA|UM|UMA)\b',
         r'\b1\s*º\s*DIA\b',
-        r'\b1\s*°\s*DIA\b',
-        r'\bPRIMEIRO\s*DIA\b'
+        r'\b1\s*°\s*DIA\b'
     ]
     
     # Padrões para Dia 2
     patterns_dia2 = [
-        r'\b(2|SEGUNDO|SEGUNDA|DOIS|DUAS)\s*(DIA|º DIA|° DIA)\b',
+        r'\b(2|SEGUNDO|SEGUNDA|DOIS|DUAS)\s*(DIA|DIA|0IA)\b',
         r'\bDIA\s*(2|SEGUNDO|SEGUNDA|DOIS|DUAS)\b',
         r'\b2\s*º\s*DIA\b',
-        r'\b2\s*°\s*DIA\b',
-        r'\bSEGUNDO\s*DIA\b'
+        r'\b2\s*°\s*DIA\b'
     ]
     
     # Verificar Dia 1
@@ -113,14 +97,19 @@ def detect_day_from_text(text):
         if re.search(pattern, text_normalized):
             return 2, 0.9
     
-    # Fallback: procurar apenas por números isolados
-    # Se encontrar "1" isolado, assume Dia 1
+    # Fallback: procurar apenas por números isolados com contexto "DIA" próximo
+    if "DIA" in text_normalized:
+        if "1" in text_normalized and "2" not in text_normalized:
+            return 1, 0.7
+        if "2" in text_normalized and "1" not in text_normalized:
+            return 2, 0.7
+            
+    # Fallback final: apenas números
     if re.search(r'\b1\b', text_normalized) and not re.search(r'\b2\b', text_normalized):
-        return 1, 0.6
+        return 1, 0.5
     
-    # Se encontrar "2" isolado, assume Dia 2
     if re.search(r'\b2\b', text_normalized) and not re.search(r'\b1\b', text_normalized):
-        return 2, 0.6
+        return 2, 0.5
     
     # Não conseguiu detectar
     return None, 0.0
@@ -160,15 +149,20 @@ def detect_day_from_image(image_path_or_array, bbox=None):
             x, y, w, h = bbox
             img = img[y:y+h, x:x+w]
         
-        # Pré-processar
-        processed = preprocess_day_region(img)
+        # Pré-processar (retorna PIL Image)
+        pil_img = preprocess_day_region(img)
         
-        # Executar OCR com EasyOCR
-        reader = get_reader()
-        results = reader.readtext(processed, detail=1)
+        # Executar OCR com Tesseract
+        # --psm 7: Treat the image as a single text line.
+        # -l por: Português
+        custom_config = r'--oem 3 --psm 7'
+        try:
+            texto_completo = pytesseract.image_to_string(pil_img, lang='por', config=custom_config)
+        except pytesseract.TesseractError:
+            # Fallback sem linguagem se 'por' não estiver instalado
+            texto_completo = pytesseract.image_to_string(pil_img, config=custom_config)
         
-        # Concatenar todo texto extraído
-        texto_completo = ' '.join([text for (bbox, text, conf) in results])
+        texto_completo = texto_completo.strip()
         
         # Detectar dia a partir do texto
         dia, confianca = detect_day_from_text(texto_completo)

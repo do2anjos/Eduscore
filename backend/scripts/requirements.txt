@@ -1,5 +1,6 @@
-opencv-python
+opencv-python-headless
 numpy
 onnxruntime
-easyocr
+# easyocr -- REMOVIDO (High Memory Usage)
+pytesseract
 Pillow
