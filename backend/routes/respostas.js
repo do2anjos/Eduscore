@@ -866,99 +866,91 @@ router.post('/confirmar-imagem', async (req, res) => {
  * Live detection rápida - apenas detecção YOLO sem processar bolhas
  * Para feedback em tempo real na interface mobile
  */
+/**
+ * Rota POST /api/respostas/processar-frame-mobile
+ * Live detection rápida - chama API HuggingFace (fn_index=0)
+ * Para feedback em tempo real na interface mobile
+ */
 router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (req, res) => {
   try {
-    console.log('[FRAME-MOBILE] Recebido frame para detecção');
+    // console.log('[FRAME-MOBILE] Recebido frame para detecção');
 
     if (!req.file) {
-      console.log('[FRAME-MOBILE] ERRO: Nenhum arquivo enviado');
-      return res.status(400).json({
-        sucesso: false,
-        erro: 'Frame é obrigatório'
-      });
+      return res.status(400).json({ sucesso: false, erro: 'Frame é obrigatório' });
     }
 
     const framePath = req.file.path;
-    console.log('[FRAME-MOBILE] Frame salvo em:', framePath);
 
-    // Executar apenas detecção YOLO (rápido, sem processar bolhas)
-    const scriptPath = path.join(__dirname, '../scripts/detector_yolo_enem.py');
+    // URL da API HuggingFace
+    const HUGGINGFACE_API_URL = process.env.HUGGINGFACE_API_URL || 'https://do2anjos-eduscore-yolo-api.hf.space';
 
-    if (!fs.existsSync(scriptPath)) {
-      console.log('[FRAME-MOBILE] ERRO: Script não encontrado:', scriptPath);
-      throw new Error('Script de detecção YOLO não encontrado');
-    }
-
-    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
-    const comando = `${pythonCommand} "${scriptPath}" "${framePath}"`;
-
-    console.log('[FRAME-MOBILE] Executando comando:', comando);
-
-    const { stdout, stderr } = await execAsync(comando, {
-      maxBuffer: 10 * 1024 * 1024,
-      encoding: 'utf8'
-    });
-
-    if (stderr && stderr.trim()) {
-      console.log('[FRAME-MOBILE] Stderr:', stderr);
-    }
-
-    console.log('[FRAME-MOBILE] Stdout:', stdout.substring(0, 200));
-
-    // Parsear resultado JSON
-    const jsonMatch = stdout.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.log('[FRAME-MOBILE] ERRO: Resposta Python inválida. Stdout completo:', stdout);
-      throw new Error('Resposta do Python inválida');
-    }
-
-    const resultado = JSON.parse(jsonMatch[0]);
-    console.log('[FRAME-MOBILE] Resultado parseado:', JSON.stringify(resultado, null, 2));
-
-    // Limpar frame temporário
     try {
-      fs.unlinkSync(framePath);
-    } catch (unlinkErr) {
-      console.error('Erro ao remover frame temporário:', unlinkErr);
-    }
+      const FormData = require('form-data');
+      const formData = new FormData();
+      formData.append('data', fs.createReadStream(framePath));
+      formData.append('fn_index', '0'); // 0 = Live Detection (Rápido)
 
-    // Gerar feedback para UI
-    let feedback = 'Procurando folha ENEM...';
-    if (resultado.detectado) {
-      feedback = '✓ Folha detectada! Capture quando estiver estável.';
-      console.log('[FRAME-MOBILE] ✅ Detecção bem-sucedida!');
-    } else if (resultado.rois && Object.keys(resultado.rois).length > 0) {
-      feedback = 'Centralize melhor a folha';
-      console.log('[FRAME-MOBILE] ⚠️ ROIs parciais detectadas');
-    } else {
-      console.log('[FRAME-MOBILE] ❌ Nenhuma detecção');
-    }
+      // Timeout curto para live detection (5s)
+      const fetch = require('node-fetch');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    res.status(200).json({
-      sucesso: resultado.sucesso,
-      detectado: resultado.detectado || false,
-      rois: resultado.rois || {},
-      feedback: feedback,
-      total_deteccoes: resultado.total_deteccoes || 0
-    });
+      const response = await fetch(`${HUGGINGFACE_API_URL}/api/predict`, {
+        method: 'POST',
+        body: formData,
+        headers: formData.getHeaders(),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HF API status ${response.status}`);
+      }
+
+      const resultado = await response.json();
+
+      // Limpar frame temporário
+      try { fs.unlinkSync(framePath); } catch { }
+
+      // Gradio response: data[0]
+      const data = resultado.data && resultado.data[0] ? resultado.data[0] : resultado;
+
+      // Gerar feedback para UI
+      let feedback = 'Procurando folha ENEM...';
+      if (data.detectado) {
+        feedback = '✓ Folha detectada! Capture quando estiver estável.';
+        // console.log('[FRAME-MOBILE] ✅ Detecção bem-sucedida!');
+      } else if (data.rois && Object.keys(data.rois).length > 0) {
+        feedback = 'Centralize melhor a folha';
+      }
+
+      res.status(200).json({
+        sucesso: data.sucesso !== false,
+        detectado: data.detectado || false,
+        rois: data.rois || {},
+        feedback: feedback,
+        total_deteccoes: data.total_deteccoes || 0
+      });
+
+    } catch (apiError) {
+      // Falha silenciosa ou log leve para não spammar
+      // console.error('[FRAME-MOBILE] Erro API:', apiError.message);
+
+      try { fs.unlinkSync(framePath); } catch { }
+
+      return res.status(200).json({
+        sucesso: false,
+        detectado: false,
+        feedback: '...', // Feedback vazio para não assustar o usuário
+        debug_erro: apiError.message
+      });
+    }
 
   } catch (err) {
-    console.error('Erro ao processar frame mobile:', err);
-
-    // Limpar arquivo temporário se houver erro
-    if (req.file && fs.existsSync(req.file.path)) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (unlinkErr) {
-        console.error('Erro ao remover frame temporário:', unlinkErr);
-      }
-    }
-
-    res.status(500).json({
-      sucesso: false,
-      erro: 'Erro ao processar frame',
-      detalhes: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+    console.error('Erro interno frame mobile:', err);
+    if (req.file) { try { fs.unlinkSync(req.file.path); } catch { } }
+    res.status(500).json({ sucesso: false, erro: 'Erro interno' });
   }
 });
 
