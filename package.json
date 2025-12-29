@@ -28,6 +28,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@gradio/client": "^2.0.1",
     "@libsql/client": "^0.15.2",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^11.7.0",

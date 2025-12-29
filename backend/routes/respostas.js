@@ -863,64 +863,44 @@ router.post('/confirmar-imagem', async (req, res) => {
 
 /**
  * Rota POST /api/respostas/processar-frame-mobile
- * Live detection rápida - apenas detecção YOLO sem processar bolhas
- * Para feedback em tempo real na interface mobile
- */
-/**
- * Rota POST /api/respostas/processar-frame-mobile
- * Live detection rápida - chama API HuggingFace (fn_index=0)
+ * Live detection rápida - chama API HuggingFace via @gradio/client
  * Para feedback em tempo real na interface mobile
  */
 router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (req, res) => {
   try {
-    // console.log('[FRAME-MOBILE] Recebido frame para detecção');
-
     if (!req.file) {
       return res.status(400).json({ sucesso: false, erro: 'Frame é obrigatório' });
     }
 
     const framePath = req.file.path;
 
-    // URL da API HuggingFace
-    const HUGGINGFACE_API_URL = process.env.HUGGINGFACE_API_URL || 'https://do2anjos-eduscore-yolo-api.hf.space';
-
     try {
-      const FormData = require('form-data');
-      const formData = new FormData();
-      formData.append('data', fs.createReadStream(framePath));
-      formData.append('fn_index', '0'); // 0 = Live Detection (Rápido)
+      // Usar @gradio/client para comunicação correta com HuggingFace
+      const { Client } = await import("@gradio/client");
 
-      // Timeout curto para live detection (5s)
-      const fetch = require('node-fetch');
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      // Conectar ao Space
+      const HUGGINGFACE_SPACE = process.env.HUGGINGFACE_SPACE || "do2anjos/eduscore-yolo-api";
+      const client = await Client.connect(HUGGINGFACE_SPACE);
 
-      const response = await fetch(`${HUGGINGFACE_API_URL}/api/predict`, {
-        method: 'POST',
-        body: formData,
-        headers: formData.getHeaders(),
-        signal: controller.signal
+      // Ler arquivo e criar Blob
+      const imageBuffer = fs.readFileSync(framePath);
+      const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
+
+      // Chamar endpoint de Live Detection (primeiro botão = fn_index 0)
+      const result = await client.predict("/predict", {
+        image: imageBlob
       });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HF API status ${response.status}`);
-      }
-
-      const resultado = await response.json();
 
       // Limpar frame temporário
       try { fs.unlinkSync(framePath); } catch { }
 
-      // Gradio response: data[0]
-      const data = resultado.data && resultado.data[0] ? resultado.data[0] : resultado;
+      // Processar resultado
+      const data = result.data[0] || result.data || {};
 
       // Gerar feedback para UI
       let feedback = 'Procurando folha ENEM...';
       if (data.detectado) {
         feedback = '✓ Folha detectada! Capture quando estiver estável.';
-        // console.log('[FRAME-MOBILE] ✅ Detecção bem-sucedida!');
       } else if (data.rois && Object.keys(data.rois).length > 0) {
         feedback = 'Centralize melhor a folha';
       }
@@ -934,15 +914,14 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
       });
 
     } catch (apiError) {
-      // Falha silenciosa ou log leve para não spammar
-      // console.error('[FRAME-MOBILE] Erro API:', apiError.message);
+      console.error('[FRAME-MOBILE] Erro Gradio Client:', apiError.message);
 
       try { fs.unlinkSync(framePath); } catch { }
 
       return res.status(200).json({
         sucesso: false,
         detectado: false,
-        feedback: '...', // Feedback vazio para não assustar o usuário
+        feedback: 'Erro de conexão com IA',
         debug_erro: apiError.message
       });
     }
@@ -956,8 +935,8 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
 
 /**
  * Rota POST /api/respostas/capturar-enem-mobile
- * Processamento completo via HuggingFace: YOLO → OCR day → detecção de bolhas
- * Para captura final no mobile
+ * Processamento completo via HuggingFace usando @gradio/client
+ * YOLO → OCR day → detecção de bolhas
  */
 router.post('/capturar-enem-mobile', uploadImagemTemp.single('imagem'), async (req, res) => {
   try {
@@ -970,67 +949,76 @@ router.post('/capturar-enem-mobile', uploadImagemTemp.single('imagem'), async (r
 
     const imagemPath = req.file.path;
     const imagemFilename = req.file.filename;
-    console.log('[CAPTURAR-ENEM-MOBILE] Processando via HuggingFace...');
+    console.log('[CAPTURAR-ENEM-MOBILE] Processando via @gradio/client...');
 
-    // URL da API HuggingFace
-    const HUGGINGFACE_API_URL = process.env.HUGGINGFACE_API_URL || 'https://do2anjos-eduscore-yolo-api.hf.space';
+    try {
+      // Usar @gradio/client para comunicação correta com HuggingFace
+      const { Client } = await import("@gradio/client");
 
-    const FormData = require('form-data');
-    const formData = new FormData();
-    formData.append('data', fs.createReadStream(imagemPath));
-    formData.append('fn_index', '1'); // Full Capture
+      // Conectar ao Space
+      const HUGGINGFACE_SPACE = process.env.HUGGINGFACE_SPACE || "do2anjos/eduscore-yolo-api";
+      const client = await Client.connect(HUGGINGFACE_SPACE);
 
-    const fetch = require('node-fetch');
-    const response = await fetch(`${HUGGINGFACE_API_URL}/api/predict`, {
-      method: 'POST',
-      body: formData,
-      headers: formData.getHeaders(),
-      timeout: 60000
-    });
+      // Ler arquivo e criar Blob
+      const imageBuffer = fs.readFileSync(imagemPath);
+      const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
 
-    if (!response.ok) {
-      throw new Error(`HuggingFace retornou ${response.status}`);
-    }
+      // Chamar endpoint de Full Capture (segundo botão = /predict_1 ou endpoint_info[1])
+      const result = await client.predict("/predict_1", {
+        image: imageBlob
+      });
 
-    const resultado = await response.json();
-    const data = resultado.data && resultado.data[0] ? resultado.data[0] : resultado;
+      // Limpar arquivo temporário
+      try { fs.unlinkSync(imagemPath); } catch { }
 
-    // Limpar arquivo temporário
-    try { fs.unlinkSync(imagemPath); } catch { }
+      // Processar resultado
+      const data = result.data[0] || result.data || {};
 
-    if (!data.sucesso) {
-      return res.status(400).json({ sucesso: false, erro: data.erro });
-    }
-
-    const imagemAnexada = {
-      nome: imagemFilename,
-      caminho: imagemPath,
-      caminhoRelativo: `/uploads/imagens/temp/${imagemFilename}`,
-      tamanho: req.file.size,
-      temporaria: true
-    };
-
-    let mensagem = `Captura processada! ${data.total_respostas} respostas. Dia ${data.dia_detectado}.`;
-    if (data.questoes_com_dupla_marcacao > 0) mensagem += ` ⚠ ${data.questoes_com_dupla_marcacao} duplas.`;
-    if (data.questoes_sem_marcacao > 0) mensagem += ` ○ ${data.questoes_sem_marcacao} em branco.`;
-
-    res.status(200).json({
-      sucesso: true,
-      mensagem,
-      dia_detectado: data.dia_detectado,
-      questao_inicial: data.questao_inicial,
-      questao_final: data.questao_final,
-      imagem: imagemAnexada,
-      respostas: data.respostas || [],
-      total_respostas: data.total_respostas || 0,
-      detalhes: {
-        total_bolhas_detectadas: data.total_bolhas_detectadas || 0,
-        questoes_com_dupla_marcacao: data.questoes_com_dupla_marcacao || 0,
-        questoes_sem_marcacao: data.questoes_sem_marcacao || 0,
-        questoes_validas: data.questoes_validas || 0,
-        avisos: data.avisos || []
+      if (!data.sucesso) {
+        return res.status(400).json({ sucesso: false, erro: data.erro || 'Erro ao processar' });
       }
-    });
+
+      const imagemAnexada = {
+        nome: imagemFilename,
+        caminho: imagemPath,
+        caminhoRelativo: `/uploads/imagens/temp/${imagemFilename}`,
+        tamanho: req.file.size,
+        temporaria: true
+      };
+
+      let mensagem = `Captura processada! ${data.total_respostas} respostas. Dia ${data.dia_detectado}.`;
+      if (data.questoes_com_dupla_marcacao > 0) mensagem += ` ⚠ ${data.questoes_com_dupla_marcacao} duplas.`;
+      if (data.questoes_sem_marcacao > 0) mensagem += ` ○ ${data.questoes_sem_marcacao} em branco.`;
+
+      res.status(200).json({
+        sucesso: true,
+        mensagem,
+        dia_detectado: data.dia_detectado,
+        questao_inicial: data.questao_inicial,
+        questao_final: data.questao_final,
+        imagem: imagemAnexada,
+        respostas: data.respostas || [],
+        total_respostas: data.total_respostas || 0,
+        detalhes: {
+          total_bolhas_detectadas: data.total_bolhas_detectadas || 0,
+          questoes_com_dupla_marcacao: data.questoes_com_dupla_marcacao || 0,
+          questoes_sem_marcacao: data.questoes_sem_marcacao || 0,
+          questoes_validas: data.questoes_validas || 0,
+          avisos: data.avisos || []
+        }
+      });
+
+    } catch (apiError) {
+      console.error('[CAPTURAR-ENEM-MOBILE] Erro Gradio Client:', apiError.message);
+
+      try { fs.unlinkSync(imagemPath); } catch { }
+
+      return res.status(500).json({
+        sucesso: false,
+        erro: 'Erro ao processar via HuggingFace',
+        detalhes: apiError.message
+      });
+    }
 
   } catch (err) {
     console.error('[CAPTURAR-ENEM-MOBILE] Erro:', err);
