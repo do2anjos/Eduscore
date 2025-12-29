@@ -127,16 +127,27 @@ def postprocess_detections(outputs, original_shape, scale, pad):
             
             # 3. Escalar de volta para o tamanho original
             # Importante: a escala deve ser aplicada após remover o padding
-            x0 = int((x_unpad - w/2) / scale)
-            y0 = int((y_unpad - h/2) / scale)
-            w0 = int(w / scale)
-            h0 = int(h / scale)
+            x0 = (x_unpad - w/2) / scale
+            y0 = (y_unpad - h/2) / scale
+            w0 = w / scale
+            h0 = h / scale
+            
+            # 4. Normalizar (0.0 - 1.0)
+            height_orig, width_orig = original_shape
+            x_norm = x0 / width_orig
+            y_norm = y0 / height_orig
+            w_norm = w0 / width_orig
+            h_norm = h0 / height_orig
+            
+            # Manter bbox absoluto para compatibilidade interna (NMS) se precisar, 
+            # mas vamos priorizar o normalizado para o retorno da API
             
             detections.append({
                 'class_id': int(class_id),
                 'class_name': CLASS_NAMES.get(int(class_id), f'class_{class_id}'),
                 'confidence': float(conf),
-                'bbox': [x0, y0, w0, h0]
+                'bbox': [int(x0), int(y0), int(w0), int(h0)], # Pixel coords for NMS
+                'bbox_norm': [x_norm, y_norm, w_norm, h_norm] # Normalized for Frontend
             })
             
     return apply_nms(detections, NMS_THRESHOLD)
@@ -158,22 +169,23 @@ def apply_nms(detections, iou_threshold):
 def detect_enem_sheet(image_input):
     try:
         # Carregar imagem de forma robusta (trata EXIF se for bytes/path)
-        # Se image_input for numpy (Gradio image component), o Gradio já tratou a rotação geralmente?
-        # Gradio 'numpy' mode usually handles rotation if coming from file upload, but base64?
-        # Vamos garantir.
         if isinstance(image_input, np.ndarray):
             image_bgr = image_input
         else:
             image_bgr = load_image_robust(image_input)
 
-        # DEBUG DA ORIENTAÇÃO DO FRAME
+        # DEBUG DA ORIENTAÇÃO DO FRAME (Salvar para verificar)
         h, w = image_bgr.shape[:2]
         print(f"DEBUG: Frame recebido -> Largura: {w}, Altura: {h}")
+        # Salvar frame debug (sobrescreve o anterior)
+        try:
+            cv2.imwrite("debug_frame_input.jpg", image_bgr)
+        except:
+            pass
         
         net = load_model()
         
         # Preprocessamento Robust (Ultralytics Style)
-        # img_padded é a imagem 640x640 pronta para visualização, blob é o tensor para inferência
         img_padded, blob, scale, pad = preprocess_numpy_image(image_bgr)
         
         # Inferência
@@ -185,67 +197,64 @@ def detect_enem_sheet(image_input):
         # Post-processamento
         detections = postprocess_detections(outputs, (h, w), scale, pad)
         
-        # --- VISUAL DEBUG (Opcional, mas útil) ---
-        # Desenhar bbox na imagem de debug (img_padded 640x640)
+        # --- VISUAL DEBUG (Opcional) ---
         debug_img = img_padded.copy()
         pad_left, pad_top = pad
-        
-        # Para desenhar na imagem 640x640, precisamos reverter algumas operações ou usar as coords "unpad" antes do scale
-        # Mas como já temos 'detections' finais, vamos fazer o caminho inverso para visualizar O QUE O MODELO DETECTOU
         
         for det in detections:
             x_orig, y_orig, w_orig, h_orig = det['bbox']
             
-            # Reverter para 640x640
+            # Reverter para 640x640 para desenho debug
             x_640 = int(x_orig * scale + pad_left)
             y_640 = int(y_orig * scale + pad_top)
             w_640 = int(w_orig * scale)
             h_640 = int(h_orig * scale)
             
-            color = (0, 255, 0) if det['class_id'] == 0 else (0, 0, 255) # Verde=Resposta, Vermelho=Data
+            color = (0, 255, 0) if det['class_id'] == 0 else (0, 0, 255) 
             cv2.rectangle(debug_img, (x_640, y_640), (x_640 + w_640, y_640 + h_640), color, 2)
             
-        # Encode Debug Image
         _, buffer = cv2.imencode('.jpg', debug_img)
         debug_base64 = base64.b64encode(buffer).decode('utf-8')
         # ------------------------------------------
 
         rois = {}
         
-        # Estratégia de MERGE para answer_area_enem
-        # O modelo pode estar detectando blocos separados de questões. 
-        # Vamos unir todas as detecções de 'answer_area_enem' em uma única caixa grande.
-        
-        answer_boxes = []
-        answer_confs = []
-        
-        day_boxes = []
+        # Separar por classes
+        answer_dets = []
+        day_dets = []
         
         for det in detections:
             cname = det['class_name']
             if cname == 'answer_area_enem':
-                answer_boxes.append(det['bbox'])
-                answer_confs.append(det['confidence'])
+                answer_dets.append(det)
             else:
                 if cname not in rois: rois[cname] = []
-                rois[cname].append({'bbox': det['bbox'], 'confidence': det['confidence']})
+                rois[cname].append({
+                    'bbox': det['bbox'], 
+                    'bbox_norm': det['bbox_norm'],
+                    'confidence': det['confidence']
+                })
         
-        # Merge Answer Area
-        if len(answer_boxes) > 0:
-            # Encontrar min_x, min_y, max_x, max_y
-            min_x = min([b[0] for b in answer_boxes])
-            min_y = min([b[1] for b in answer_boxes])
-            max_x = max([b[0] + b[2] for b in answer_boxes])
-            max_y = max([b[1] + b[3] for b in answer_boxes])
+        # Merge Answer Area (Usando coordenadas normalizadas também)
+        if len(answer_dets) > 0:
+            # Merge Pixel Coords
+            min_x = min([d['bbox'][0] for d in answer_dets])
+            min_y = min([d['bbox'][1] for d in answer_dets])
+            max_x = max([d['bbox'][0] + d['bbox'][2] for d in answer_dets])
+            max_y = max([d['bbox'][1] + d['bbox'][3] for d in answer_dets])
             
-            merged_w = max_x - min_x
-            merged_h = max_y - min_y
+            # Merge Normalized Coords
+            min_xn = min([d['bbox_norm'][0] for d in answer_dets])
+            min_yn = min([d['bbox_norm'][1] for d in answer_dets])
+            max_xn = max([d['bbox_norm'][0] + d['bbox_norm'][2] for d in answer_dets])
+            max_yn = max([d['bbox_norm'][1] + d['bbox_norm'][3] for d in answer_dets])
             
-            # Usar a maior confiança encontrada ou média
-            max_conf = max(answer_confs)
+            # Usar a maior confiança
+            max_conf = max([d['confidence'] for d in answer_dets])
             
             rois['answer_area_enem'] = [{
-                'bbox': [min_x, min_y, merged_w, merged_h],
+                'bbox': [min_x, min_y, max_x - min_x, max_y - min_y],
+                'bbox_norm': [min_xn, min_yn, max_xn - min_xn, max_yn - min_yn],
                 'confidence': max_conf
             }]
             
