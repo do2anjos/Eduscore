@@ -10,6 +10,10 @@ import cv2
 import numpy as np
 import pytesseract
 from PIL import Image
+import os
+import re
+import sys
+import json
 
 # Configurar caminho do Tesseract se estiver no Windows (Desenvolvimento Local)
 if os.name == 'nt':
