@@ -209,10 +209,43 @@ def detect_enem_sheet(image_input):
         # ------------------------------------------
 
         rois = {}
+        
+        # Estratégia de MERGE para answer_area_enem
+        # O modelo pode estar detectando blocos separados de questões. 
+        # Vamos unir todas as detecções de 'answer_area_enem' em uma única caixa grande.
+        
+        answer_boxes = []
+        answer_confs = []
+        
+        day_boxes = []
+        
         for det in detections:
             cname = det['class_name']
-            if cname not in rois: rois[cname] = []
-            rois[cname].append({'bbox': det['bbox'], 'confidence': det['confidence']})
+            if cname == 'answer_area_enem':
+                answer_boxes.append(det['bbox'])
+                answer_confs.append(det['confidence'])
+            else:
+                if cname not in rois: rois[cname] = []
+                rois[cname].append({'bbox': det['bbox'], 'confidence': det['confidence']})
+        
+        # Merge Answer Area
+        if len(answer_boxes) > 0:
+            # Encontrar min_x, min_y, max_x, max_y
+            min_x = min([b[0] for b in answer_boxes])
+            min_y = min([b[1] for b in answer_boxes])
+            max_x = max([b[0] + b[2] for b in answer_boxes])
+            max_y = max([b[1] + b[3] for b in answer_boxes])
+            
+            merged_w = max_x - min_x
+            merged_h = max_y - min_y
+            
+            # Usar a maior confiança encontrada ou média
+            max_conf = max(answer_confs)
+            
+            rois['answer_area_enem'] = [{
+                'bbox': [min_x, min_y, merged_w, merged_h],
+                'confidence': max_conf
+            }]
             
         detectado = 'day_region' in rois and 'answer_area_enem' in rois
         
@@ -223,7 +256,6 @@ def detect_enem_sheet(image_input):
             'total_deteccoes': len(detections),
             'debug_base64': debug_base64
         }
-        
     except Exception as e:
         import traceback
         traceback.print_exc()
