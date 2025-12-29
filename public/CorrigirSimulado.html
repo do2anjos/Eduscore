@@ -543,30 +543,38 @@
     }
 
     function desenharROIsCamera(rois) {
-      // Ajustar resolução do canvas para bater com o tamanho visual (CSS)
-      // Isso é crucial porque o video usa object-fit: cover (recorta bordas)
-      // e o canvas precisa desenhar exatamente sobre a área visível
-      const displayWidth = cameraVideo.clientWidth;
-      const displayHeight = cameraVideo.clientHeight;
+      // Obter dimensões EXATAS do vídeo renderizado (incluindo barras do navegador)
+      const videoRect = cameraVideo.getBoundingClientRect();
+      const canvasRect = cameraCanvas.getBoundingClientRect();
 
-      if (cameraCanvas.width !== displayWidth || cameraCanvas.height !== displayHeight) {
-        cameraCanvas.width = displayWidth;
-        cameraCanvas.height = displayHeight;
-      }
+      // Ajustar canvas para cobrir exatamente o vídeo
+      cameraCanvas.width = videoRect.width;
+      cameraCanvas.height = videoRect.height;
+
+      // Posicionar canvas exatamente sobre o vídeo
+      cameraCanvas.style.left = `${videoRect.left - canvasRect.left}px`;
+      cameraCanvas.style.top = `${videoRect.top - canvasRect.top}px`;
 
       cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
-      // Dimensões originais do vídeo (Source)
-      const videoW = cameraVideo.videoWidth;
-      const videoH = cameraVideo.videoHeight;
+      // Dimensões da fonte de vídeo (resolução real da câmera)
+      const sourceW = cameraVideo.videoWidth;
+      const sourceH = cameraVideo.videoHeight;
 
-      // Cálculo do object-fit: cover
-      // Queremos saber como o vídeo foi escalado e posicionado pelo CSS
-      const scale = Math.max(displayWidth / videoW, displayHeight / videoH);
+      // Dimensões renderizadas na tela
+      const displayW = videoRect.width;
+      const displayH = videoRect.height;
 
-      // Offsets (centralização)
-      const offsetX = (displayWidth - (videoW * scale)) / 2;
-      const offsetY = (displayHeight - (videoH * scale)) / 2;
+      // Calcular escala e offset para object-fit: cover
+      const scaleX = displayW / sourceW;
+      const scaleY = displayH / sourceH;
+      const scale = Math.max(scaleX, scaleY); // cover usa o maior
+
+      // Calcular quanto foi cortado (offset de centralização)
+      const scaledSourceW = sourceW * scale;
+      const scaledSourceH = sourceH * scale;
+      const offsetX = (displayW - scaledSourceW) / 2;
+      const offsetY = (displayH - scaledSourceH) / 2;
 
       Object.entries(rois).forEach(([nome, deteccoes]) => {
         if (!deteccoes || deteccoes.length === 0) return;
@@ -574,32 +582,29 @@
         deteccoes.forEach(deteccao => {
           const [x, y, w, h] = deteccao.bbox;
 
-          // Transformar coordenadas:
-          // 1. Escalar (source -> display size com aspect ratio mantido)
-          // 2. Transladar (centralizar como o object-fit faz)
+          // Aplicar transformação: escala + offset
           const finalX = (x * scale) + offsetX;
           const finalY = (y * scale) + offsetY;
           const finalW = w * scale;
           const finalH = h * scale;
 
           const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
-          const labelNome = nome === 'day_region' ? 'Dia / Prova' : 'Respostas';
+          const labelNome = nome === 'day_region' ? 'Dia/Prova' : 'Respostas';
 
           cameraCtx.strokeStyle = cor;
           cameraCtx.lineWidth = 3;
           cameraCtx.strokeRect(finalX, finalY, finalW, finalH);
 
-          // Fundo semi-transparente para o texto ficar legível
-          const text = `${labelNome} (${Math.round(deteccao.confidence * 100)}%)`;
-          cameraCtx.font = 'bold 14px Atkinson Hyperlegible, sans-serif';
-          const textMetrics = cameraCtx.measureText(text);
-          const textBgHeight = 20;
+          // Label com fundo
+          const text = `${labelNome} ${Math.round(deteccao.confidence * 100)}%`;
+          cameraCtx.font = 'bold 14px sans-serif';
+          const textW = cameraCtx.measureText(text).width;
 
           cameraCtx.fillStyle = cor;
-          cameraCtx.fillRect(finalX, finalY - textBgHeight, textMetrics.width + 8, textBgHeight);
+          cameraCtx.fillRect(finalX, finalY - 22, textW + 8, 20);
 
-          cameraCtx.fillStyle = '#ffffff';
-          cameraCtx.fillText(text, finalX + 4, finalY - 4);
+          cameraCtx.fillStyle = '#fff';
+          cameraCtx.fillText(text, finalX + 4, finalY - 6);
         });
       });
     }
