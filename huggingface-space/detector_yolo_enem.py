@@ -128,16 +128,26 @@ def postprocess_detections(outputs, original_shape, scale, pad):
             print(f"[DEBUG] Raw ONNX output (first detection): x_center={x_center}, y_center={y_center}, w={w}, h={h}")
             print(f"[DEBUG] Image size (with padding): {INPUT_SIZE}, Original: {width}x{height}, Scale: {scale}")
         
-        # Converter coordenadas
-        x_center = (x_center - pad_left) / scale
-        y_center = (y_center - pad_top) / scale
-        w = w / scale
-        h = h / scale
+        # IMPORTANTE: x_center, y_center, w, h estão no espaço de INPUT (640x640)
+        # Precisamos remover padding e então escalar para o tamanho original
         
-        x = int(x_center - w / 2)
-        y = int(y_center - h / 2)
-        w = int(w)
-        h = int(h)
+        # 1. Remover padding (ainda no espaço 640x640)
+        x_center_nopad = x_center - pad_left
+        y_center_nopad = y_center - pad_top
+        
+        # 2. Escalar para o tamanho original
+        # scale = INPUT_SIZE / max(width, height)
+        # Para voltar ao original: coord_original = coord_input / scale
+        x_center_orig = x_center_nopad / scale
+        y_center_orig = y_center_nopad / scale
+        w_orig = w / scale
+        h_orig = h / scale
+        
+        # 3. Converter de center para top-left (x, y, w, h)
+        x = int(x_center_orig - w_orig / 2)
+        y = int(y_center_orig - h_orig / 2)
+        w = int(w_orig)
+        h = int(h_orig)
         
         detections.append({
             'class_id': int(class_id),
