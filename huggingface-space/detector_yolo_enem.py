@@ -1,8 +1,7 @@
-# ... imports updated in separate chunk or assuming context
 import cv2
 import numpy as np
+import base64
 import sys
-import json
 import os
 from pathlib import Path
 
@@ -10,38 +9,15 @@ from pathlib import Path
 MODEL_PATH = Path(__file__).parent / "best_yolo11s_optimized.onnx"
 INPUT_SIZE = (640, 640)
 CONFIDENCE_THRESHOLD = 0.25
-NMS_THRESHOLD = 0.3
+NMS_THRESHOLD = 0.45
 
 CLASS_NAMES = {
     0: "answer_area_enem",
     1: "day_region"
 }
 
-
+_NET = None
 def load_model():
-    """Carrega o modelo ONNX usando OpenCV DNN (Evita erro execstack do onnxruntime)"""
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"Modelo não encontrado: {MODEL_PATH}")
-    
-    try:
-        # Tentar carregar com OpenCV DNN
-        net = cv2.dnn.readNetFromONNX(str(MODEL_PATH))
-        # Configurar backend preferencial (CPU)
-        net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-        net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-        return net
-    except Exception as e:
-        raise RuntimeError(f"Erro ao carregar modelo com OpenCV DNN: {e}")
-
-
-def preprocess_image(image_path):
-    # Manter implementação original que retorna (original_img, img_batch, scale, pad)
-    # ... (código existente de preprocess_image é compatível, pois gera NCHW)
-    # Mas precisamos adaptar levemente se formos usar blobFromImage, 
-    # ou podemos apenas usar o array numpy que já temos.
-    # Vou reescrever para garantir compatibilidade completa.
-    
-    img = cv2.imread(image_path)
     global _NET
     if _NET is None:
         if not MODEL_PATH.exists():
@@ -51,67 +27,145 @@ def preprocess_image(image_path):
             # Tentar carregar com OpenCV DNN
             _NET = cv2.dnn.readNetFromONNX(str(MODEL_PATH))
             # Configurar backend preferencial (CPU)
-            # Tentar usar CUDA se disponível (opcional)
-            try:
-                _NET.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-                _NET.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-            except:
-                _NET.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-                _NET.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+            _NET.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+            _NET.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
         except Exception as e:
             raise RuntimeError(f"Erro ao carregar modelo com OpenCV DNN: {e}")
     return _NET
 
+def preprocess_numpy_image(img):
+    """Implementação correta do Letterbox (estilo Ultralytics)"""
+    shape = img.shape[:2]  # altura, largura atual
+    new_shape = INPUT_SIZE
+    
+    # Razão de escala (new / old)
+    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+    
+    # Tamanho do redimensionamento (mantendo aspecto)
+    new_unpad = (int(round(shape[1] * r)), int(round(shape[0] * r)))
+    
+    # Padding
+    dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]
+    dw /= 2  # divide o padding nas duas bordas
+    dh /= 2
+    
+    if shape[::-1] != new_unpad:  # resize
+        img_resized = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
+    else:
+        img_resized = img
+    
+    top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+    left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+    
+    img_padded = cv2.copyMakeBorder(img_resized, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
+    
+    # Normalização e Blob
+    blob = cv2.dnn.blobFromImage(img_padded, 1/255.0, new_shape, swapRB=True, crop=False)
+    
+    return img_padded, blob, r, (left, top)
 
-# The preprocess_image and preprocess_numpy_image functions are replaced by the new letterbox logic
-# and integrated directly into detect_enem_sheet and detect_rois.
-# The postprocess_detections is also replaced by the new logic in detect_enem_sheet.
-
+def postprocess_detections(outputs, original_shape, scale, pad):
+    """Post-processamento robusto para YOLOv8/v11 ONNX"""
+    output = outputs[0]
+    
+    # Se o shape for (1, 6, 8400), transpõe para (1, 8400, 6)
+    if output.shape[1] < output.shape[2]: 
+        output = np.transpose(output, (0, 2, 1))
+    
+    output = output[0] # Remover batch -> agota é (8400, 6)
+        
+    detections = []
+    pad_left, pad_top = pad
+    
+    for row in output:
+        scores = row[4:]
+        class_id = np.argmax(scores)
+        conf = scores[class_id]
+        
+        if conf > CONFIDENCE_THRESHOLD:
+            # 1. Coordenadas no espaço 640x640
+            cx, cy, w, h = row[0:4]
+            
+            # 2. Remover o padding (centralizado)
+            x_unpad = cx - pad_left
+            y_unpad = cy - pad_top
+            
+            # 3. Escalar de volta para o tamanho original
+            # Importante: a escala deve ser aplicada após remover o padding
+            x0 = int((x_unpad - w/2) / scale)
+            y0 = int((y_unpad - h/2) / scale)
+            w0 = int(w / scale)
+            h0 = int(h / scale)
+            
+            detections.append({
+                'class_id': int(class_id),
+                'class_name': CLASS_NAMES.get(int(class_id), f'class_{class_id}'),
+                'confidence': float(conf),
+                'bbox': [x0, y0, w0, h0]
+            })
+            
+    return apply_nms(detections, NMS_THRESHOLD)
 
 def apply_nms(detections, iou_threshold):
     if not detections: return []
     boxes = [d['bbox'] for d in detections]
     scores = [d['confidence'] for d in detections]
-    # cv2.dnn.NMSBoxes expects boxes as [x, y, w, h]
-    # The confidence threshold here is for filtering boxes *before* NMS,
-    # but NMSBoxes also takes a scoreThreshold for internal filtering.
-    # We already filtered by CONFIDENCE_THRESHOLD, so we can pass 0 here or the same threshold.
+    
     indices = cv2.dnn.NMSBoxes(boxes, scores, CONFIDENCE_THRESHOLD, iou_threshold)
     
-    # NMSBoxes returns a list of lists, e.g., [[idx1], [idx2], ...], so flatten it.
+    final_detections = []
     if len(indices) > 0:
-        indices = indices.flatten()
-        return [detections[i] for i in indices]
-    else:
-        return []
-
-
-def detect_rois(image_path, draw_boxes=False, output_path=None):
-    try:
-        detectado = 'day_region' in rois and 'answer_area_enem' in rois
-        return {'sucesso': True, 'detectado': detectado, 'rois': rois, 'total_deteccoes': len(detections)}
-        
-    except Exception as e:
-        return {'sucesso': False, 'erro': str(e), 'detectado': False, 'rois': {}}
-
+        for i in indices.flatten():
+            final_detections.append(detections[i])
+            
+    return final_detections
 
 def detect_enem_sheet(image_bgr):
     try:
-        net = load_model()
-        print(f"[DETECT] Input image_bgr shape: {image_bgr.shape}")
-        # preprocess_numpy_image retorna (orig, blob, scale, pad)
-        original_img, blob, scale, pad = preprocess_numpy_image(image_bgr)
-        print(f"[DETECT] After preprocess - original shape: {original_img.shape}, scale: {scale}")
+        # DEBUG DA ORIENTAÇÃO DO FRAME
+        h, w = image_bgr.shape[:2]
+        print(f"DEBUG: Frame recebido -> Largura: {w}, Altura: {h}")
         
-        # Run inference
+        net = load_model()
+        
+        # Preprocessamento Robust (Ultralytics Style)
+        # img_padded é a imagem 640x640 pronta para visualização, blob é o tensor para inferência
+        img_padded, blob, scale, pad = preprocess_numpy_image(image_bgr)
+        
+        # Inferência
         net.setInput(blob)
         outputs = net.forward()
         if not isinstance(outputs, (list, tuple)):
             outputs = [outputs]
         
-        detections = postprocess_detections(outputs, original_img.shape[:2], scale, pad)
-        print(f"[DETECT] Detections found: {len(detections)}")
+        # Post-processamento
+        detections = postprocess_detections(outputs, (h, w), scale, pad)
         
+        # --- VISUAL DEBUG (Opcional, mas útil) ---
+        # Desenhar bbox na imagem de debug (img_padded 640x640)
+        debug_img = img_padded.copy()
+        pad_left, pad_top = pad
+        
+        # Para desenhar na imagem 640x640, precisamos reverter algumas operações ou usar as coords "unpad" antes do scale
+        # Mas como já temos 'detections' finais, vamos fazer o caminho inverso para visualizar O QUE O MODELO DETECTOU
+        
+        for det in detections:
+            x_orig, y_orig, w_orig, h_orig = det['bbox']
+            
+            # Reverter para 640x640
+            x_640 = int(x_orig * scale + pad_left)
+            y_640 = int(y_orig * scale + pad_top)
+            w_640 = int(w_orig * scale)
+            h_640 = int(h_orig * scale)
+            
+            color = (0, 255, 0) if det['class_id'] == 0 else (0, 0, 255) # Verde=Resposta, Vermelho=Data
+            cv2.rectangle(debug_img, (x_640, y_640), (x_640 + w_640, y_640 + h_640), color, 2)
+            
+        # Encode Debug Image
+        _, buffer = cv2.imencode('.jpg', debug_img)
+        debug_base64 = base64.b64encode(buffer).decode('utf-8')
+        # ------------------------------------------
+
         rois = {}
         for det in detections:
             cname = det['class_name']
@@ -119,38 +173,16 @@ def detect_enem_sheet(image_bgr):
             rois[cname].append({'bbox': det['bbox'], 'confidence': det['confidence']})
             
         detectado = 'day_region' in rois and 'answer_area_enem' in rois
-        return {'sucesso': True, 'detectado': detectado, 'rois': rois, 'total_deteccoes': len(detections)}
+        
+        return {
+            'sucesso': True, 
+            'detectado': detectado, 
+            'rois': rois, 
+            'total_deteccoes': len(detections),
+            'debug_base64': debug_base64
+        }
         
     except Exception as e:
         import traceback
-        return {'sucesso': False, 'erro': str(e), 'traceback': traceback.format_exc(), 'detectado': False, 'rois': {}}
-
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(json.dumps({
-            'sucesso': False,
-            'erro': 'Uso: python detector_yolo_enem.py <caminho_imagem> [--draw] [--output <caminho_saida>]'
-        }))
-        sys.exit(1)
-    
-    image_path = sys.argv[1]
-    draw_boxes = '--draw' in sys.argv
-    output_path = None
-    
-    if '--output' in sys.argv:
-        try:
-            output_idx = sys.argv.index('--output')
-            output_path = sys.argv[output_idx + 1]
-        except (ValueError, IndexError):
-            pass
-    
-    if not os.path.exists(image_path):
-        print(json.dumps({
-            'sucesso': False,
-            'erro': f'Arquivo não encontrado: {image_path}'
-        }))
-        sys.exit(1)
-    
-    resultado = detect_rois(image_path, draw_boxes=draw_boxes, output_path=output_path)
-    print(json.dumps(resultado, ensure_ascii=False, indent=2))
+        traceback.print_exc()
+        return {'sucesso': False, 'erro': str(e), 'detectado': False, 'rois': {}}
