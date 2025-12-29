@@ -8,7 +8,7 @@ from pathlib import Path
 # Configurações do modelo
 MODEL_PATH = Path(__file__).parent / "best_yolo11s_optimized.onnx"
 INPUT_SIZE = (640, 640)
-CONFIDENCE_THRESHOLD = 0.25
+CONFIDENCE_THRESHOLD = 0.15
 NMS_THRESHOLD = 0.45
 
 CLASS_NAMES = {
