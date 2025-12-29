@@ -245,7 +245,16 @@ def detect_enem_sheet(image_bgr):
         print(f"[DETECT] Input image_bgr shape: {image_bgr.shape}")
         # preprocess_numpy_image retorna (orig, blob, scale, pad)
         original_img, blob, scale, pad = preprocess_numpy_image(image_bgr)
+        print(f"[DETECT] After preprocess - original shape: {original_img.shape}, scale: {scale}")
+        
+        # Run inference
+        net.setInput(blob)
+        outputs = net.forward()
+        if not isinstance(outputs, (list, tuple)):
+            outputs = [outputs]
+        
         detections = postprocess_detections(outputs, original_img.shape[:2], scale, pad)
+        print(f"[DETECT] Detections found: {len(detections)}")
         
         rois = {}
         for det in detections:
