@@ -158,15 +158,22 @@ def postprocess_detections(outputs, original_shape, scale, pad):
         if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
             print(f"[DEBUG] After scaling: x={x_center_orig}, y={y_center_orig}, w={w_orig}, h={h_orig}")
         
-        # 3. Converter de center para top-left (x, y, w, h)
-        x = int(x_center_orig - w_orig / 2)
-        y = int(y_center_orig - h_orig / 2)
+        # 3. Converter de center para top-left
+        # HIPÓTESE: O modelo pode estar retornando xywh (Top-Left) ao invés de cxcywh (Center)
+        # Sintoma: Boxes aparecem deslocadas para cima e esquerda (~metade da dimensão)
+        # Teste: Assumir Top-Left direto
+        
+        # x = int(x_center_orig - w_orig / 2) # Center logic
+        # y = int(y_center_orig - h_orig / 2) # Center logic
+        
+        x = int(x_center_orig) # Top-Left logic test
+        y = int(y_center_orig) # Top-Left logic test
         w = int(w_orig)
         h = int(h_orig)
         
         # DEBUG: Log final
         if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
-            print(f"[DEBUG] Final bbox: [{x}, {y}, {w}, {h}]")
+            print(f"[DEBUG] Final bbox (Assuming Top-Left Input): [{x}, {y}, {w}, {h}]")
         
         detections.append({
             'class_id': int(class_id),
