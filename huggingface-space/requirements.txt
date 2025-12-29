@@ -1,6 +1,5 @@
 gradio
 opencv-python-headless
-numpy
-onnxruntime==1.14.1
+
 pytesseract
 Pillow
