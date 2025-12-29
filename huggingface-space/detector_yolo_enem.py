@@ -83,7 +83,9 @@ def preprocess_numpy_image(img):
     dh /= 2
     
     if shape[::-1] != new_unpad:  # resize
-        img_resized = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
+        # Usar INTER_AREA para downscaling (preserva melhor texturas finas/bolinhas)
+        # O usuário identificou que INTER_LINEAR pode estar destruindo as bolinhas do gabarito.
+        img_resized = cv2.resize(img, new_unpad, interpolation=cv2.INTER_AREA)
     else:
         img_resized = img
     
