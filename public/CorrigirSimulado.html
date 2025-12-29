@@ -545,6 +545,8 @@
       const tempCtx = tempCanvas.getContext('2d');
       tempCtx.drawImage(cameraVideo, 0, 0);
 
+      console.log(`[CAPTURE] Frame size: ${tempCanvas.width}x${tempCanvas.height}`);
+
       return new Promise((resolve) => {
         tempCanvas.toBlob(resolve, 'image/jpeg', 0.95);
       });

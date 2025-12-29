@@ -48,6 +48,8 @@ def preprocess_image(image_path):
         nparr = np.asarray(dados, dtype=np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     
+    print(f"[PREPROCESS] Loaded image size: {img.shape if img is not None else 'None'}")
+    
     if img is None:
         raise ValueError(f"Não foi possível carregar a imagem: {image_path}")
     
@@ -240,14 +242,9 @@ def detect_rois(image_path, draw_boxes=False, output_path=None):
 def detect_enem_sheet(image_bgr):
     try:
         net = load_model()
+        print(f"[DETECT] Input image_bgr shape: {image_bgr.shape}")
         # preprocess_numpy_image retorna (orig, blob, scale, pad)
         original_img, blob, scale, pad = preprocess_numpy_image(image_bgr)
-        
-        net.setInput(blob)
-        outputs = net.forward()
-        if not isinstance(outputs, (list, tuple)):
-            outputs = [outputs]
-            
         detections = postprocess_detections(outputs, original_img.shape[:2], scale, pad)
         
         rois = {}
