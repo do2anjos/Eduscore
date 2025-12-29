@@ -33,6 +33,39 @@ def load_model():
             raise RuntimeError(f"Erro ao carregar modelo com OpenCV DNN: {e}")
     return _NET
 
+from PIL import Image, ImageOps
+import io
+
+def load_image_robust(image_source):
+    """
+    Carrega imagem de forma robusta usando PIL para tratar EXIF orientation.
+    Converte para BGR (OpenCV format) para ser compatível com o resto do pipeline.
+    """
+    if isinstance(image_source, str) or isinstance(image_source, Path):
+        img_pil = Image.open(image_source)
+    elif isinstance(image_source, bytes) or isinstance(image_source, bytearray):
+        img_pil = Image.open(io.BytesIO(image_source))
+    elif isinstance(image_source, np.ndarray):
+        # Assumindo BGR do OpenCV, converte para PIL para garantir consistência se necessário,
+        # mas se já é numpy, EXIF já foi perdido provavelmente.
+        # Nesse caso retornamos o próprio array.
+        return image_source
+    else:
+        raise ValueError("Formato de imagem não suportado")
+
+    # Corrigir orientação baseada no EXIF (Crítico para mobile!)
+    img_pil = ImageOps.exif_transpose(img_pil)
+    
+    # Converter para RGB (PIL usa RGB, OpenCV usa BGR)
+    if img_pil.mode != 'RGB':
+        img_pil = img_pil.convert('RGB')
+    
+    img_np = np.array(img_pil)
+    # Converter RGB -> BGR
+    img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    
+    return img_bgr
+
 def preprocess_numpy_image(img):
     """Implementação correta do Letterbox (estilo Ultralytics)"""
     shape = img.shape[:2]  # altura, largura atual
@@ -120,8 +153,17 @@ def apply_nms(detections, iou_threshold):
             
     return final_detections
 
-def detect_enem_sheet(image_bgr):
+def detect_enem_sheet(image_input):
     try:
+        # Carregar imagem de forma robusta (trata EXIF se for bytes/path)
+        # Se image_input for numpy (Gradio image component), o Gradio já tratou a rotação geralmente?
+        # Gradio 'numpy' mode usually handles rotation if coming from file upload, but base64?
+        # Vamos garantir.
+        if isinstance(image_input, np.ndarray):
+            image_bgr = image_input
+        else:
+            image_bgr = load_image_robust(image_input)
+
         # DEBUG DA ORIENTAÇÃO DO FRAME
         h, w = image_bgr.shape[:2]
         print(f"DEBUG: Frame recebido -> Largura: {w}, Altura: {h}")
