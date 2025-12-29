@@ -302,6 +302,87 @@ def detect_rois(image_path, draw_boxes=False, output_path=None):
         }
 
 
+def detect_enem_sheet(image_bgr):
+    """
+    Detecta folha ENEM a partir de uma imagem numpy array (BGR)
+    Esta é a função chamada pelo app.py do Gradio
+    
+    Args:
+        image_bgr: numpy array da imagem em formato BGR (OpenCV)
+        
+    Returns:
+        dict: Resultado da detecção {sucesso, detectado, rois, total_deteccoes}
+    """
+    try:
+        # Carregar modelo
+        session = load_model()
+        
+        # Pré-processar imagem diretamente do array
+        original_img = image_bgr.copy()
+        height, width = original_img.shape[:2]
+        
+        # Calcular escala e padding
+        scale = min(INPUT_SIZE[0] / width, INPUT_SIZE[1] / height)
+        new_width = int(width * scale)
+        new_height = int(height * scale)
+        
+        img_resized = cv2.resize(original_img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+        
+        pad_w = INPUT_SIZE[0] - new_width
+        pad_h = INPUT_SIZE[1] - new_height
+        top, bottom = pad_h // 2, pad_h - (pad_h // 2)
+        left, right = pad_w // 2, pad_w - (pad_w // 2)
+        
+        img_padded = cv2.copyMakeBorder(
+            img_resized, top, bottom, left, right,
+            cv2.BORDER_CONSTANT, value=(114, 114, 114)
+        )
+        
+        # Converter para RGB e normalizar
+        img_rgb = cv2.cvtColor(img_padded, cv2.COLOR_BGR2RGB)
+        img_normalized = img_rgb.astype(np.float32) / 255.0
+        
+        # Transpor para formato NCHW
+        img_transposed = np.transpose(img_normalized, (2, 0, 1))
+        img_batch = np.expand_dims(img_transposed, axis=0)
+        
+        # Inferência
+        input_name = session.get_inputs()[0].name
+        outputs = session.run(None, {input_name: img_batch})
+        
+        # Pós-processar detecções
+        detections = postprocess_detections(outputs, (height, width), scale, (left, top))
+        
+        # Organizar ROIs por classe
+        rois = {}
+        for det in detections:
+            class_name = det['class_name']
+            if class_name not in rois:
+                rois[class_name] = []
+            rois[class_name].append({
+                'bbox': det['bbox'],
+                'confidence': det['confidence']
+            })
+        
+        # Verificar se detectou ambas as ROIs
+        detectado = 'day_region' in rois and 'answer_area_enem' in rois
+        
+        return {
+            'sucesso': True,
+            'detectado': detectado,
+            'rois': rois,
+            'total_deteccoes': len(detections)
+        }
+        
+    except Exception as e:
+        return {
+            'sucesso': False,
+            'erro': str(e),
+            'detectado': False,
+            'rois': {}
+        }
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(json.dumps({
