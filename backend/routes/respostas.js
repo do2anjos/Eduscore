@@ -887,22 +887,30 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
       const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
 
       // Chamar endpoint de Live Detection
+      console.log('[FRAME-MOBILE] Chamando Gradio /detect...');
       const result = await client.predict("/detect", {
         image: imageBlob
       });
+
+      console.log('[FRAME-MOBILE] Resposta Gradio:', JSON.stringify(result, null, 2));
 
       // Limpar frame temporário
       try { fs.unlinkSync(framePath); } catch { }
 
       // Processar resultado
       const data = result.data[0] || result.data || {};
+      console.log('[FRAME-MOBILE] Dados extraídos:', JSON.stringify(data, null, 2));
 
       // Gerar feedback para UI
       let feedback = 'Procurando folha ENEM...';
       if (data.detectado) {
         feedback = '✓ Folha detectada! Capture quando estiver estável.';
+        console.log('[FRAME-MOBILE] ✅ DETECÇÃO POSITIVA!');
       } else if (data.rois && Object.keys(data.rois).length > 0) {
         feedback = 'Centralize melhor a folha';
+        console.log('[FRAME-MOBILE] ⚠️ ROIs parciais:', Object.keys(data.rois));
+      } else {
+        console.log('[FRAME-MOBILE] ❌ Nenhuma detecção');
       }
 
       res.status(200).json({
