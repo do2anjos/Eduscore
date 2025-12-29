@@ -65,7 +65,8 @@ def preprocess_numpy_image(img):
     new_width = int(width * scale)
     new_height = int(height * scale)
     
-    img_resized = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    # Usar INTER_AREA para downscaling (preserva melhor texturas finas/bolinhas)
+    img_resized = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
     
     pad_w = INPUT_SIZE[0] - new_width
     pad_h = INPUT_SIZE[1] - new_height
@@ -116,6 +117,7 @@ def postprocess_detections(outputs, original_shape, scale, pad):
     
     rows = output.shape[0]
     
+    
     for i in range(rows):
         row = output[i]
         
@@ -124,56 +126,40 @@ def postprocess_detections(outputs, original_shape, scale, pad):
         class_id = np.argmax(scores)
         confidence = scores[class_id]
         
+        # LOG DIAGNÓSTICO: Ver tudo que o modelo vê acima de 5%
+        if confidence > 0.05:
+            x_raw, y_raw, w_raw, h_raw = row[:4]
+            # print(f"[DEBUG-ALL] Conf={confidence:.3f}, Class={class_id}, RawXYWH=[{x_raw:.1f},{y_raw:.1f},{w_raw:.1f},{h_raw:.1f}]")
+
         if confidence < CONFIDENCE_THRESHOLD:
             continue
             
         x_center, y_center, w, h = row[:4]
         
-        # DEBUG: Log primeira detecção para diagnóstico
-        if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
-            print(f"[DEBUG] Raw ONNX output (first detection): x_center={x_center}, y_center={y_center}, w={w}, h={h}")
-            print(f"[DEBUG] Image size (with padding): {INPUT_SIZE}, Original: {width}x{height}, Scale: {scale}")
-            print(f"[DEBUG] Padding: pad_left={pad_left}, pad_top={pad_top}")
+        # DEBUG: Log para diagnóstico (primeiras 3 detecções)
+        if len(detections) < 3:
+            print(f"[DEBUG] Valid Detection: Conf={confidence:.3f}, Raw=[{x_center:.1f}, {y_center:.1f}, {w:.1f}, {h:.1f}]")
+            # print(f"[DEBUG] Padding used: left={pad_left}, top={pad_top}")
         
-        # IMPORTANTE: x_center, y_center, w, h estão no espaço de INPUT (640x640)
-        # Precisamos remover padding e então escalar para o tamanho original
-        
-        # 1. Remover padding (ainda no espaço 640x640)
+        # 1. Remover padding
         x_center_nopad = x_center - pad_left
         y_center_nopad = y_center - pad_top
         
-        # DEBUG: Log após remover padding
-        if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
-            print(f"[DEBUG] After removing padding: x={x_center_nopad}, y={y_center_nopad}")
-        
         # 2. Escalar para o tamanho original
-        # scale = INPUT_SIZE / max(width, height)
-        # Para voltar ao original: coord_original = coord_input / scale
         x_center_orig = x_center_nopad / scale
         y_center_orig = y_center_nopad / scale
         w_orig = w / scale
         h_orig = h / scale
         
-        # DEBUG: Log após escalar
-        if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
-            print(f"[DEBUG] After scaling: x={x_center_orig}, y={y_center_orig}, w={w_orig}, h={h_orig}")
-        
-        # 3. Converter de center para top-left
-        # HIPÓTESE: O modelo pode estar retornando xywh (Top-Left) ao invés de cxcywh (Center)
-        # Sintoma: Boxes aparecem deslocadas para cima e esquerda (~metade da dimensão)
-        # Teste: Assumir Top-Left direto
-        
-        # x = int(x_center_orig - w_orig / 2) # Center logic
-        # y = int(y_center_orig - h_orig / 2) # Center logic
-        
-        x = int(x_center_orig) # Top-Left logic test
-        y = int(y_center_orig) # Top-Left logic test
+        # 3. Converter de Center-XYWH para TopLeft-XYWH (Padrão YOLO)
+        # Revertendo hipótese anterior (estava errado assumir top-left input)
+        x = int(x_center_orig - w_orig / 2)
+        y = int(y_center_orig - h_orig / 2)
         w = int(w_orig)
         h = int(h_orig)
         
-        # DEBUG: Log final
-        if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
-            print(f"[DEBUG] Final bbox (Assuming Top-Left Input): [{x}, {y}, {w}, {h}]")
+        if len(detections) < 3:
+            print(f"[DEBUG] Final bbox: [{x}, {y}, {w}, {h}]")
         
         detections.append({
             'class_id': int(class_id),
