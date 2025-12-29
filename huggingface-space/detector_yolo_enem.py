@@ -123,6 +123,11 @@ def postprocess_detections(outputs, original_shape, scale, pad):
             
         x_center, y_center, w, h = row[:4]
         
+        # DEBUG: Log primeira detecção para diagnóstico
+        if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
+            print(f"[DEBUG] Raw ONNX output (first detection): x_center={x_center}, y_center={y_center}, w={w}, h={h}")
+            print(f"[DEBUG] Image size (with padding): {INPUT_SIZE}, Original: {width}x{height}, Scale: {scale}")
+        
         # Converter coordenadas
         x_center = (x_center - pad_left) / scale
         y_center = (y_center - pad_top) / scale
