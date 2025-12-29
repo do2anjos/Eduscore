@@ -357,7 +357,12 @@ with gr.Blocks(title="EduScore YOLO API") as demo:
             output_frame = gr.JSON(label="Resultado")
         
         btn_detect = gr.Button("Detectar", variant="primary")
-        btn_detect.click(fn=process_frame, inputs=input_frame, outputs=output_frame)
+        btn_detect.click(
+            fn=process_frame, 
+            inputs=input_frame, 
+            outputs=output_frame,
+            api_name="detect"  # Endpoint: /api/predict ou client.predict("/detect")
+        )
         
     with gr.Tab("Full Capture (Completo)"):
         gr.Markdown("### Processamento completo com OCR e extração de respostas")
@@ -366,7 +371,12 @@ with gr.Blocks(title="EduScore YOLO API") as demo:
             output_full = gr.JSON(label="Resultado Completo")
         
         btn_process = gr.Button("Processar", variant="primary")
-        btn_process.click(fn=process_full_capture, inputs=input_full, outputs=output_full)
+        btn_process.click(
+            fn=process_full_capture, 
+            inputs=input_full, 
+            outputs=output_full,
+            api_name="process"  # Endpoint: client.predict("/process")
+        )
     
     gr.Markdown("---")
     gr.Markdown("**Como usar via API:**")

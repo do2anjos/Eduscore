@@ -886,8 +886,8 @@ router.post('/processar-frame-mobile', uploadImagemTemp.single('frame'), async (
       const imageBuffer = fs.readFileSync(framePath);
       const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
 
-      // Chamar endpoint de Live Detection (primeiro botão = fn_index 0)
-      const result = await client.predict("/predict", {
+      // Chamar endpoint de Live Detection
+      const result = await client.predict("/detect", {
         image: imageBlob
       });
 
@@ -963,8 +963,8 @@ router.post('/capturar-enem-mobile', uploadImagemTemp.single('imagem'), async (r
       const imageBuffer = fs.readFileSync(imagemPath);
       const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
 
-      // Chamar endpoint de Full Capture (segundo botão = /predict_1 ou endpoint_info[1])
-      const result = await client.predict("/predict_1", {
+      // Chamar endpoint de Full Capture
+      const result = await client.predict("/process", {
         image: imageBlob
       });
 
