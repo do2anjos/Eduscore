@@ -183,9 +183,15 @@
 
             <!-- DEBUG INFO (remover depois) -->
             <div id="debugInfo"
-              style="background: rgba(255,255,0,0.9); color: black; padding: 8px; border-radius: 8px; font-size: 12px; font-family: monospace; text-align: left; width: 90%; max-width: 400px;">
+              style="background: rgba(0,0,0,0.8); color: lime; padding: 8px; border-radius: 8px; font-size: 10px; font-family: monospace; text-align: left; width: 95%; max-width: 400px; z-index: 1000;">
               <div>📐 <strong>Debug Info:</strong></div>
               <div id="debugDimensions">Aguardando...</div>
+              <!-- DEBUG IMAGE -->
+              <div style="margin-top: 5px; border-top: 1px solid white; padding-top: 5px;">
+                <strong>YOLO Input (640x640):</strong>
+                <img id="debugModelView"
+                  style="width: 100px; height: 100px; object-fit: contain; background: #333; display: block; margin-top: 5px;" />
+              </div>
             </div>
 
             <div id="detectionFeedback"
@@ -497,6 +503,14 @@
           });
 
           const data = await response.json();
+
+          // Atualizar imagem de debug se houver
+          if (data.debug_base64) {
+            const imgDebug = document.getElementById('debugModelView');
+            if (imgDebug) {
+              imgDebug.src = 'data:image/jpeg;base64,' + data.debug_base64;
+            }
+          }
 
           if (data.sucesso && data.detectado) {
             // Folha detectada!

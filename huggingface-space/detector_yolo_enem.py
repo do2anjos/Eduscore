@@ -42,229 +42,52 @@ def preprocess_image(image_path):
     # Vou reescrever para garantir compatibilidade completa.
     
     img = cv2.imread(image_path)
-    if img is None:
-        with open(image_path, 'rb') as f:
-            dados = bytearray(f.read())
-        nparr = np.asarray(dados, dtype=np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-    print(f"[PREPROCESS] Loaded image size: {img.shape if img is not None else 'None'}")
-    
-    if img is None:
-        raise ValueError(f"Não foi possível carregar a imagem: {image_path}")
-    
-    return preprocess_numpy_image(img)
+    global _NET
+    if _NET is None:
+        if not MODEL_PATH.exists():
+            raise FileNotFoundError(f"Modelo não encontrado: {MODEL_PATH}")
+        
+        try:
+            # Tentar carregar com OpenCV DNN
+            _NET = cv2.dnn.readNetFromONNX(str(MODEL_PATH))
+            # Configurar backend preferencial (CPU)
+            # Tentar usar CUDA se disponível (opcional)
+            try:
+                _NET.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+                _NET.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+            except:
+                _NET.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+                _NET.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+        except Exception as e:
+            raise RuntimeError(f"Erro ao carregar modelo com OpenCV DNN: {e}")
+    return _NET
 
 
-def preprocess_numpy_image(img):
-    """Refatorado para reuso"""
-    original_img = img.copy()
-    height, width = img.shape[:2]
-    
-    scale = min(INPUT_SIZE[0] / width, INPUT_SIZE[1] / height)
-    new_width = int(width * scale)
-    new_height = int(height * scale)
-    
-    # Usar INTER_AREA para downscaling (preserva melhor texturas finas/bolinhas)
-    img_resized = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
-    
-    pad_w = INPUT_SIZE[0] - new_width
-    pad_h = INPUT_SIZE[1] - new_height
-    top, bottom = pad_h // 2, pad_h - (pad_h // 2)
-    left, right = pad_w // 2, pad_w - (pad_w // 2)
-    
-    img_padded = cv2.copyMakeBorder(
-        img_resized, top, bottom, left, right,
-        cv2.BORDER_CONSTANT, value=(114, 114, 114)
-    )
-    
-    
-    print(f"[PREPROCESS] Original: {height}x{width} (HxW), Scale: {scale:.3f}, Resized: {new_height}x{new_width}")
-    print(f"[PREPROCESS] Padding - left: {left}, top: {top}, right: {right}, bottom: {bottom}")
-    
-    # Normalização e Transposição
-    # OpenCV DNN pode usar blobFromImage, mas para manter consistência com o código anterior:
-    blob = cv2.dnn.blobFromImage(img_padded, 1/255.0, INPUT_SIZE, swapRB=True, crop=False)
-    
-    # Nota: blobFromImage já faz swapRB (BGR->RGB se True) e normalização
-    # O código anterior fazia isso manualmente. 
-    # Vamos retornar o blob pronto.
-    
-    return original_img, blob, scale, (left, top)
-
-
-def postprocess_detections(outputs, original_shape, scale, pad):
-    # OpenCV retorna outputs como uma lista de blobs. 
-    # Para YOLO ONNX exportado, geralmente é um único output [1, 8400, 6] (se for v8/11)
-    
-    # outputs é uma lista de arrays numpy
-    output = outputs[0] # Pegar o primeiro output layer
-    
-    # output shape para YOLOv8/11 geralmente é (1, 6, 8400) ou (1, 8400, 6) dependendo do export
-    # Vamos verificar a dimensão. Se for (1, 6, 8400), precisamos transpor.
-    if output.shape[1] < output.shape[2]: # Ex: (1, 6, 8400) -> Transpor para (1, 8400, 6)
-        output = np.transpose(output, (0, 2, 1))
-    
-    output = output[0] # Remover batch -> (8400, 6)
-    
-    detections = []
-    height, width = original_shape
-    pad_left, pad_top = pad
-    
-    # Iterar sobre detecções
-    # Formato: [x_center, y_center, width, height, class0_score, class1_score...]
-    # Não tem "confidence" separado no v8/v11 default, a confiança é o max(class_scores)
-    
-    rows = output.shape[0]
-    
-    
-    for i in range(rows):
-        row = output[i]
-        
-        # As primeiras 4 colunas são bbox
-        scores = row[4:]
-        class_id = np.argmax(scores)
-        confidence = scores[class_id]
-        
-        # LOG DIAGNÓSTICO: Ver tudo que o modelo vê acima de 5%
-        if confidence > 0.05:
-            x_raw, y_raw, w_raw, h_raw = row[:4]
-            # print(f"[DEBUG-ALL] Conf={confidence:.3f}, Class={class_id}, RawXYWH=[{x_raw:.1f},{y_raw:.1f},{w_raw:.1f},{h_raw:.1f}]")
-
-        if confidence < CONFIDENCE_THRESHOLD:
-            continue
-            
-        x_center, y_center, w, h = row[:4]
-        
-        # DEBUG: Log para diagnóstico (primeiras 3 detecções)
-        if len(detections) < 3:
-            print(f"[DEBUG] Valid Detection: Conf={confidence:.3f}, Raw=[{x_center:.1f}, {y_center:.1f}, {w:.1f}, {h:.1f}]")
-            # print(f"[DEBUG] Padding used: left={pad_left}, top={pad_top}")
-        
-        
-        # TESTE CRÍTICO: Ignorar subtração de padding
-        # Hipótese: O modelo ONNX pode estar exportando coordenadas já referentes à imagem escalada 
-        # sem letterbox, ou o padding calculado está errado.
-        # Vamos assumir que x_center já é relativo à area útil da imagem.
-        
-        # 1. Remover padding (COMENTADO PARA TESTE)
-        # x_center_nopad = x_center - pad_left
-        # y_center_nopad = y_center - pad_top
-        
-        x_center_nopad = x_center
-        y_center_nopad = y_center
-        
-        # 2. Escalar para o tamanho original
-        # Se não tiramos padding, talvez precisemos ajustar como escalamos
-        
-        # Vamos tentar uma abordagem diferente:
-        # Se x_center=379 em 640, e padding=140...
-        # Se ignorarmos padding, 379 * (1920/640) = 1137 (meio da tela)
-        # Se usarmos padding, (379-140) * 3 = 717 (esquerda)
-        
-        # Vou manter a subtração de padding 'invalida' mas ajustar o cálculo
-        # para ver onde cai o bbox sem padding.
-        
-        x_center_orig = (x_center - pad_left) / scale
-        y_center_orig = (y_center - pad_top) / scale
-        
-        # DEBUG: Imprimir coordenadas sem padding para comparação
-        if len(detections) < 3:
-             print(f"[DEBUG] No-Pad Test: x={(x_center)/scale:.1f}, y={(y_center)/scale:.1f}")
-
-        w_orig = w / scale
-        h_orig = h / scale
-        
-        # 3. Converter de Center-XYWH
-        x = int(x_center_orig - w_orig / 2)
-        y = int(y_center_orig - h_orig / 2)
-        w = int(w_orig)
-        h = int(h_orig)
-        
-        if len(detections) < 3:
-            print(f"[DEBUG] Final bbox: [{x}, {y}, {w}, {h}]")
-        
-        detections.append({
-            'class_id': int(class_id),
-            'class_name': CLASS_NAMES.get(int(class_id), f'class_{class_id}'),
-            'confidence': float(confidence),
-            'bbox': [x, y, w, h]
-        })
-    
-    return apply_nms(detections, NMS_THRESHOLD)
+# The preprocess_image and preprocess_numpy_image functions are replaced by the new letterbox logic
+# and integrated directly into detect_enem_sheet and detect_rois.
+# The postprocess_detections is also replaced by the new logic in detect_enem_sheet.
 
 
 def apply_nms(detections, iou_threshold):
-    # Mantém implementación anterior
-    if len(detections) == 0: return []
+    if not detections: return []
+    boxes = [d['bbox'] for d in detections]
+    scores = [d['confidence'] for d in detections]
+    # cv2.dnn.NMSBoxes expects boxes as [x, y, w, h]
+    # The confidence threshold here is for filtering boxes *before* NMS,
+    # but NMSBoxes also takes a scoreThreshold for internal filtering.
+    # We already filtered by CONFIDENCE_THRESHOLD, so we can pass 0 here or the same threshold.
+    indices = cv2.dnn.NMSBoxes(boxes, scores, CONFIDENCE_THRESHOLD, iou_threshold)
     
-    # OpenCV tem NMSBoxes que é mais rápido, mas vamos manter o Python puro 
-    # por enquanto para evitar mudar muitas coisas, ou usar cv2.dnn.NMSBoxes se quiser otimizar.
-    # Manterei a função original para minimizar erros de portabilidade agora.
-    
-    detections_by_class = {}
-    for det in detections:
-        cid = det['class_id']
-        if cid not in detections_by_class: detections_by_class[cid] = []
-        detections_by_class[cid].append(det)
-        
-    final_detections = []
-    for cid, dets in detections_by_class.items():
-        dets = sorted(dets, key=lambda x: x['confidence'], reverse=True)
-        keep = []
-        while len(dets) > 0:
-            best = dets.pop(0)
-            keep.append(best)
-            dets = [d for d in dets if calculate_iou(best['bbox'], d['bbox']) < iou_threshold]
-        final_detections.extend(keep)
-        
-    return final_detections
-
-
-def calculate_iou(box1, box2):
-    # Manter implementação original
-    x1, y1, w1, h1 = box1
-    x2, y2, w2, h2 = box2
-    x_left = max(x1, x2)
-    y_top = max(y1, y2)
-    x_right = min(x1 + w1, x2 + w2)
-    y_bottom = min(y1 + h1, y2 + h2)
-    if x_right < x_left or y_bottom < y_top: return 0.0
-    intersection = (x_right - x_left) * (y_bottom - y_top)
-    union = (w1 * h1) + (w2 * h2) - intersection
-    return intersection / union if union > 0 else 0.0
+    # NMSBoxes returns a list of lists, e.g., [[idx1], [idx2], ...], so flatten it.
+    if len(indices) > 0:
+        indices = indices.flatten()
+        return [detections[i] for i in indices]
+    else:
+        return []
 
 
 def detect_rois(image_path, draw_boxes=False, output_path=None):
     try:
-        net = load_model()
-        original_img, blob, scale, pad = preprocess_image(image_path)
-        
-        net.setInput(blob)
-        outputs = net.forward()
-        # forward retorna lista ou array, colocamos em lista se não for
-        if not isinstance(outputs, (list, tuple)):
-            outputs = [outputs]
-            
-        detections = postprocess_detections(outputs, original_img.shape[:2], scale, pad)
-        
-        rois = {}
-        for det in detections:
-            cname = det['class_name']
-            if cname not in rois: rois[cname] = []
-            rois[cname].append({'bbox': det['bbox'], 'confidence': det['confidence']})
-            
-        if draw_boxes and len(detections) > 0:
-            img_with_boxes = original_img.copy()
-            for det in detections:
-                x, y, w, h = det['bbox']
-                color = (0, 255, 0) if det['class_name'] == 'answer_area_enem' else (255, 0, 0)
-                cv2.rectangle(img_with_boxes, (x, y), (x + w, y + h), color, 2)
-                label = f"{det['class_name']}: {det['confidence']:.2f}"
-                cv2.putText(img_with_boxes, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-            if output_path:
-                cv2.imwrite(output_path, img_with_boxes)
-                
         detectado = 'day_region' in rois and 'answer_area_enem' in rois
         return {'sucesso': True, 'detectado': detectado, 'rois': rois, 'total_deteccoes': len(detections)}
         
