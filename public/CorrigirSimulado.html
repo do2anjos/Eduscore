@@ -572,7 +572,6 @@
       // Isso é crucial porque o video usa object-fit: cover (recorta bordas)
       // e o canvas precisa desenhar exatamente sobre a área visível
       // O canvas cobre toda a tela (position: fixed), então use window dimensions
-      const displayWidth = window.innerWidth;
       // AGORA USANDO OBJECT-FIT: CONTAIN para garantir que vemos tudo que o modelo vê
       const displayWidth = cameraVideo.clientWidth;
       const displayHeight = cameraVideo.clientHeight;
