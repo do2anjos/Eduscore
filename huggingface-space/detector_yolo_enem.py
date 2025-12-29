@@ -141,18 +141,41 @@ def postprocess_detections(outputs, original_shape, scale, pad):
             print(f"[DEBUG] Valid Detection: Conf={confidence:.3f}, Raw=[{x_center:.1f}, {y_center:.1f}, {w:.1f}, {h:.1f}]")
             # print(f"[DEBUG] Padding used: left={pad_left}, top={pad_top}")
         
-        # 1. Remover padding
-        x_center_nopad = x_center - pad_left
-        y_center_nopad = y_center - pad_top
+        
+        # TESTE CRÍTICO: Ignorar subtração de padding
+        # Hipótese: O modelo ONNX pode estar exportando coordenadas já referentes à imagem escalada 
+        # sem letterbox, ou o padding calculado está errado.
+        # Vamos assumir que x_center já é relativo à area útil da imagem.
+        
+        # 1. Remover padding (COMENTADO PARA TESTE)
+        # x_center_nopad = x_center - pad_left
+        # y_center_nopad = y_center - pad_top
+        
+        x_center_nopad = x_center
+        y_center_nopad = y_center
         
         # 2. Escalar para o tamanho original
-        x_center_orig = x_center_nopad / scale
-        y_center_orig = y_center_nopad / scale
+        # Se não tiramos padding, talvez precisemos ajustar como escalamos
+        
+        # Vamos tentar uma abordagem diferente:
+        # Se x_center=379 em 640, e padding=140...
+        # Se ignorarmos padding, 379 * (1920/640) = 1137 (meio da tela)
+        # Se usarmos padding, (379-140) * 3 = 717 (esquerda)
+        
+        # Vou manter a subtração de padding 'invalida' mas ajustar o cálculo
+        # para ver onde cai o bbox sem padding.
+        
+        x_center_orig = (x_center - pad_left) / scale
+        y_center_orig = (y_center - pad_top) / scale
+        
+        # DEBUG: Imprimir coordenadas sem padding para comparação
+        if len(detections) < 3:
+             print(f"[DEBUG] No-Pad Test: x={(x_center)/scale:.1f}, y={(y_center)/scale:.1f}")
+
         w_orig = w / scale
         h_orig = h / scale
         
-        # 3. Converter de Center-XYWH para TopLeft-XYWH (Padrão YOLO)
-        # Revertendo hipótese anterior (estava errado assumir top-left input)
+        # 3. Converter de Center-XYWH
         x = int(x_center_orig - w_orig / 2)
         y = int(y_center_orig - h_orig / 2)
         w = int(w_orig)
