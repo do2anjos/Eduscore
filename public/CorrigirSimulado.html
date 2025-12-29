@@ -591,6 +591,12 @@
       const offsetX = (displayWidth - (videoW * scale)) / 2;
       const offsetY = (displayHeight - (videoH * scale)) / 2;
 
+      // TESTE: Desenhar marcadores de teste nos cantos do vídeo (após transform)
+      cameraCtx.fillStyle = 'yellow';
+      cameraCtx.fillRect(offsetX, offsetY, 20, 20); // Canto superior esquerdo
+      cameraCtx.fillRect(offsetX + (videoW * scale) - 20, offsetY, 20, 20); // Canto superior direito
+
+
       Object.entries(rois).forEach(([nome, deteccoes]) => {
         if (!deteccoes || deteccoes.length === 0) return;
 
