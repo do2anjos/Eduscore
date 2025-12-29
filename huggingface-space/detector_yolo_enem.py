@@ -77,6 +77,9 @@ def preprocess_numpy_image(img):
         cv2.BORDER_CONSTANT, value=(114, 114, 114)
     )
     
+    print(f"[PREPROCESS] Original: {width}x{height}, Scale: {scale:.3f}, Resized: {new_width}x{new_height}")
+    print(f"[PREPROCESS] Padding - left: {left}, top: {top}, right: {right}, bottom: {bottom}")
+    
     # Normalização e Transposição
     # OpenCV DNN pode usar blobFromImage, mas para manter consistência com o código anterior:
     blob = cv2.dnn.blobFromImage(img_padded, 1/255.0, INPUT_SIZE, swapRB=True, crop=False)
@@ -129,6 +132,7 @@ def postprocess_detections(outputs, original_shape, scale, pad):
         if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
             print(f"[DEBUG] Raw ONNX output (first detection): x_center={x_center}, y_center={y_center}, w={w}, h={h}")
             print(f"[DEBUG] Image size (with padding): {INPUT_SIZE}, Original: {width}x{height}, Scale: {scale}")
+            print(f"[DEBUG] Padding: pad_left={pad_left}, pad_top={pad_top}")
         
         # IMPORTANTE: x_center, y_center, w, h estão no espaço de INPUT (640x640)
         # Precisamos remover padding e então escalar para o tamanho original
@@ -136,6 +140,10 @@ def postprocess_detections(outputs, original_shape, scale, pad):
         # 1. Remover padding (ainda no espaço 640x640)
         x_center_nopad = x_center - pad_left
         y_center_nopad = y_center - pad_top
+        
+        # DEBUG: Log após remover padding
+        if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
+            print(f"[DEBUG] After removing padding: x={x_center_nopad}, y={y_center_nopad}")
         
         # 2. Escalar para o tamanho original
         # scale = INPUT_SIZE / max(width, height)
@@ -145,11 +153,19 @@ def postprocess_detections(outputs, original_shape, scale, pad):
         w_orig = w / scale
         h_orig = h / scale
         
+        # DEBUG: Log após escalar
+        if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
+            print(f"[DEBUG] After scaling: x={x_center_orig}, y={y_center_orig}, w={w_orig}, h={h_orig}")
+        
         # 3. Converter de center para top-left (x, y, w, h)
         x = int(x_center_orig - w_orig / 2)
         y = int(y_center_orig - h_orig / 2)
         w = int(w_orig)
         h = int(h_orig)
+        
+        # DEBUG: Log final
+        if len(detections) == 0 and confidence > CONFIDENCE_THRESHOLD:
+            print(f"[DEBUG] Final bbox: [{x}, {y}, {w}, {h}]")
         
         detections.append({
             'class_id': int(class_id),
