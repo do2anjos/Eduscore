@@ -554,17 +554,21 @@
       // Ajustar resolução do canvas para bater com o tamanho visual (CSS)
       // Isso é crucial porque o video usa object-fit: cover (recorta bordas)
       // e o canvas precisa desenhar exatamente sobre a área visível
-      const displayWidth = cameraVideo.clientWidth;
-      const displayHeight = cameraVideo.clientHeight;
+      // O canvas cobre toda a tela (position: fixed), então use window dimensions
+      const displayWidth = window.innerWidth;
+      const displayHeight = window.innerHeight;
 
 
       // DEBUG: Show dimensions on screen
       const debugEl = document.getElementById('debugDimensions');
       if (debugEl) {
+        const scale = Math.max(displayWidth / cameraVideo.videoWidth, displayHeight / cameraVideo.videoHeight);
+        const offsetX = (displayWidth - (cameraVideo.videoWidth * scale)) / 2;
+        const offsetY = (displayHeight - (cameraVideo.videoHeight * scale)) / 2;
         debugEl.innerHTML = `
           Video: ${cameraVideo.videoWidth} x ${cameraVideo.videoHeight}<br>
-          Display: ${displayWidth} x ${displayHeight}<br>
-          Canvas: ${cameraCanvas.width} x ${cameraCanvas.height}
+          Window: ${displayWidth} x ${displayHeight}<br>
+          Scale: ${scale.toFixed(3)} | Offset: ${Math.round(offsetX)}, ${Math.round(offsetY)}
         `;
       }
 
