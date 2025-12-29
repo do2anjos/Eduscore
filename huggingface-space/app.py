@@ -10,12 +10,22 @@ import os
 sys.path.append(os.path.dirname(__file__))
 
 # Importar funções do detector YOLO e OCR
+modules_error = None
 try:
     from detector_yolo_enem import detect_enem_sheet
     from ocr_day_detector import detect_day_from_image
 except ImportError as e:
-    print(f"AVISO: Não foi possível importar módulos: {e}")
-    print("Certifique-se de copiar detector_yolo_enem.py e ocr_day_detector.py para este diretório")
+    modules_error = str(e)
+    print(f"ERRO CRÍTICO DE IMPORTAÇÃO: {e}")
+    import traceback
+    traceback.print_exc()
+    
+    # Definir funções dummy para retornar o erro na API
+    def detect_enem_sheet(*args, **kwargs):
+        raise ImportError(f"Falha ao carregar módulos no servidor: {modules_error}")
+        
+    def detect_day_from_image(*args, **kwargs):
+        raise ImportError(f"Falha ao carregar módulos no servidor: {modules_error}")
 
 def process_frame(image):
     """
