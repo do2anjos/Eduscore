@@ -77,7 +77,8 @@ def preprocess_numpy_image(img):
         cv2.BORDER_CONSTANT, value=(114, 114, 114)
     )
     
-    print(f"[PREPROCESS] Original: {width}x{height}, Scale: {scale:.3f}, Resized: {new_width}x{new_height}")
+    
+    print(f"[PREPROCESS] Original: {height}x{width} (HxW), Scale: {scale:.3f}, Resized: {new_height}x{new_width}")
     print(f"[PREPROCESS] Padding - left: {left}, top: {top}, right: {right}, bottom: {bottom}")
     
     # Normalização e Transposição
