@@ -13,8 +13,8 @@ CONFIDENCE_THRESHOLD = 0.25
 NMS_THRESHOLD = 0.3
 
 CLASS_NAMES = {
-    0: "day_region",
-    1: "answer_area_enem"
+    0: "answer_area_enem",
+    1: "day_region"
 }
 
 
