@@ -135,50 +135,16 @@ def postprocess_detections(outputs, original_shape, scale, pad):
             # 4. Normalizar (0.0 - 1.0)
             height_orig, width_orig = original_shape
             
-            # --- CALIBRATION FIX ---
-            # O usuário reportou que as caixas estão comprimidas verticalmente (Day muito baixo, Answer muito alto)
-            # ou deslocadas. Análise sugere compressão em direção ao centro ou desalinhamento de FOV.
-            # Vamos aplicar uma expansão vertical em imagens RETRATO.
-            
-            x_final = x0
-            y_final = y0
-            w_final = w0
-            h_final = h0
-            
-            if height_orig > width_orig: # Portrait
-                # Fator de expansão experimental baseado no feedback (2.4 parece muito, vamos com 1.4 conservador + offset)
-                # Se y=387 -> target=150. Se y=900 -> target=1200.
-                # Vamos tentar esticar a partir do centro da tela.
-                center_y = height_orig / 2
-                
-                # Expansão linear: Afastar do centro
-                y_center_box = y_final + h_final/2
-                dist_from_center = y_center_box - center_y
-                
-                # Se dist for negativa (topo), queremos que fique MAIS negativa (subir)
-                # Se dist for positiva (baixo), queremos MAIS positiva (descer)
-                calib_scale = 1.6 # Aumentando a distância vertical
-                
-                new_dist = dist_from_center * calib_scale
-                new_center_y = center_y + new_dist
-                
-                # Recalcular Top-Left
-                y_final = new_center_y - h_final/2
-                
-                # Debug Log
-                # if conf > 0.8 and class_id == 0:
-                #    print(f"[CALIB] Y_old={y0:.0f} -> Y_new={y_final:.0f}")
-
-            x_norm = x_final / width_orig
-            y_norm = y_final / height_orig
-            w_norm = w_final / width_orig
-            h_norm = h_final / height_orig
+            x_norm = x0 / width_orig
+            y_norm = y0 / height_orig
+            w_norm = w0 / width_orig
+            h_norm = h0 / height_orig
             
             detections.append({
                 'class_id': int(class_id),
                 'class_name': CLASS_NAMES.get(int(class_id), f'class_{class_id}'),
                 'confidence': float(conf),
-                'bbox': [int(x_final), int(y_final), int(w_final), int(h_final)], # Pixel coords for NMS
+                'bbox': [int(x0), int(y0), int(w0), int(h0)], # Pixel coords for NMS
                 'bbox_norm': [x_norm, y_norm, w_norm, h_norm] # Normalized for Frontend
             })
             
