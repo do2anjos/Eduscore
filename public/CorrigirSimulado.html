@@ -557,10 +557,16 @@
       const displayWidth = cameraVideo.clientWidth;
       const displayHeight = cameraVideo.clientHeight;
 
-      // DEBUG: Log dimensions
-      console.log('[DRAW] Video Source:', cameraVideo.videoWidth, 'x', cameraVideo.videoHeight);
-      console.log('[DRAW] Display Size:', displayWidth, 'x', displayHeight);
-      console.log('[DRAW] Canvas Size:', cameraCanvas.width, 'x', cameraCanvas.height);
+
+      // DEBUG: Show dimensions on screen
+      const debugEl = document.getElementById('debugDimensions');
+      if (debugEl) {
+        debugEl.innerHTML = `
+          Video: ${cameraVideo.videoWidth} x ${cameraVideo.videoHeight}<br>
+          Display: ${displayWidth} x ${displayHeight}<br>
+          Canvas: ${cameraCanvas.width} x ${cameraCanvas.height}
+        `;
+      }
 
       if (cameraCanvas.width !== displayWidth || cameraCanvas.height !== displayHeight) {
         cameraCanvas.width = displayWidth;
