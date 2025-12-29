@@ -543,30 +543,63 @@
     }
 
     function desenharROIsCamera(rois) {
+      // Ajustar resolução do canvas para bater com o tamanho visual (CSS)
+      // Isso é crucial porque o video usa object-fit: cover (recorta bordas)
+      // e o canvas precisa desenhar exatamente sobre a área visível
+      const displayWidth = cameraVideo.clientWidth;
+      const displayHeight = cameraVideo.clientHeight;
+
+      if (cameraCanvas.width !== displayWidth || cameraCanvas.height !== displayHeight) {
+        cameraCanvas.width = displayWidth;
+        cameraCanvas.height = displayHeight;
+      }
+
       cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
-      const scaleX = cameraCanvas.width / cameraVideo.videoWidth;
-      const scaleY = cameraCanvas.height / cameraVideo.videoHeight;
+      // Dimensões originais do vídeo (Source)
+      const videoW = cameraVideo.videoWidth;
+      const videoH = cameraVideo.videoHeight;
+
+      // Cálculo do object-fit: cover
+      // Queremos saber como o vídeo foi escalado e posicionado pelo CSS
+      const scale = Math.max(displayWidth / videoW, displayHeight / videoH);
+
+      // Offsets (centralização)
+      const offsetX = (displayWidth - (videoW * scale)) / 2;
+      const offsetY = (displayHeight - (videoH * scale)) / 2;
 
       Object.entries(rois).forEach(([nome, deteccoes]) => {
         if (!deteccoes || deteccoes.length === 0) return;
 
         deteccoes.forEach(deteccao => {
           const [x, y, w, h] = deteccao.bbox;
-          const scaledX = x * scaleX;
-          const scaledY = y * scaleY;
-          const scaledW = w * scaleX;
-          const scaledH = h * scaleY;
+
+          // Transformar coordenadas:
+          // 1. Escalar (source -> display size com aspect ratio mantido)
+          // 2. Transladar (centralizar como o object-fit faz)
+          const finalX = (x * scale) + offsetX;
+          const finalY = (y * scale) + offsetY;
+          const finalW = w * scale;
+          const finalH = h * scale;
 
           const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
+          const labelNome = nome === 'day_region' ? 'Dia / Prova' : 'Respostas';
 
           cameraCtx.strokeStyle = cor;
-          cameraCtx.lineWidth = 4;
-          cameraCtx.strokeRect(scaledX, scaledY, scaledW, scaledH);
+          cameraCtx.lineWidth = 3;
+          cameraCtx.strokeRect(finalX, finalY, finalW, finalH);
+
+          // Fundo semi-transparente para o texto ficar legível
+          const text = `${labelNome} (${Math.round(deteccao.confidence * 100)}%)`;
+          cameraCtx.font = 'bold 14px Atkinson Hyperlegible, sans-serif';
+          const textMetrics = cameraCtx.measureText(text);
+          const textBgHeight = 20;
 
           cameraCtx.fillStyle = cor;
-          cameraCtx.font = '16px Atkinson Hyperlegible, sans-serif';
-          cameraCtx.fillText(nome.replace('_', ' '), scaledX, scaledY - 8);
+          cameraCtx.fillRect(finalX, finalY - textBgHeight, textMetrics.width + 8, textBgHeight);
+
+          cameraCtx.fillStyle = '#ffffff';
+          cameraCtx.fillText(text, finalX + 4, finalY - 4);
         });
       });
     }
