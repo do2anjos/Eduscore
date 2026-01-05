@@ -342,12 +342,12 @@
     const boxTracker = {
       // Estado das boxes rastreadas: { tipo: { smoothed: {x,y,w,h}, lastSeen: timestamp, confidence: number } }
       tracked: {},
-      
+
       // Configurações
       alpha: 0.7, // Fator de suavização (0-1): maior = mais suave, menor = mais responsivo
       maxAge: 1500, // Tempo máximo (ms) para manter box quando não detectada
       minIOU: 0.3, // IOU mínimo para associar detecção a box existente
-      
+
       /**
        * Calcula Intersection over Union (IOU) entre duas boxes
        */
@@ -356,24 +356,24 @@
         const y1 = Math.max(box1.y, box2.y);
         const x2 = Math.min(box1.x + box1.w, box2.x + box2.w);
         const y2 = Math.min(box1.y + box1.h, box2.y + box2.h);
-        
+
         if (x2 <= x1 || y2 <= y1) return 0;
-        
+
         const intersection = (x2 - x1) * (y2 - y1);
         const area1 = box1.w * box1.h;
         const area2 = box2.w * box2.h;
         const union = area1 + area2 - intersection;
-        
+
         return union > 0 ? intersection / union : 0;
       },
-      
+
       /**
        * Atualiza boxes rastreadas com novas detecções
        */
       update(deteccoes) {
         const now = Date.now();
         const newTracked = {};
-        
+
         // Processar cada tipo de detecção (day_region, answer_area_enem)
         Object.entries(deteccoes).forEach(([tipo, lista]) => {
           if (!lista || lista.length === 0) {
@@ -383,10 +383,10 @@
             }
             return;
           }
-          
+
           // Pegar a primeira detecção (maior confiança geralmente vem primeiro)
           const deteccao = lista[0];
-          
+
           // Converter para coordenadas normalizadas se necessário
           let x, y, w, h;
           if (deteccao.bbox_norm) {
@@ -406,14 +406,14 @@
             w = pw / videoW;
             h = ph / videoH;
           }
-          
+
           const newBox = { x, y, w, h };
-          
+
           // Verificar se há box existente para este tipo
           if (this.tracked[tipo]) {
             const existingBox = this.tracked[tipo].smoothed;
             const iou = this.calculateIOU(existingBox, newBox);
-            
+
             if (iou >= this.minIOU) {
               // Associar: aplicar suavização exponencial
               newTracked[tipo] = {
@@ -446,7 +446,7 @@
             };
           }
         });
-        
+
         // Remover boxes muito antigas
         Object.keys(this.tracked).forEach(tipo => {
           if (!newTracked[tipo] && (now - this.tracked[tipo].lastSeen) >= this.maxAge) {
@@ -456,18 +456,18 @@
             newTracked[tipo] = this.tracked[tipo];
           }
         });
-        
+
         this.tracked = newTracked;
         return this.tracked;
       },
-      
+
       /**
        * Limpa todas as boxes rastreadas
        */
       reset() {
         this.tracked = {};
       },
-      
+
       /**
        * Retorna boxes suavizadas no formato esperado pelo desenho
        */
@@ -476,11 +476,11 @@
         const rois = {};
         Object.entries(this.tracked).forEach(([tipo, data]) => {
           if (!rois[tipo]) rois[tipo] = [];
-          
+
           // Calcular idade da detecção (quanto tempo desde última detecção)
           const age = now - data.lastSeen;
           const ageRatio = Math.min(age / this.maxAge, 1.0); // 0 = nova, 1 = antiga
-          
+
           rois[tipo].push({
             bbox_norm: [data.smoothed.x, data.smoothed.y, data.smoothed.w, data.smoothed.h],
             confidence: data.confidence,
@@ -639,7 +639,7 @@
       const btnCapturar = document.getElementById('btnCapturarCamera');
 
       let isDetected = false;
-      
+
       // Resetar tracker ao iniciar
       boxTracker.reset();
 
@@ -743,30 +743,58 @@
     }
 
     function desenharROIsCamera(rois) {
-      // Ajustar resolução do canvas para bater com o tamanho visual (CSS)
-      // AGORA USANDO OBJECT-FIT: CONTAIN para garantir que vemos tudo que o modelo vê
-      const displayWidth = cameraVideo.clientWidth;
-      const displayHeight = cameraVideo.clientHeight;
+      // Obter dimensões do container (tela inteira no mobile)
+      const containerWidth = cameraVideo.clientWidth;
+      const containerHeight = cameraVideo.clientHeight;
 
-      if (cameraCanvas.width !== displayWidth || cameraCanvas.height !== displayHeight) {
-        cameraCanvas.width = displayWidth;
-        cameraCanvas.height = displayHeight;
+      // Ajustar canvas para cobrir o container inteiro
+      if (cameraCanvas.width !== containerWidth || cameraCanvas.height !== containerHeight) {
+        cameraCanvas.width = containerWidth;
+        cameraCanvas.height = containerHeight;
       }
 
       cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
-      // Dimensões originais do vídeo (Source)
+      // Dimensões do vídeo original (o que a câmera captura)
       const videoW = cameraVideo.videoWidth;
       const videoH = cameraVideo.videoHeight;
 
-      // Cálculo do object-fit: CONTAIN (Compatível com o CSS)
-      // Usa Math.min para garantir que o vídeo caiba inteiro no container
-      const scale = Math.min(displayWidth / videoW, displayHeight / videoH);
+      if (!videoW || !videoH) {
+        console.warn('[DRAW] Video dimensions not available yet');
+        return;
+      }
 
-      // Offsets (centralização - letterbox)
-      // O vídeo é centralizado, as barras pretas ficam nas laterais ou topo/fundo
-      const offsetX = (displayWidth - (videoW * scale)) / 2;
-      const offsetY = (displayHeight - (videoH * scale)) / 2;
+      // ========== CÁLCULO DO OBJECT-FIT: CONTAIN ==========
+      // O vídeo é escalado para caber inteiro no container, mantendo aspect ratio
+      // Isso cria "letterbox" (barras pretas) nas laterais ou topo/fundo
+
+      const videoAspect = videoW / videoH;
+      const containerAspect = containerWidth / containerHeight;
+
+      let renderedWidth, renderedHeight, offsetX, offsetY;
+
+      if (videoAspect > containerAspect) {
+        // Vídeo é mais "largo" que o container -> barras no topo/fundo
+        renderedWidth = containerWidth;
+        renderedHeight = containerWidth / videoAspect;
+        offsetX = 0;
+        offsetY = (containerHeight - renderedHeight) / 2;
+      } else {
+        // Vídeo é mais "alto" que o container -> barras nas laterais
+        renderedHeight = containerHeight;
+        renderedWidth = containerHeight * videoAspect;
+        offsetX = (containerWidth - renderedWidth) / 2;
+        offsetY = 0;
+      }
+
+      // Atualizar debug info
+      const debugEl = document.getElementById('debugDimensions');
+      if (debugEl) {
+        debugEl.innerHTML = `
+          📹 Video: ${videoW}x${videoH} | 📱 Container: ${containerWidth}x${containerHeight}<br>
+          🎯 Rendered: ${Math.round(renderedWidth)}x${Math.round(renderedHeight)} | Offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})
+        `;
+      }
 
       Object.entries(rois).forEach(([nome, deteccoes]) => {
         if (!deteccoes || deteccoes.length === 0) return;
@@ -778,26 +806,30 @@
           if (deteccao.bbox_norm) {
             const [nX, nY, nW, nH] = deteccao.bbox_norm;
 
-            // Converter normalizado -> dimensões reais do vídeo na tela
-            // nX * videoW * scale + offsetX
+            // Converter normalizado -> posição na área renderizada do vídeo
+            // As coordenadas normalizadas são relativas ao vídeo original
+            // Precisamos mapear para a área onde o vídeo é realmente exibido
 
-            finalX = (nX * videoW * scale) + offsetX;
-            finalY = (nY * videoH * scale) + offsetY;
-            finalW = nW * videoW * scale;
-            finalH = nH * videoH * scale;
+            finalX = (nX * renderedWidth) + offsetX;
+            finalY = (nY * renderedHeight) + offsetY;
+            finalW = nW * renderedWidth;
+            finalH = nH * renderedHeight;
 
           } else {
             // Fallback para pixel coords (legado)
+            // Converter coordenadas de pixel do vídeo original para a área renderizada
             const [x, y, w, h] = deteccao.bbox;
-            finalX = (x * scale) + offsetX;
-            finalY = (y * scale) + offsetY;
-            finalW = w * scale;
-            finalH = h * scale;
+            const scaleX = renderedWidth / videoW;
+            const scaleY = renderedHeight / videoH;
+            finalX = (x * scaleX) + offsetX;
+            finalY = (y * scaleY) + offsetY;
+            finalW = w * scaleX;
+            finalH = h * scaleY;
           }
 
           const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
           const labelNome = nome === 'day_region' ? 'Dia / Prova' : 'Respostas';
-          
+
           // Ajustar opacidade baseado na idade da detecção (se disponível)
           const ageRatio = deteccao.ageRatio !== undefined ? deteccao.ageRatio : 0;
           const opacity = Math.max(0.4, 1.0 - (ageRatio * 0.6)); // Opacidade entre 0.4 e 1.0
@@ -819,7 +851,7 @@
 
           cameraCtx.fillStyle = '#ffffff';
           cameraCtx.fillText(text, finalX + 4, finalY - 4);
-          
+
           // Restaurar opacidade
           cameraCtx.globalAlpha = 1.0;
         });
