@@ -583,11 +583,12 @@
       const videoW = cameraVideo.videoWidth;
       const videoH = cameraVideo.videoHeight;
 
-      // Cálculo do object-fit: CONTAIN (Barra preta nas laterais ou topo)
-      // O modelo roda na imagem inteira, então precisamos desenhar relativo à imagem inteira APRESENTADA
-      const scale = Math.min(displayWidth / videoW, displayHeight / videoH);
+      // Cálculo do object-fit: COVER (Compatível com o CSS style="object-fit: cover")
+      // Usa Math.max para garantir que o vídeo preencha todo o container (zoom/crop)
+      const scale = Math.max(displayWidth / videoW, displayHeight / videoH);
 
-      // Offsets (centralização - letterbox no frontend)
+      // Offsets (centralização - crop)
+      // O vídeo é centralizado, então o offset será negativo para as partes cortadas
       const offsetX = (displayWidth - (videoW * scale)) / 2;
       const offsetY = (displayHeight - (videoH * scale)) / 2;
 
