@@ -338,6 +338,161 @@
     let cameraVideo = null;
     let track = null; // Track de video para controlar flash
 
+    // Sistema de Tracking e Suavização de Bounding Boxes
+    const boxTracker = {
+      // Estado das boxes rastreadas: { tipo: { smoothed: {x,y,w,h}, lastSeen: timestamp, confidence: number } }
+      tracked: {},
+      
+      // Configurações
+      alpha: 0.7, // Fator de suavização (0-1): maior = mais suave, menor = mais responsivo
+      maxAge: 1500, // Tempo máximo (ms) para manter box quando não detectada
+      minIOU: 0.3, // IOU mínimo para associar detecção a box existente
+      
+      /**
+       * Calcula Intersection over Union (IOU) entre duas boxes
+       */
+      calculateIOU(box1, box2) {
+        const x1 = Math.max(box1.x, box2.x);
+        const y1 = Math.max(box1.y, box2.y);
+        const x2 = Math.min(box1.x + box1.w, box2.x + box2.w);
+        const y2 = Math.min(box1.y + box1.h, box2.y + box2.h);
+        
+        if (x2 <= x1 || y2 <= y1) return 0;
+        
+        const intersection = (x2 - x1) * (y2 - y1);
+        const area1 = box1.w * box1.h;
+        const area2 = box2.w * box2.h;
+        const union = area1 + area2 - intersection;
+        
+        return union > 0 ? intersection / union : 0;
+      },
+      
+      /**
+       * Atualiza boxes rastreadas com novas detecções
+       */
+      update(deteccoes) {
+        const now = Date.now();
+        const newTracked = {};
+        
+        // Processar cada tipo de detecção (day_region, answer_area_enem)
+        Object.entries(deteccoes).forEach(([tipo, lista]) => {
+          if (!lista || lista.length === 0) {
+            // Manter box existente se ainda estiver dentro do maxAge
+            if (this.tracked[tipo] && (now - this.tracked[tipo].lastSeen) < this.maxAge) {
+              newTracked[tipo] = this.tracked[tipo];
+            }
+            return;
+          }
+          
+          // Pegar a primeira detecção (maior confiança geralmente vem primeiro)
+          const deteccao = lista[0];
+          
+          // Converter para coordenadas normalizadas se necessário
+          let x, y, w, h;
+          if (deteccao.bbox_norm) {
+            const [nX, nY, nW, nH] = deteccao.bbox_norm;
+            // Assumir dimensões do vídeo para cálculo (será ajustado no desenho)
+            x = nX;
+            y = nY;
+            w = nW;
+            h = nH;
+          } else {
+            const [px, py, pw, ph] = deteccao.bbox;
+            // Normalizar (assumir dimensões do vídeo)
+            const videoW = cameraVideo ? cameraVideo.videoWidth : 1080;
+            const videoH = cameraVideo ? cameraVideo.videoHeight : 1920;
+            x = px / videoW;
+            y = py / videoH;
+            w = pw / videoW;
+            h = ph / videoH;
+          }
+          
+          const newBox = { x, y, w, h };
+          
+          // Verificar se há box existente para este tipo
+          if (this.tracked[tipo]) {
+            const existingBox = this.tracked[tipo].smoothed;
+            const iou = this.calculateIOU(existingBox, newBox);
+            
+            if (iou >= this.minIOU) {
+              // Associar: aplicar suavização exponencial
+              newTracked[tipo] = {
+                smoothed: {
+                  x: this.alpha * existingBox.x + (1 - this.alpha) * newBox.x,
+                  y: this.alpha * existingBox.y + (1 - this.alpha) * newBox.y,
+                  w: this.alpha * existingBox.w + (1 - this.alpha) * newBox.w,
+                  h: this.alpha * existingBox.h + (1 - this.alpha) * newBox.h
+                },
+                lastSeen: now,
+                confidence: deteccao.confidence || 0.8,
+                raw: deteccao // Guardar detecção original para referência
+              };
+            } else {
+              // Nova detecção (IOU baixo) - substituir
+              newTracked[tipo] = {
+                smoothed: newBox,
+                lastSeen: now,
+                confidence: deteccao.confidence || 0.8,
+                raw: deteccao
+              };
+            }
+          } else {
+            // Primeira detecção deste tipo
+            newTracked[tipo] = {
+              smoothed: newBox,
+              lastSeen: now,
+              confidence: deteccao.confidence || 0.8,
+              raw: deteccao
+            };
+          }
+        });
+        
+        // Remover boxes muito antigas
+        Object.keys(this.tracked).forEach(tipo => {
+          if (!newTracked[tipo] && (now - this.tracked[tipo].lastSeen) >= this.maxAge) {
+            // Box expirada - não incluir
+          } else if (!newTracked[tipo]) {
+            // Manter temporariamente
+            newTracked[tipo] = this.tracked[tipo];
+          }
+        });
+        
+        this.tracked = newTracked;
+        return this.tracked;
+      },
+      
+      /**
+       * Limpa todas as boxes rastreadas
+       */
+      reset() {
+        this.tracked = {};
+      },
+      
+      /**
+       * Retorna boxes suavizadas no formato esperado pelo desenho
+       */
+      getSmoothedROIs() {
+        const now = Date.now();
+        const rois = {};
+        Object.entries(this.tracked).forEach(([tipo, data]) => {
+          if (!rois[tipo]) rois[tipo] = [];
+          
+          // Calcular idade da detecção (quanto tempo desde última detecção)
+          const age = now - data.lastSeen;
+          const ageRatio = Math.min(age / this.maxAge, 1.0); // 0 = nova, 1 = antiga
+          
+          rois[tipo].push({
+            bbox_norm: [data.smoothed.x, data.smoothed.y, data.smoothed.w, data.smoothed.h],
+            confidence: data.confidence,
+            raw: data.raw,
+            age: age, // Idade em ms
+            ageRatio: ageRatio // 0-1, útil para ajustar opacidade
+          });
+        });
+        return rois;
+      }
+    };
+
     async function iniciarCameraMobile() {
       try {
         showLoading('Iniciando camera...');
@@ -471,6 +626,9 @@
         detectionInterval = null;
       }
 
+      // Resetar tracker
+      boxTracker.reset();
+
       // Voltar para interface de upload
       document.getElementById('cameraInterface').style.display = 'none';
       document.getElementById('uploadInterface').style.display = 'block';
@@ -481,6 +639,9 @@
       const btnCapturar = document.getElementById('btnCapturarCamera');
 
       let isDetected = false;
+      
+      // Resetar tracker ao iniciar
+      boxTracker.reset();
 
       // Loop de detecção a cada 800ms
       detectionInterval = setInterval(async () => {
@@ -513,38 +674,52 @@
             }
           }
 
+          // Atualizar tracker com novas detecções
+          if (data.rois && Object.keys(data.rois).length > 0) {
+            boxTracker.update(data.rois);
+          }
+
+          // Obter boxes suavizadas do tracker
+          const smoothedROIs = boxTracker.getSmoothedROIs();
+          const hasTrackedBoxes = Object.keys(smoothedROIs).length > 0;
+
           if (data.sucesso && data.detectado) {
-            // Folha detectada!
+            // Folha detectada completamente!
             isDetected = true;
             feedbackEl.style.background = '#51cf66';
             feedbackEl.textContent = data.feedback || '✓ Folha detectada! Capture agora.';
             btnCapturar.disabled = false;
             btnCapturar.style.opacity = '1';
 
-            // Desenhar ROIs
-            desenharROIsCamera(data.rois);
+            // Desenhar ROIs suavizadas
+            desenharROIsCamera(smoothedROIs);
 
-          } else if (data.rois && Object.keys(data.rois).length > 0) {
-            // Detectou parcialmente
+          } else if (hasTrackedBoxes || (data.rois && Object.keys(data.rois).length > 0)) {
+            // Detectou parcialmente ou tem boxes rastreadas
             isDetected = false;
             feedbackEl.style.background = '#ffd43b';
             feedbackEl.textContent = data.feedback || 'Centralize melhor a folha';
             btnCapturar.disabled = true;
             btnCapturar.style.opacity = '0.5';
 
-            // Desenhar ROIs parciais
-            desenharROIsCamera(data.rois);
+            // Desenhar ROIs suavizadas (mesmo se detecção atual falhou, manter boxes rastreadas)
+            desenharROIsCamera(smoothedROIs);
 
           } else {
-            // Nada detectado
+            // Nada detectado e sem boxes rastreadas
             isDetected = false;
             feedbackEl.style.background = '#f03e3e';
             feedbackEl.textContent = data.feedback || '🔍 Procurando folha ENEM...';
             btnCapturar.disabled = true;
             btnCapturar.style.opacity = '0.5';
 
-            // Limpar canvas
-            cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+            // Limpar canvas apenas se não houver boxes rastreadas
+            if (!hasTrackedBoxes) {
+              cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+            } else {
+              // Ainda desenhar boxes rastreadas mesmo sem nova detecção
+              desenharROIsCamera(smoothedROIs);
+            }
           }
 
         } catch (error) {
@@ -622,13 +797,19 @@
 
           const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
           const labelNome = nome === 'day_region' ? 'Dia / Prova' : 'Respostas';
+          
+          // Ajustar opacidade baseado na idade da detecção (se disponível)
+          const ageRatio = deteccao.ageRatio !== undefined ? deteccao.ageRatio : 0;
+          const opacity = Math.max(0.4, 1.0 - (ageRatio * 0.6)); // Opacidade entre 0.4 e 1.0
 
+          // Desenhar box com opacidade
           cameraCtx.strokeStyle = cor;
+          cameraCtx.globalAlpha = opacity;
           cameraCtx.lineWidth = 3;
           cameraCtx.strokeRect(finalX, finalY, finalW, finalH);
 
           // Fundo semi-transparente para o texto ficar legível
-          const text = `${labelNome} (${Math.round(deteccao.confidence * 100)}%)`;
+          const text = `${labelNome} (${Math.round((deteccao.confidence || 0.8) * 100)}%)`;
           cameraCtx.font = 'bold 14px Atkinson Hyperlegible, sans-serif';
           const textMetrics = cameraCtx.measureText(text);
           const textBgHeight = 20;
@@ -638,6 +819,9 @@
 
           cameraCtx.fillStyle = '#ffffff';
           cameraCtx.fillText(text, finalX + 4, finalY - 4);
+          
+          // Restaurar opacidade
+          cameraCtx.globalAlpha = 1.0;
         });
       });
     }
