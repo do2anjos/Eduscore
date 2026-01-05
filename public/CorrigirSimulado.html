@@ -174,7 +174,8 @@
             </button>
           </div>
 
-          <video id="videoPreview" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+          <video id="videoPreview" autoplay playsinline
+            style="width: 100%; height: 100%; object-fit: contain; background: #000;"></video>
           <canvas id="canvasOverlay"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
 
@@ -583,12 +584,12 @@
       const videoW = cameraVideo.videoWidth;
       const videoH = cameraVideo.videoHeight;
 
-      // Cálculo do object-fit: COVER (Compatível com o CSS style="object-fit: cover")
-      // Usa Math.max para garantir que o vídeo preencha todo o container (zoom/crop)
-      const scale = Math.max(displayWidth / videoW, displayHeight / videoH);
+      // Cálculo do object-fit: CONTAIN (Compatível com o CSS)
+      // Usa Math.min para garantir que o vídeo caiba inteiro no container
+      const scale = Math.min(displayWidth / videoW, displayHeight / videoH);
 
-      // Offsets (centralização - crop)
-      // O vídeo é centralizado, então o offset será negativo para as partes cortadas
+      // Offsets (centralização - letterbox)
+      // O vídeo é centralizado, as barras pretas ficam nas laterais ou topo/fundo
       const offsetX = (displayWidth - (videoW * scale)) / 2;
       const offsetY = (displayHeight - (videoH * scale)) / 2;
 
