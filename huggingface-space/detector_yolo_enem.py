@@ -118,17 +118,20 @@ def postprocess_detections(outputs, original_shape, scale, pad):
         conf = scores[class_id]
         
         if conf > CONFIDENCE_THRESHOLD:
-            # 1. Coordenadas no espaço 640x640
+            # 1. Coordenadas no espaço 640x640 (formato: centro_x, centro_y, largura, altura)
             cx, cy, w, h = row[0:4]
             
-            # 2. Remover o padding (centralizado)
-            x_unpad = cx - pad_left
-            y_unpad = cy - pad_top
+            # 2. Converter centro → top-left NO ESPAÇO 640x640 (ANTES de remover padding)
+            x_topleft_640 = cx - w/2
+            y_topleft_640 = cy - h/2
             
-            # 3. Escalar de volta para o tamanho original
-            # Importante: a escala deve ser aplicada após remover o padding
-            x0 = (x_unpad - w/2) / scale
-            y0 = (y_unpad - h/2) / scale
+            # 3. Remover o padding (agora já está em top-left)
+            x_unpad = x_topleft_640 - pad_left
+            y_unpad = y_topleft_640 - pad_top
+            
+            # 4. Escalar de volta para o tamanho original
+            x0 = x_unpad / scale
+            y0 = y_unpad / scale
             w0 = w / scale
             h0 = h / scale
             
