@@ -1,53 +1,48 @@
-# Script para sincronizar alterações com o HuggingFace Space
-# Uso: .\scripts\sync-huggingface.ps1 [-Message "sua mensagem de commit"]
+# Script para sincronizar HuggingFace Space
+# Uso: .\scripts\sync-huggingface.ps1 "mensagem do commit"
 
 param(
-    [string]$Message = "sync: update HuggingFace Space files"
+    [string]$CommitMessage = "update: sync changes to HuggingFace Space"
 )
 
-Write-Host "🚀 Sincronizando com HuggingFace Space..." -ForegroundColor Cyan
+$HfSpacePath = Join-Path $PSScriptRoot "..\huggingface-space"
 
-# Navegar para o diretório do HuggingFace Space
-$HFSpaceDir = Join-Path $PSScriptRoot "..\huggingface-space"
+Write-Host "🚀 Sincronizando HuggingFace Space..." -ForegroundColor Cyan
 
-if (-not (Test-Path $HFSpaceDir)) {
-    Write-Host "❌ Diretório huggingface-space não encontrado!" -ForegroundColor Red
-    exit 1
-}
-
-Push-Location $HFSpaceDir
+# Navegar para o diretório
+Push-Location $HfSpacePath
 
 try {
-    # Verificar se há alterações
-    $status = git status --porcelain
-    
-    if (-not $status) {
-        Write-Host "✅ Nenhuma alteração para sincronizar." -ForegroundColor Green
-        Pop-Location
+    # Verificar status
+    Write-Host "`n📋 Status atual:" -ForegroundColor Yellow
+    git status --short
+
+    # Verificar se há mudanças
+    $changes = git status --porcelain
+    if (-not $changes) {
+        Write-Host "`n✅ Nenhuma mudança para sincronizar." -ForegroundColor Green
         exit 0
     }
-    
-    Write-Host "📝 Alterações detectadas:" -ForegroundColor Yellow
-    git status --short
-    
-    # Adicionar todas as alterações
-    Write-Host "`n📦 Adicionando arquivos..." -ForegroundColor Cyan
-    git add -A
-    
+
+    # Adicionar todas as mudanças
+    Write-Host "`n📦 Adicionando mudanças..." -ForegroundColor Yellow
+    git add .
+
     # Commit
-    Write-Host "💾 Criando commit..." -ForegroundColor Cyan
-    git commit -m $Message
-    
+    Write-Host "`n💾 Criando commit..." -ForegroundColor Yellow
+    git commit -m $CommitMessage
+
     # Push
-    Write-Host "🔄 Enviando para HuggingFace Space..." -ForegroundColor Cyan
+    Write-Host "`n🔄 Enviando para HuggingFace..." -ForegroundColor Yellow
     git push origin main
-    
+
     Write-Host "`n✅ Sincronização concluída com sucesso!" -ForegroundColor Green
-    Write-Host "🔗 Acesse: https://huggingface.co/spaces/do2anjos/eduscore-yolo-api" -ForegroundColor Blue
-    
-} catch {
-    Write-Host "❌ Erro durante a sincronização: $_" -ForegroundColor Red
+    Write-Host "🌐 URL: https://huggingface.co/spaces/do2anjos/eduscore-yolo-api" -ForegroundColor Cyan
+}
+catch {
+    Write-Host "`n❌ Erro durante sincronização: $_" -ForegroundColor Red
     exit 1
-} finally {
+}
+finally {
     Pop-Location
 }
