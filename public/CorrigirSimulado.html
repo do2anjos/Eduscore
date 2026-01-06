@@ -674,14 +674,8 @@
             }
           }
 
-          // Atualizar tracker com novas detecções
-          if (data.rois && Object.keys(data.rois).length > 0) {
-            boxTracker.update(data.rois);
-          }
-
-          // Obter boxes suavizadas do tracker
-          const smoothedROIs = boxTracker.getSmoothedROIs();
-          const hasTrackedBoxes = Object.keys(smoothedROIs).length > 0;
+          // DEBUG: Log raw data from backend
+          console.log('[DEBUG] Raw data.rois:', JSON.stringify(data.rois, null, 2));
 
           if (data.sucesso && data.detectado) {
             // Folha detectada completamente!
@@ -691,41 +685,114 @@
             btnCapturar.disabled = false;
             btnCapturar.style.opacity = '1';
 
-            // Desenhar ROIs suavizadas
-            desenharROIsCamera(smoothedROIs);
+            // DESENHAR DIRETAMENTE SEM TRACKER (para debug)
+            desenharROIsDireto(data.rois);
 
-          } else if (hasTrackedBoxes || (data.rois && Object.keys(data.rois).length > 0)) {
-            // Detectou parcialmente ou tem boxes rastreadas
+          } else if (data.rois && Object.keys(data.rois).length > 0) {
+            // Detectou parcialmente
             isDetected = false;
             feedbackEl.style.background = '#ffd43b';
             feedbackEl.textContent = data.feedback || 'Centralize melhor a folha';
             btnCapturar.disabled = true;
             btnCapturar.style.opacity = '0.5';
 
-            // Desenhar ROIs suavizadas (mesmo se detecção atual falhou, manter boxes rastreadas)
-            desenharROIsCamera(smoothedROIs);
+            // DESENHAR DIRETAMENTE SEM TRACKER
+            desenharROIsDireto(data.rois);
 
           } else {
-            // Nada detectado e sem boxes rastreadas
+            // Nada detectado
             isDetected = false;
             feedbackEl.style.background = '#f03e3e';
             feedbackEl.textContent = data.feedback || '🔍 Procurando folha ENEM...';
             btnCapturar.disabled = true;
             btnCapturar.style.opacity = '0.5';
-
-            // Limpar canvas apenas se não houver boxes rastreadas
-            if (!hasTrackedBoxes) {
-              cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
-            } else {
-              // Ainda desenhar boxes rastreadas mesmo sem nova detecção
-              desenharROIsCamera(smoothedROIs);
-            }
+            cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
           }
 
         } catch (error) {
           console.error('Erro na detecção:', error);
         }
       }, 800);
+    }
+
+    // NOVA FUNÇÃO: Desenhar ROIs diretamente sem tracker (para debug)
+    function desenharROIsDireto(rois) {
+      const containerWidth = cameraVideo.clientWidth;
+      const containerHeight = cameraVideo.clientHeight;
+
+      if (cameraCanvas.width !== containerWidth || cameraCanvas.height !== containerHeight) {
+        cameraCanvas.width = containerWidth;
+        cameraCanvas.height = containerHeight;
+      }
+
+      cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+
+      const videoW = cameraVideo.videoWidth;
+      const videoH = cameraVideo.videoHeight;
+
+      if (!videoW || !videoH) return;
+
+      // Calcular área renderizada (object-fit: contain)
+      const videoAspect = videoW / videoH;
+      const containerAspect = containerWidth / containerHeight;
+
+      let renderedWidth, renderedHeight, offsetX, offsetY;
+
+      if (videoAspect > containerAspect) {
+        renderedWidth = containerWidth;
+        renderedHeight = containerWidth / videoAspect;
+        offsetX = 0;
+        offsetY = (containerHeight - renderedHeight) / 2;
+      } else {
+        renderedHeight = containerHeight;
+        renderedWidth = containerHeight * videoAspect;
+        offsetX = (containerWidth - renderedWidth) / 2;
+        offsetY = 0;
+      }
+
+      // DEBUG: Mostrar dimensões
+      const debugEl = document.getElementById('debugDimensions');
+      if (debugEl) {
+        debugEl.innerHTML = `
+          📹 Video: ${videoW}x${videoH} | 📱 Container: ${containerWidth}x${containerHeight}<br>
+          🎯 Rendered: ${Math.round(renderedWidth)}x${Math.round(renderedHeight)} | Offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})
+        `;
+      }
+
+      // Desenhar cada ROI
+      Object.entries(rois).forEach(([nome, deteccoes]) => {
+        if (!deteccoes || deteccoes.length === 0) return;
+
+        deteccoes.forEach(deteccao => {
+          // Usar bbox_norm se disponível
+          if (deteccao.bbox_norm) {
+            const [nX, nY, nW, nH] = deteccao.bbox_norm;
+
+            // DEBUG: Log cada conversão
+            console.log(`[DEBUG] ${nome} bbox_norm: [${nX.toFixed(3)}, ${nY.toFixed(3)}, ${nW.toFixed(3)}, ${nH.toFixed(3)}]`);
+
+            const finalX = (nX * renderedWidth) + offsetX;
+            const finalY = (nY * renderedHeight) + offsetY;
+            const finalW = nW * renderedWidth;
+            const finalH = nH * renderedHeight;
+
+            console.log(`[DEBUG] ${nome} finalPixels: X=${Math.round(finalX)}, Y=${Math.round(finalY)}, W=${Math.round(finalW)}, H=${Math.round(finalH)}`);
+
+            const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
+            cameraCtx.strokeStyle = cor;
+            cameraCtx.lineWidth = 3;
+            cameraCtx.strokeRect(finalX, finalY, finalW, finalH);
+
+            // Label
+            const text = `${nome} (${Math.round((deteccao.confidence || 0.8) * 100)}%)`;
+            cameraCtx.font = 'bold 12px monospace';
+            cameraCtx.fillStyle = cor;
+            cameraCtx.fillRect(finalX, finalY - 16, cameraCtx.measureText(text).width + 6, 16);
+            cameraCtx.fillStyle = '#fff';
+            cameraCtx.fillText(text, finalX + 3, finalY - 3);
+          }
+        });
+      });
     }
 
     async function capturarFrameAtualCamera() {
