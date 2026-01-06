@@ -175,7 +175,7 @@
           </div>
 
           <video id="videoPreview" autoplay playsinline
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: #000;"></video>
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: #000; visibility: hidden;"></video>
           <canvas id="canvasOverlay"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
 
@@ -715,68 +715,76 @@
       }, 800);
     }
 
-    // NOVA FUNÇÃO: Desenhar ROIs diretamente sem tracker (para debug)
+    // NOVA ABORDAGEM: Desenhar vídeo no canvas + bboxes em cima
+    // Isso elimina a complexidade do object-fit: contain
     function desenharROIsDireto(rois) {
       const containerWidth = cameraVideo.clientWidth;
       const containerHeight = cameraVideo.clientHeight;
 
+      // Ajustar tamanho do canvas para o container
       if (cameraCanvas.width !== containerWidth || cameraCanvas.height !== containerHeight) {
         cameraCanvas.width = containerWidth;
         cameraCanvas.height = containerHeight;
       }
-
-      cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
       const videoW = cameraVideo.videoWidth;
       const videoH = cameraVideo.videoHeight;
 
       if (!videoW || !videoH) return;
 
-      // Calcular área renderizada (object-fit: contain)
+      // Calcular como o vídeo seria renderizado com object-fit: contain
       const videoAspect = videoW / videoH;
       const containerAspect = containerWidth / containerHeight;
 
-      let renderedWidth, renderedHeight, offsetX, offsetY;
+      let drawWidth, drawHeight, drawX, drawY;
 
       if (videoAspect > containerAspect) {
-        renderedWidth = containerWidth;
-        renderedHeight = containerWidth / videoAspect;
-        offsetX = 0;
-        offsetY = (containerHeight - renderedHeight) / 2;
+        // Vídeo mais largo -> barras em cima/baixo
+        drawWidth = containerWidth;
+        drawHeight = containerWidth / videoAspect;
+        drawX = 0;
+        drawY = (containerHeight - drawHeight) / 2;
       } else {
-        renderedHeight = containerHeight;
-        renderedWidth = containerHeight * videoAspect;
-        offsetX = (containerWidth - renderedWidth) / 2;
-        offsetY = 0;
+        // Vídeo mais alto -> barras nas laterais
+        drawHeight = containerHeight;
+        drawWidth = containerHeight * videoAspect;
+        drawX = (containerWidth - drawWidth) / 2;
+        drawY = 0;
       }
+
+      // Limpar e desenhar fundo preto (letterbox)
+      cameraCtx.fillStyle = '#000';
+      cameraCtx.fillRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+
+      // DESENHAR O VÍDEO NO CANVAS (na posição calculada)
+      cameraCtx.drawImage(cameraVideo, drawX, drawY, drawWidth, drawHeight);
 
       // DEBUG: Mostrar dimensões
       const debugEl = document.getElementById('debugDimensions');
       if (debugEl) {
         debugEl.innerHTML = `
           📹 Video: ${videoW}x${videoH} | 📱 Container: ${containerWidth}x${containerHeight}<br>
-          🎯 Rendered: ${Math.round(renderedWidth)}x${Math.round(renderedHeight)} | Offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})
+          🎯 Draw: ${Math.round(drawWidth)}x${Math.round(drawHeight)} at (${Math.round(drawX)}, ${Math.round(drawY)})
         `;
       }
 
-      // Desenhar cada ROI
+      // AGORA desenhar as bounding boxes EM CIMA do vídeo renderizado
+      // As coordenadas normalizadas são relativas ao vídeo original
+      // Precisamos mapear para a área onde desenhamos o vídeo (drawX, drawY, drawWidth, drawHeight)
       Object.entries(rois).forEach(([nome, deteccoes]) => {
         if (!deteccoes || deteccoes.length === 0) return;
 
         deteccoes.forEach(deteccao => {
-          // Usar bbox_norm se disponível
           if (deteccao.bbox_norm) {
             const [nX, nY, nW, nH] = deteccao.bbox_norm;
 
-            // DEBUG: Log cada conversão
-            console.log(`[DEBUG] ${nome} bbox_norm: [${nX.toFixed(3)}, ${nY.toFixed(3)}, ${nW.toFixed(3)}, ${nH.toFixed(3)}]`);
+            // Mapear coordenadas normalizadas para a área de desenho do vídeo
+            const finalX = drawX + (nX * drawWidth);
+            const finalY = drawY + (nY * drawHeight);
+            const finalW = nW * drawWidth;
+            const finalH = nH * drawHeight;
 
-            const finalX = (nX * renderedWidth) + offsetX;
-            const finalY = (nY * renderedHeight) + offsetY;
-            const finalW = nW * renderedWidth;
-            const finalH = nH * renderedHeight;
-
-            console.log(`[DEBUG] ${nome} finalPixels: X=${Math.round(finalX)}, Y=${Math.round(finalY)}, W=${Math.round(finalW)}, H=${Math.round(finalH)}`);
+            console.log(`[DEBUG] ${nome}: norm=[${nX.toFixed(3)},${nY.toFixed(3)},${nW.toFixed(3)},${nH.toFixed(3)}] -> px=[${Math.round(finalX)},${Math.round(finalY)},${Math.round(finalW)},${Math.round(finalH)}]`);
 
             const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
             cameraCtx.strokeStyle = cor;
