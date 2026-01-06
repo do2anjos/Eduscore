@@ -232,55 +232,62 @@
     </main>
   </div>
 
-  <!-- Interface MOBILE (camera YOLO) - Movida para o top-level para evitar conflitos de layout -->
+  <!-- Interface MOBILE (camera YOLO) - Segmentada com Flexbox para evitar colapsos de layout -->
   <div id="cameraInterface"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: #000; overflow: hidden;">
+    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; z-index: 9999; background: #000; display: flex; flex-direction: column; overflow: hidden;">
 
-    <!-- Barra Superior -->
-    <div
-      style="position: absolute; top: 0; left: 0; right: 0; padding: 16px; display: flex; justify-content: space-between; align-items: center; z-index: 10000; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);">
+    <!-- Barra Superior (Header) -->
+    <div id="cameraHeader"
+      style="padding: 16px; display: flex; justify-content: space-between; align-items: center; z-index: 10000; background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));">
       <button onclick="fecharCameraMobile()"
-        style="background: rgba(0,0,0,0.5); color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(4px);">
         <span>←</span> Voltar
       </button>
 
       <button id="btnFlash" onclick="toggleFlash()"
-        style="background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; border-radius: 50%; cursor: pointer; display: none;">
+        style="background: rgba(255,255,255,0.15); color: white; border: none; padding: 10px; border-radius: 50%; cursor: pointer; display: none; backdrop-filter: blur(4px);">
         ⚡
       </button>
     </div>
 
-    <video id="videoPreview" autoplay playsinline
-      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000; opacity: 0; pointer-events: none;"></video>
-    <canvas id="canvasOverlay"
-      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+    <!-- Área do Vídeo (Expansível) -->
+    <div id="cameraVideoWrapper" style="flex: 1; position: relative; background: #000; overflow: hidden;">
+      <video id="videoPreview" autoplay playsinline
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none;"></video>
+      <canvas id="canvasOverlay"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+    </div>
 
-    <div
-      style="position: absolute; bottom: 0; left: 0; right: 0; padding: 24px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 10001;">
+    <!-- Interface de Controle (Footer) -->
+    <div id="cameraFooter"
+      style="padding: 24px; background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)); display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 10001;">
 
       <!-- DEBUG INFO -->
       <div id="debugInfo"
-        style="background: rgba(0,0,0,0.8); color: lime; padding: 8px; border-radius: 8px; font-size: 10px; font-family: monospace; text-align: left; width: 95%; max-width: 400px;">
+        style="background: rgba(0,0,0,0.8); color: lime; padding: 10px; border-radius: 8px; font-size: 10px; font-family: monospace; text-align: left; width: 95%; max-width: 400px; border: 1px solid rgba(0,255,0,0.2);">
         <div>📐 <strong>Debug Info:</strong></div>
         <div id="debugDimensions">Aguardando...</div>
-        <div style="margin-top: 5px; border-top: 1px solid white; padding-top: 5px;">
+        <div style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 5px;">
           <strong>YOLO Input (640x640):</strong>
           <img id="debugModelView"
-            style="width: 100px; height: 100px; object-fit: contain; background: #333; display: block; margin-top: 5px;" />
+            style="width: 100px; height: 100px; object-fit: contain; background: #222; display: block; margin-top: 5px; border-radius: 4px;" />
         </div>
       </div>
 
       <div id="detectionFeedback"
-        style="padding: 12px 24px; border-radius: 12px; font-weight: 600; background: #f03e3e; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+        style="padding: 12px 24px; border-radius: 12px; font-weight: 600; background: #f03e3e; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); text-align: center; width: 90%; max-width: 300px;">
         🔍 Procurando folha ENEM...
       </div>
 
       <button id="btnCapturarCamera" onclick="capturarDaCamera()" disabled
-        style="width: 80px; height: 80px; border-radius: 50%; border: 4px solid white; background: #007aa3; cursor: pointer; font-size: 24px; opacity: 0.5;">
+        style="width: 76px; height: 76px; border-radius: 50%; border: 4px solid white; background: #007aa3; cursor: pointer; font-size: 24px; opacity: 0.5; box-shadow: 0 0 20px rgba(0,0,0,0.5); transition: transform 0.2s;">
         📷
       </button>
     </div>
   </div>
+
+
+
 
   <script>
     let alunos = [];
@@ -759,8 +766,9 @@
     function renderCanvasFrame() {
       if (!isRenderLoopRunning) return;
 
-      const containerWidth = window.innerWidth;
-      const containerHeight = window.innerHeight;
+      const container = document.getElementById('cameraVideoWrapper');
+      const containerWidth = container ? container.clientWidth : window.innerWidth;
+      const containerHeight = container ? container.clientHeight : window.innerHeight;
 
       // Sincronizar tamanho do buffer do canvas com o tamanho exibido
       if (cameraCanvas.width !== containerWidth || cameraCanvas.height !== containerHeight) {
