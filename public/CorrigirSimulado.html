@@ -715,6 +715,30 @@
       }, 800);
     }
 
+    // Função de utilidade para mapear bboxes normalizadas para o container mobile com object-fit: cover
+    function mapBboxToCoverContainer(bbox_norm, imgWidth, imgHeight, containerWidth, containerHeight) {
+      const scale = Math.max(containerWidth / imgWidth, containerHeight / imgHeight);
+      const offsetX = (containerWidth - (imgWidth * scale)) / 2;
+      const offsetY = (containerHeight - (imgHeight * scale)) / 2;
+
+      const [nX, nY, nW, nH] = bbox_norm;
+
+      // 1. Converter normalizado para pixels da imagem original
+      const pixelX = nX * imgWidth;
+      const pixelY = nY * imgHeight;
+      const pixelW = nW * imgWidth;
+      const pixelH = nH * imgHeight;
+
+      // 2. Aplicar transformação (escala + offset)
+      return {
+        x: (pixelX * scale) + offsetX,
+        y: (pixelY * scale) + offsetY,
+        w: pixelW * scale,
+        h: pixelH * scale,
+        debug: { scale, offsetX, offsetY }
+      };
+    }
+
     // Canvas overlay - desenha bboxes sobre o vídeo renderizado pelo browser
     function desenharROIsDireto(rois) {
       const containerWidth = cameraVideo.clientWidth;
@@ -729,51 +753,33 @@
       // Limpar canvas (transparente)
       cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
-      const videoW = cameraVideo.videoWidth;  // Ex: 1080
-      const videoH = cameraVideo.videoHeight; // Ex: 1920
+      const videoW = cameraVideo.videoWidth;
+      const videoH = cameraVideo.videoHeight;
 
       if (!videoW || !videoH) return;
 
-      // ===== ENTENDIMENTO CRÍTICO =====
-      // bbox_norm vem do backend JÁ no espaço da imagem ORIGINAL (videoW x videoH)
-      // O backend já fez: YOLO 640x640 -> remove padding -> escala -> normaliza
-      // Então bbox_norm = [x/videoW, y/videoH, w/videoW, h/videoH]
-      //
-      // O que precisamos fazer:
-      // 1. Converter bbox_norm de volta para pixels da imagem original
-      // 2. Mapear esses pixels para onde o browser renderiza com object-fit:cover
+      // Usar a nossa nova função robusta para o primeiro box de debug (usando coords 0,0,1,1 para o vídeo todo)
+      const videoArea = mapBboxToCoverContainer([0, 0, 1, 1], videoW, videoH, containerWidth, containerHeight);
+      const { scale, offsetX, offsetY } = videoArea.debug;
 
-      // ===== OBJECT-FIT: COVER - Cálculo Robusto =====
-      // COVER usa Math.max para garantir que o vídeo PREENCHA todo o container
-      // Pode ter offset negativo (indicando parte do vídeo fora da tela)
-      const videoAspect = videoW / videoH;
-      const containerAspect = containerWidth / containerHeight;
-
-      // A fórmula robusta: Math.max garante que o maior fator de escala seja usado
-      const scale = Math.max(containerWidth / videoW, containerHeight / videoH);
-      const offsetX = (containerWidth - (videoW * scale)) / 2;
-      const offsetY = (containerHeight - (videoH * scale)) / 2;
-
-      // DEBUG com mais detalhes
+      // DEBUG INFO
       const debugEl = document.getElementById('debugDimensions');
       if (debugEl) {
         debugEl.innerHTML = `
-          📹 Video: ${videoW}x${videoH} (aspect: ${videoAspect.toFixed(3)})<br>
-          📱 Container: ${containerWidth}x${containerHeight} (aspect: ${containerAspect.toFixed(3)})<br>
+          📹 Video: ${videoW}x${videoH} (aspect: ${(videoW / videoH).toFixed(3)})<br>
+          📱 Container: ${containerWidth}x${containerHeight} (aspect: ${(containerWidth / containerHeight).toFixed(3)})<br>
           🔍 Scale: ${scale.toFixed(4)} | Offset: (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})
         `;
       }
 
-      // DEBUG VISUAL: Desenhar retângulo azul representando a área TOTAL do vídeo calculado
-      // Se o cálculo estiver certo, a área do vídeo (imagem da câmera) deve bater exatamente com esse retângulo
-      // O retângulo vai "vazar" do canvas onde há crop
+      // DEBUG VISUAL: Retângulo Ciano Representando a área TOTAL do vídeo
       cameraCtx.save();
       cameraCtx.strokeStyle = 'cyan';
       cameraCtx.lineWidth = 2;
       cameraCtx.setLineDash([5, 5]);
       cameraCtx.strokeRect(offsetX, offsetY, videoW * scale, videoH * scale);
 
-      // Desenhar um X no centro da área calculada
+      // X no centro da área do vídeo
       cameraCtx.beginPath();
       cameraCtx.moveTo(offsetX, offsetY);
       cameraCtx.lineTo(offsetX + (videoW * scale), offsetY + (videoH * scale));
@@ -782,24 +788,13 @@
       cameraCtx.stroke();
       cameraCtx.restore();
 
-      // ===== DEBUG PONTOS DE REFERÊNCIA =====
-      // PONTO VERMELHO: Centro REAL do container (onde deveria ficar o centro do vídeo)
+      // DEBUG PONTOS: Vermelho (centro tela) vs Amarelo (centro vídeo)
       cameraCtx.fillStyle = 'red';
       cameraCtx.fillRect(containerWidth / 2 - 8, containerHeight / 2 - 8, 16, 16);
 
-      // PONTO AMARELO: Centro CALCULADO do vídeo (0.5, 0.5 normalizado)
-      // Se a matemática estiver certa, este ponto deve sobrepor o VERMELHO
-      const calcCenterX = (0.5 * videoW * scale) + offsetX;
-      const calcCenterY = (0.5 * videoH * scale) + offsetY;
+      const center = mapBboxToCoverContainer([0.5, 0.5, 0, 0], videoW, videoH, containerWidth, containerHeight);
       cameraCtx.fillStyle = 'yellow';
-      cameraCtx.fillRect(calcCenterX - 5, calcCenterY - 5, 10, 10);
-
-      // LOG para debug
-      console.log('=== DEBUG ALINHAMENTO ===');
-      console.log('Container center:', containerWidth / 2, containerHeight / 2);
-      console.log('Calculated center:', calcCenterX, calcCenterY);
-      console.log('Diferença:', Math.abs(containerWidth / 2 - calcCenterX), Math.abs(containerHeight / 2 - calcCenterY));
-      console.log('SE A DIFERENÇA FOR > 5px, A MATEMÁTICA ESTÁ ERRADA!');
+      cameraCtx.fillRect(center.x - 5, center.y - 5, 10, 10);
 
       // Desenhar cada bbox
       Object.entries(rois).forEach(([nome, deteccoes]) => {
@@ -807,35 +802,22 @@
 
         deteccoes.forEach(deteccao => {
           if (deteccao.bbox_norm) {
-            const [nX, nY, nW, nH] = deteccao.bbox_norm;
+            const pos = mapBboxToCoverContainer(deteccao.bbox_norm, videoW, videoH, containerWidth, containerHeight);
 
-            // 1. Converter normalizado -> pixels da imagem original
-            const pixelX = nX * videoW;
-            const pixelY = nY * videoH;
-            const pixelW = nW * videoW;
-            const pixelH = nH * videoH;
+            console.log(`[DEBUG] ${nome}: norm=${deteccao.bbox_norm} -> final=[${Math.round(pos.x)},${Math.round(pos.y)}]`);
 
-            // 2. Escalar para o tamanho renderizado no container
-            const finalX = (pixelX * scale) + offsetX;
-            const finalY = (pixelY * scale) + offsetY;
-            const finalW = pixelW * scale;
-            const finalH = pixelH * scale;
-
-            console.log(`[DEBUG] ${nome}: norm = [${nX.toFixed(3)}, ${nY.toFixed(3)}] -> pixel=[${Math.round(pixelX)}, ${Math.round(pixelY)}] -> final=[${Math.round(finalX)}, ${Math.round(finalY)}]`);
-
-            // Desenhar bbox
             const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
             cameraCtx.strokeStyle = cor;
             cameraCtx.lineWidth = 3;
-            cameraCtx.strokeRect(finalX, finalY, finalW, finalH);
+            cameraCtx.strokeRect(pos.x, pos.y, pos.w, pos.h);
 
             // Label
             const text = `${nome} (${Math.round((deteccao.confidence || 0.8) * 100)}%)`;
             cameraCtx.font = 'bold 12px monospace';
             cameraCtx.fillStyle = cor;
-            cameraCtx.fillRect(finalX, Math.max(finalY - 16, 0), cameraCtx.measureText(text).width + 6, 16);
+            cameraCtx.fillRect(pos.x, Math.max(pos.y - 16, 0), cameraCtx.measureText(text).width + 6, 16);
             cameraCtx.fillStyle = '#fff';
-            cameraCtx.fillText(text, finalX + 3, Math.max(finalY - 3, 13));
+            cameraCtx.fillText(text, pos.x + 3, Math.max(pos.y - 3, 13));
           }
         });
       });
