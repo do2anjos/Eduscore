@@ -732,32 +732,45 @@
 
       if (!videoW || !videoH) return;
 
-      // Calcular como o vídeo seria renderizado com object-fit: contain
+      // ===== OBJECT-FIT: COVER (preenche o container, cortando excesso) =====
+      // Isso garante que o vídeo preencha TODO o container sem distorção
+      // Pode cortar um pouco das bordas, mas mantém aspect ratio perfeito
       const videoAspect = videoW / videoH;
       const containerAspect = containerWidth / containerHeight;
 
       let drawWidth, drawHeight, drawX, drawY;
+      let sourceX = 0, sourceY = 0, sourceW = videoW, sourceH = videoH;
 
       if (videoAspect > containerAspect) {
-        // Vídeo mais largo -> barras em cima/baixo
+        // Vídeo mais largo que container -> cortar laterais
         drawWidth = containerWidth;
-        drawHeight = containerWidth / videoAspect;
-        drawX = 0;
-        drawY = (containerHeight - drawHeight) / 2;
-      } else {
-        // Vídeo mais alto -> barras nas laterais
         drawHeight = containerHeight;
-        drawWidth = containerHeight * videoAspect;
-        drawX = (containerWidth - drawWidth) / 2;
+        drawX = 0;
         drawY = 0;
+
+        // Calcular quanto do vídeo mostrar (cropar laterais)
+        const visibleVideoWidth = videoH * containerAspect;
+        sourceX = (videoW - visibleVideoWidth) / 2;
+        sourceW = visibleVideoWidth;
+      } else {
+        // Vídeo mais alto que container -> cortar topo/fundo
+        drawWidth = containerWidth;
+        drawHeight = containerHeight;
+        drawX = 0;
+        drawY = 0;
+
+        // Calcular quanto do vídeo mostrar (cropar topo/fundo)
+        const visibleVideoHeight = videoW / containerAspect;
+        sourceY = (videoH - visibleVideoHeight) / 2;
+        sourceH = visibleVideoHeight;
       }
 
-      // Limpar e desenhar fundo preto (letterbox)
+      // Limpar canvas
       cameraCtx.fillStyle = '#000';
       cameraCtx.fillRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
-      // DESENHAR O VÍDEO NO CANVAS (na posição calculada)
-      cameraCtx.drawImage(cameraVideo, drawX, drawY, drawWidth, drawHeight);
+      // DESENHAR O VÍDEO NO CANVAS (crop para fill)
+      cameraCtx.drawImage(cameraVideo, sourceX, sourceY, sourceW, sourceH, drawX, drawY, drawWidth, drawHeight);
 
       // DEBUG: Mostrar dimensões
       const debugEl = document.getElementById('debugDimensions');
@@ -769,8 +782,13 @@
       }
 
       // AGORA desenhar as bounding boxes EM CIMA do vídeo renderizado
-      // As coordenadas normalizadas são relativas ao vídeo original
-      // Precisamos mapear para a área onde desenhamos o vídeo (drawX, drawY, drawWidth, drawHeight)
+      // IMPORTANTE: As coordenadas normalizadas são relativas ao vídeo COMPLETO (videoW x videoH)
+      // Mas só estamos mostrando uma PARTE do vídeo (sourceX, sourceY, sourceW, sourceH)
+      // Então precisamos:
+      // 1. Converter coords normalizadas para pixels do vídeo original
+      // 2. Subtrair a parte cropada (sourceX, sourceY)
+      // 3. Escalar para o tamanho do canvas (drawWidth, drawHeight)
+
       Object.entries(rois).forEach(([nome, deteccoes]) => {
         if (!deteccoes || deteccoes.length === 0) return;
 
@@ -778,26 +796,42 @@
           if (deteccao.bbox_norm) {
             const [nX, nY, nW, nH] = deteccao.bbox_norm;
 
-            // Mapear coordenadas normalizadas para a área de desenho do vídeo
-            const finalX = drawX + (nX * drawWidth);
-            const finalY = drawY + (nY * drawHeight);
-            const finalW = nW * drawWidth;
-            const finalH = nH * drawHeight;
+            // 1. Converter normalizado -> pixels do vídeo original
+            const pixelX = nX * videoW;
+            const pixelY = nY * videoH;
+            const pixelW = nW * videoW;
+            const pixelH = nH * videoH;
 
-            console.log(`[DEBUG] ${nome}: norm=[${nX.toFixed(3)},${nY.toFixed(3)},${nW.toFixed(3)},${nH.toFixed(3)}] -> px=[${Math.round(finalX)},${Math.round(finalY)},${Math.round(finalW)},${Math.round(finalH)}]`);
+            // 2. Ajustar para a região visível (subtrair crop offset)
+            const visibleX = pixelX - sourceX;
+            const visibleY = pixelY - sourceY;
 
-            const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
-            cameraCtx.strokeStyle = cor;
-            cameraCtx.lineWidth = 3;
-            cameraCtx.strokeRect(finalX, finalY, finalW, finalH);
+            // 3. Escalar para o tamanho do canvas
+            const scaleX = drawWidth / sourceW;
+            const scaleY = drawHeight / sourceH;
 
-            // Label
-            const text = `${nome} (${Math.round((deteccao.confidence || 0.8) * 100)}%)`;
-            cameraCtx.font = 'bold 12px monospace';
-            cameraCtx.fillStyle = cor;
-            cameraCtx.fillRect(finalX, finalY - 16, cameraCtx.measureText(text).width + 6, 16);
-            cameraCtx.fillStyle = '#fff';
-            cameraCtx.fillText(text, finalX + 3, finalY - 3);
+            const finalX = drawX + (visibleX * scaleX);
+            const finalY = drawY + (visibleY * scaleY);
+            const finalW = pixelW * scaleX;
+            const finalH = pixelH * scaleY;
+
+            console.log(`[DEBUG] ${nome}: norm=[${nX.toFixed(3)},${nY.toFixed(3)}] -> final=[${Math.round(finalX)},${Math.round(finalY)},${Math.round(finalW)},${Math.round(finalH)}]`);
+
+            // Só desenhar se estiver visível na área do canvas
+            if (finalX + finalW > 0 && finalX < containerWidth && finalY + finalH > 0 && finalY < containerHeight) {
+              const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
+              cameraCtx.strokeStyle = cor;
+              cameraCtx.lineWidth = 3;
+              cameraCtx.strokeRect(finalX, finalY, finalW, finalH);
+
+              // Label
+              const text = `${nome} (${Math.round((deteccao.confidence || 0.8) * 100)}%)`;
+              cameraCtx.font = 'bold 12px monospace';
+              cameraCtx.fillStyle = cor;
+              cameraCtx.fillRect(finalX, Math.max(finalY - 16, 0), cameraCtx.measureText(text).width + 6, 16);
+              cameraCtx.fillStyle = '#fff';
+              cameraCtx.fillText(text, finalX + 3, Math.max(finalY - 3, 13));
+            }
           }
         });
       });
