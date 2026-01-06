@@ -175,7 +175,7 @@
           </div>
 
           <video id="videoPreview" autoplay playsinline
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: #000; visibility: hidden;"></video>
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000;"></video>
           <canvas id="canvasOverlay"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
 
@@ -715,8 +715,7 @@
       }, 800);
     }
 
-    // NOVA ABORDAGEM: Desenhar vídeo no canvas + bboxes em cima
-    // Isso elimina a complexidade do object-fit: contain
+    // Canvas overlay - apenas desenha bboxes, vídeo é renderizado pelo browser
     function desenharROIsDireto(rois) {
       const containerWidth = cameraVideo.clientWidth;
       const containerHeight = cameraVideo.clientHeight;
@@ -727,57 +726,40 @@
         cameraCanvas.height = containerHeight;
       }
 
+      // Limpar canvas (transparente para ver o vídeo por baixo)
+      cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+
       const videoW = cameraVideo.videoWidth;
       const videoH = cameraVideo.videoHeight;
 
       if (!videoW || !videoH) return;
 
-      // ===== OBJECT-FIT: COVER (preenche o container, cortando excesso) =====
-      // Isso garante que o vídeo preencha TODO o container sem distorção
-      // Pode cortar um pouco das bordas, mas mantém aspect ratio perfeito
+      // ===== CÁLCULO DO OBJECT-FIT: COVER (como o browser renderiza) =====
+      // Precisamos calcular exatamente como o browser posiciona o vídeo
       const videoAspect = videoW / videoH;
       const containerAspect = containerWidth / containerHeight;
 
-      let drawWidth, drawHeight, drawX, drawY;
+      // Variáveis para mapear coordenadas do vídeo para o canvas
       let sourceX = 0, sourceY = 0, sourceW = videoW, sourceH = videoH;
 
       if (videoAspect > containerAspect) {
-        // Vídeo mais largo que container -> cortar laterais
-        drawWidth = containerWidth;
-        drawHeight = containerHeight;
-        drawX = 0;
-        drawY = 0;
-
-        // Calcular quanto do vídeo mostrar (cropar laterais)
+        // Vídeo mais largo que container -> browser cropa laterais
         const visibleVideoWidth = videoH * containerAspect;
         sourceX = (videoW - visibleVideoWidth) / 2;
         sourceW = visibleVideoWidth;
       } else {
-        // Vídeo mais alto que container -> cortar topo/fundo
-        drawWidth = containerWidth;
-        drawHeight = containerHeight;
-        drawX = 0;
-        drawY = 0;
-
-        // Calcular quanto do vídeo mostrar (cropar topo/fundo)
+        // Vídeo mais alto que container -> browser cropa topo/fundo
         const visibleVideoHeight = videoW / containerAspect;
         sourceY = (videoH - visibleVideoHeight) / 2;
         sourceH = visibleVideoHeight;
       }
-
-      // Limpar canvas
-      cameraCtx.fillStyle = '#000';
-      cameraCtx.fillRect(0, 0, cameraCanvas.width, cameraCanvas.height);
-
-      // DESENHAR O VÍDEO NO CANVAS (crop para fill)
-      cameraCtx.drawImage(cameraVideo, sourceX, sourceY, sourceW, sourceH, drawX, drawY, drawWidth, drawHeight);
 
       // DEBUG: Mostrar dimensões
       const debugEl = document.getElementById('debugDimensions');
       if (debugEl) {
         debugEl.innerHTML = `
           📹 Video: ${videoW}x${videoH} | 📱 Container: ${containerWidth}x${containerHeight}<br>
-          🎯 Draw: ${Math.round(drawWidth)}x${Math.round(drawHeight)} at (${Math.round(drawX)}, ${Math.round(drawY)})
+          ✂️ Crop: source(${Math.round(sourceX)},${Math.round(sourceY)}) size(${Math.round(sourceW)}x${Math.round(sourceH)})
         `;
       }
 
@@ -806,12 +788,12 @@
             const visibleX = pixelX - sourceX;
             const visibleY = pixelY - sourceY;
 
-            // 3. Escalar para o tamanho do canvas
-            const scaleX = drawWidth / sourceW;
-            const scaleY = drawHeight / sourceH;
+            // 3. Escalar para o tamanho do container (canvas = container)
+            const scaleX = containerWidth / sourceW;
+            const scaleY = containerHeight / sourceH;
 
-            const finalX = drawX + (visibleX * scaleX);
-            const finalY = drawY + (visibleY * scaleY);
+            const finalX = visibleX * scaleX;
+            const finalY = visibleY * scaleY;
             const finalW = pixelW * scaleX;
             const finalH = pixelH * scaleY;
 
