@@ -789,6 +789,25 @@
       cameraCtx.stroke();
       cameraCtx.restore();
 
+      // ===== DEBUG PONTOS DE REFERÊNCIA =====
+      // PONTO VERMELHO: Centro REAL do container (onde deveria ficar o centro do vídeo)
+      cameraCtx.fillStyle = 'red';
+      cameraCtx.fillRect(containerWidth / 2 - 8, containerHeight / 2 - 8, 16, 16);
+
+      // PONTO AMARELO: Centro CALCULADO do vídeo (0.5, 0.5 normalizado)
+      // Se a matemática estiver certa, este ponto deve sobrepor o VERMELHO
+      const calcCenterX = (0.5 * videoW * scale) + offsetX;
+      const calcCenterY = (0.5 * videoH * scale) + offsetY;
+      cameraCtx.fillStyle = 'yellow';
+      cameraCtx.fillRect(calcCenterX - 5, calcCenterY - 5, 10, 10);
+
+      // LOG para debug
+      console.log('=== DEBUG ALINHAMENTO ===');
+      console.log('Container center:', containerWidth / 2, containerHeight / 2);
+      console.log('Calculated center:', calcCenterX, calcCenterY);
+      console.log('Diferença:', Math.abs(containerWidth / 2 - calcCenterX), Math.abs(containerHeight / 2 - calcCenterY));
+      console.log('SE A DIFERENÇA FOR > 5px, A MATEMÁTICA ESTÁ ERRADA!');
+
       // Desenhar cada bbox
       Object.entries(rois).forEach(([nome, deteccoes]) => {
         if (!deteccoes || deteccoes.length === 0) return;
