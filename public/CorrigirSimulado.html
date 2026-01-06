@@ -233,7 +233,7 @@
   </div>
 
   <div id="cameraInterface"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; z-index: 9999; background: #000; overflow: hidden; flex-direction: column;">
+    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; z-index: 9999; background: #000; overflow: hidden; flex-direction: column;">
 
     <!-- Header da Câmera -->
     <div id="cameraHeader"
@@ -250,7 +250,8 @@
     </div>
 
     <!-- Container Central do Vídeo - Ocupa todo o resto -->
-    <div id="videoContainer" style="flex: 1; position: relative; width: 100%; overflow: hidden; background: #000;">
+    <div id="videoContainer"
+      style="flex: 1; position: relative; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; border: 2px solid red;">
       <video id="videoPreview" autoplay playsinline
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000; opacity: 0; pointer-events: none;"></video>
       <canvas id="canvasOverlay"
@@ -733,21 +734,9 @@
 
     // Função de utilidade para mapear bboxes normalizadas para o container mobile com object-fit: cover
     function mapBboxToCoverContainer(bbox_norm, imgWidth, imgHeight, containerWidth, containerHeight) {
-      const videoRatio = imgWidth / imgHeight;
-      const screenRatio = containerWidth / containerHeight;
-      let scale, offsetX, offsetY;
-
-      if (screenRatio > videoRatio) {
-        // Tela é mais LARGA que o vídeo (corta topo/baixo)
-        scale = containerWidth / imgWidth;
-        offsetX = 0;
-        offsetY = (containerHeight - (imgHeight * scale)) / 2;
-      } else {
-        // Tela é mais ALTA que o vídeo (corta laterais - caso comum no mobile)
-        scale = containerHeight / imgHeight;
-        offsetX = (containerWidth - (imgWidth * scale)) / 2;
-        offsetY = 0;
-      }
+      const scale = Math.max(containerWidth / imgWidth, containerHeight / imgHeight);
+      const offsetX = (containerWidth - (imgWidth * scale)) / 2;
+      const offsetY = (containerHeight - (imgHeight * scale)) / 2;
 
       const [nX, nY, nW, nH] = bbox_norm;
 
@@ -774,8 +763,9 @@
     function renderCanvasFrame() {
       if (!isRenderLoopRunning) return;
 
-      const containerWidth = cameraCanvas.parentElement.clientWidth;
-      const containerHeight = cameraCanvas.parentElement.clientHeight;
+      const rect = cameraCanvas.parentElement.getBoundingClientRect();
+      const containerWidth = rect.width;
+      const containerHeight = rect.height;
 
       // Sincronizar tamanho do buffer do canvas com o tamanho exibido
       if (cameraCanvas.width !== containerWidth || cameraCanvas.height !== containerHeight) {
@@ -833,9 +823,9 @@
       const debugEl = document.getElementById('debugDimensions');
       if (debugEl) {
         debugEl.innerHTML = `
-          📹 Video: ${videoW}x${videoH} (aspect: ${(videoW / videoH).toFixed(3)})<br>
-          📱 Container: ${containerWidth}x${containerHeight} (aspect: ${(containerWidth / containerHeight).toFixed(3)})<br>
-          🔍 Scale: ${scale.toFixed(4)} | Offset: (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})
+          📹 Video: ${videoW}x${videoH} (Ratio: ${(videoW / videoH).toFixed(2)})<br>
+          📱 Screen: ${containerWidth.toFixed(0)}x${containerHeight.toFixed(0)} (Ratio: ${(containerWidth / containerHeight).toFixed(2)})<br>
+          🔍 Transform: S:${scale.toFixed(3)} O:(${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})
         `;
       }
 
