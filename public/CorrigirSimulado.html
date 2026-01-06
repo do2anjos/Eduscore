@@ -505,7 +505,7 @@
 
         // Mostrar interface
         const interface = document.getElementById('cameraInterface');
-        interface.style.display = 'block';
+        interface.style.display = 'flex';
 
         cameraVideo = document.getElementById('videoPreview');
         const canvasOverlay = document.getElementById('canvasOverlay');
@@ -774,15 +774,13 @@
     function renderCanvasFrame() {
       if (!isRenderLoopRunning) return;
 
-      const containerWidth = window.innerWidth;
-      const containerHeight = window.innerHeight;
+      const containerWidth = cameraCanvas.parentElement.clientWidth;
+      const containerHeight = cameraCanvas.parentElement.clientHeight;
 
       // Sincronizar tamanho do buffer do canvas com o tamanho exibido
       if (cameraCanvas.width !== containerWidth || cameraCanvas.height !== containerHeight) {
         cameraCanvas.width = containerWidth;
         cameraCanvas.height = containerHeight;
-        cameraCanvas.style.width = containerWidth + 'px';
-        cameraCanvas.style.height = containerHeight + 'px';
       }
 
       const videoW = cameraVideo.videoWidth;
