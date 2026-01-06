@@ -719,7 +719,7 @@
             feedbackEl.textContent = data.feedback || '🔍 Procurando folha ENEM...';
             btnCapturar.disabled = true;
             btnCapturar.style.opacity = '0.5';
-            cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+            lastROIs = {};
           }
 
         } catch (error) {
