@@ -174,8 +174,9 @@
             </button>
           </div>
 
+          <!-- O vídeo fica oculto, o canvas será o mestre da renderização -->
           <video id="videoPreview" autoplay playsinline
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000;"></video>
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000; opacity: 0; pointer-events: none;"></video>
           <canvas id="canvasOverlay"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
 
@@ -337,6 +338,8 @@
     let cameraCtx = null;
     let cameraVideo = null;
     let track = null; // Track de video para controlar flash
+    let lastROIs = {}; // Guardar últimas detecções para o render loop
+    let isRenderLoopRunning = false;
 
     // Sistema de Tracking e Suavização de Bounding Boxes
     const boxTracker = {
@@ -559,6 +562,13 @@
         await new Promise(resolve => {
           cameraVideo.onloadedmetadata = () => {
             console.log('[CAMERA] Video carregado. Dimensões REAIS:', cameraVideo.videoWidth, 'x', cameraVideo.videoHeight);
+
+            // Iniciar o loop de renderização manual para evitar tela preta
+            if (!isRenderLoopRunning) {
+              isRenderLoopRunning = true;
+              renderCanvasFrame();
+            }
+
             resolve();
           };
         });
@@ -619,6 +629,9 @@
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
       }
+
+      isRenderLoopRunning = false;
+      lastROIs = {};
 
       // Parar detecção
       if (detectionInterval) {
@@ -739,30 +752,69 @@
       };
     }
 
-    // Canvas overlay - desenha bboxes sobre o vídeo renderizado pelo browser
-    function desenharROIsDireto(rois) {
-      const containerWidth = cameraVideo.clientWidth;
-      const containerHeight = cameraVideo.clientHeight;
+    /**
+     * LOOP DE RENDERIZAÇÃO DE ALTA PERFORMANCE (requestAnimationFrame)
+     * Desenha o vídeo e as boxes em perfeita sincronia no canvas.
+     */
+    function renderCanvasFrame() {
+      if (!isRenderLoopRunning) return;
 
-      // Ajustar canvas para cobrir o container
+      const containerWidth = cameraCanvas.clientWidth;
+      const containerHeight = cameraCanvas.clientHeight;
+
+      // Sincronizar tamanho do buffer do canvas com o tamanho exibido
       if (cameraCanvas.width !== containerWidth || cameraCanvas.height !== containerHeight) {
         cameraCanvas.width = containerWidth;
         cameraCanvas.height = containerHeight;
       }
 
-      // Limpar canvas (transparente)
-      cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
-
       const videoW = cameraVideo.videoWidth;
       const videoH = cameraVideo.videoHeight;
 
-      if (!videoW || !videoH) return;
+      if (videoW && videoH) {
+        // 1. Limpar canvas
+        cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
 
-      // Usar a nossa nova função robusta para o primeiro box de debug (usando coords 0,0,1,1 para o vídeo todo)
-      const videoArea = mapBboxToCoverContainer([0, 0, 1, 1], videoW, videoH, containerWidth, containerHeight);
-      const { scale, offsetX, offsetY } = videoArea.debug;
+        // 2. Calcular transformação object-fit: cover
+        const videoArea = mapBboxToCoverContainer([0, 0, 1, 1], videoW, videoH, containerWidth, containerHeight);
+        const { scale, offsetX, offsetY } = videoArea.debug;
 
-      // DEBUG INFO
+        // 3. DESENHAR O VÍDEO NO CANVAS (Simulando object-fit: cover)
+        // Usamos as mesmas variáveis scale/offset que usaremos para as boxes
+        cameraCtx.drawImage(cameraVideo, offsetX, offsetY, videoW * scale, videoH * scale);
+
+        // 4. DESENHAR AS BBOXES (Efeito overlay)
+        Object.entries(lastROIs).forEach(([nome, deteccoes]) => {
+          if (!deteccoes || deteccoes.length === 0) return;
+
+          deteccoes.forEach(deteccao => {
+            if (deteccao.bbox_norm) {
+              const pos = mapBboxToCoverContainer(deteccao.bbox_norm, videoW, videoH, containerWidth, containerHeight);
+
+              const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
+              cameraCtx.strokeStyle = cor;
+              cameraCtx.lineWidth = 3;
+              cameraCtx.strokeRect(pos.x, pos.y, pos.w, pos.h);
+
+              // Label
+              const text = `${nome} (${Math.round((deteccao.confidence || 0.8) * 100)}%)`;
+              cameraCtx.font = 'bold 12px monospace';
+              cameraCtx.fillStyle = cor;
+              cameraCtx.fillRect(pos.x, Math.max(pos.y - 16, 0), cameraCtx.measureText(text).width + 6, 16);
+              cameraCtx.fillStyle = '#fff';
+              cameraCtx.fillText(text, pos.x + 3, Math.max(pos.y - 3, 13));
+            }
+          });
+        });
+
+        // 5. DEBUG VISUAL (Opcial)
+        desenharDebugVisual(scale, offsetX, offsetY, videoW, videoH, containerWidth, containerHeight);
+      }
+
+      requestAnimationFrame(renderCanvasFrame);
+    }
+
+    function desenharDebugVisual(scale, offsetX, offsetY, videoW, videoH, containerWidth, containerHeight) {
       const debugEl = document.getElementById('debugDimensions');
       if (debugEl) {
         debugEl.innerHTML = `
@@ -772,55 +824,31 @@
         `;
       }
 
-      // DEBUG VISUAL: Retângulo Ciano Representando a área TOTAL do vídeo
+      // Retângulo Ciano Representando a área TOTAL do vídeo
       cameraCtx.save();
       cameraCtx.strokeStyle = 'cyan';
       cameraCtx.lineWidth = 2;
       cameraCtx.setLineDash([5, 5]);
       cameraCtx.strokeRect(offsetX, offsetY, videoW * scale, videoH * scale);
 
-      // X no centro da área do vídeo
-      cameraCtx.beginPath();
-      cameraCtx.moveTo(offsetX, offsetY);
-      cameraCtx.lineTo(offsetX + (videoW * scale), offsetY + (videoH * scale));
-      cameraCtx.moveTo(offsetX + (videoW * scale), offsetY);
-      cameraCtx.lineTo(offsetX, offsetY + (videoH * scale));
-      cameraCtx.stroke();
-      cameraCtx.restore();
-
-      // DEBUG PONTOS: Vermelho (centro tela) vs Amarelo (centro vídeo)
+      // Centro
       cameraCtx.fillStyle = 'red';
       cameraCtx.fillRect(containerWidth / 2 - 8, containerHeight / 2 - 8, 16, 16);
-
       const center = mapBboxToCoverContainer([0.5, 0.5, 0, 0], videoW, videoH, containerWidth, containerHeight);
       cameraCtx.fillStyle = 'yellow';
       cameraCtx.fillRect(center.x - 5, center.y - 5, 10, 10);
+      cameraCtx.restore();
+    }
 
-      // Desenhar cada bbox
-      Object.entries(rois).forEach(([nome, deteccoes]) => {
-        if (!deteccoes || deteccoes.length === 0) return;
+    // Canvas overlay - apenas atualiza o estado para o render loop
+    function desenharROIsDireto(rois) {
+      lastROIs = rois;
 
-        deteccoes.forEach(deteccao => {
-          if (deteccao.bbox_norm) {
-            const pos = mapBboxToCoverContainer(deteccao.bbox_norm, videoW, videoH, containerWidth, containerHeight);
-
-            console.log(`[DEBUG] ${nome}: norm=${deteccao.bbox_norm} -> final=[${Math.round(pos.x)},${Math.round(pos.y)}]`);
-
-            const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
-            cameraCtx.strokeStyle = cor;
-            cameraCtx.lineWidth = 3;
-            cameraCtx.strokeRect(pos.x, pos.y, pos.w, pos.h);
-
-            // Label
-            const text = `${nome} (${Math.round((deteccao.confidence || 0.8) * 100)}%)`;
-            cameraCtx.font = 'bold 12px monospace';
-            cameraCtx.fillStyle = cor;
-            cameraCtx.fillRect(pos.x, Math.max(pos.y - 16, 0), cameraCtx.measureText(text).width + 6, 16);
-            cameraCtx.fillStyle = '#fff';
-            cameraCtx.fillText(text, pos.x + 3, Math.max(pos.y - 3, 13));
-          }
-        });
-      });
+      // Iniciar o loop se ainda não estiver rodando
+      if (!isRenderLoopRunning && cameraVideo && cameraVideo.videoWidth > 0) {
+        isRenderLoopRunning = true;
+        renderCanvasFrame();
+      }
     }
 
     async function capturarFrameAtualCamera() {
