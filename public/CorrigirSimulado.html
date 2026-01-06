@@ -766,9 +766,27 @@
       if (debugEl) {
         debugEl.innerHTML = `
           📹 Video: ${videoW}x${videoH} | 📱 Container: ${containerWidth}x${containerHeight}<br>
-          🔍 Scale: ${scale.toFixed(3)} | Offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})
+          🔍 Scale: ${scale.toFixed(4)} | Offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})
         `;
       }
+
+      // DEBUG VISUAL: Desenhar retângulo azul representando a área TOTAL do vídeo calculado
+      // Se o cálculo estiver certo, a área do vídeo (imagem da câmera) deve bater exatamente com esse retângulo
+      // O retângulo vai "vazar" do canvas onde há crop
+      cameraCtx.save();
+      cameraCtx.strokeStyle = 'cyan';
+      cameraCtx.lineWidth = 2;
+      cameraCtx.setLineDash([5, 5]);
+      cameraCtx.strokeRect(offsetX, offsetY, videoW * scale, videoH * scale);
+
+      // Desenhar um X no centro da área calculada
+      cameraCtx.beginPath();
+      cameraCtx.moveTo(offsetX, offsetY);
+      cameraCtx.lineTo(offsetX + (videoW * scale), offsetY + (videoH * scale));
+      cameraCtx.moveTo(offsetX + (videoW * scale), offsetY);
+      cameraCtx.lineTo(offsetX, offsetY + (videoH * scale));
+      cameraCtx.stroke();
+      cameraCtx.restore();
 
       // Desenhar cada bbox
       Object.entries(rois).forEach(([nome, deteccoes]) => {
