@@ -175,7 +175,7 @@
           </div>
 
           <video id="videoPreview" autoplay playsinline
-            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: #000;"></video>
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000;"></video>
           <canvas id="canvasOverlay"
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
 
@@ -743,31 +743,24 @@
       // 1. Converter bbox_norm de volta para pixels da imagem original
       // 2. Mapear esses pixels para onde o browser renderiza com object-fit:cover
 
-      // Calcular como object-fit:cover renderiza o vídeo
+      // ===== OBJECT-FIT: COVER - Cálculo Robusto =====
+      // COVER usa Math.max para garantir que o vídeo PREENCHA todo o container
+      // Pode ter offset negativo (indicando parte do vídeo fora da tela)
       const videoAspect = videoW / videoH;
       const containerAspect = containerWidth / containerHeight;
 
-      let scale, offsetX, offsetY;
+      // A fórmula robusta: Math.max garante que o maior fator de escala seja usado
+      const scale = Math.max(containerWidth / videoW, containerHeight / videoH);
+      const offsetX = (containerWidth - (videoW * scale)) / 2;
+      const offsetY = (containerHeight - (videoH * scale)) / 2;
 
-      // OBJECT-FIT: CONTAIN - vídeo cabe inteiro, com letterbox
-      if (videoAspect > containerAspect) {
-        // Vídeo mais largo -> preenche largura, letterbox topo/fundo
-        scale = containerWidth / videoW;
-        offsetX = 0;
-        offsetY = (containerHeight - (videoH * scale)) / 2;
-      } else {
-        // Vídeo mais alto -> preenche altura, letterbox laterais
-        scale = containerHeight / videoH;
-        offsetX = (containerWidth - (videoW * scale)) / 2;
-        offsetY = 0;
-      }
-
-      // DEBUG
+      // DEBUG com mais detalhes
       const debugEl = document.getElementById('debugDimensions');
       if (debugEl) {
         debugEl.innerHTML = `
-          📹 Video: ${videoW}x${videoH} | 📱 Container: ${containerWidth}x${containerHeight}<br>
-          🔍 Scale: ${scale.toFixed(4)} | Offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})
+          📹 Video: ${videoW}x${videoH} (aspect: ${videoAspect.toFixed(3)})<br>
+          📱 Container: ${containerWidth}x${containerHeight} (aspect: ${containerAspect.toFixed(3)})<br>
+          🔍 Scale: ${scale.toFixed(4)} | Offset: (${offsetX.toFixed(1)}, ${offsetY.toFixed(1)})
         `;
       }
 
@@ -828,7 +821,7 @@
             const finalW = pixelW * scale;
             const finalH = pixelH * scale;
 
-            console.log(`[DEBUG] ${nome}: norm=[${nX.toFixed(3)},${nY.toFixed(3)}] -> pixel=[${Math.round(pixelX)},${Math.round(pixelY)}] -> final=[${Math.round(finalX)},${Math.round(finalY)}]`);
+            console.log(`[DEBUG] ${nome}: norm = [${nX.toFixed(3)}, ${nY.toFixed(3)}] -> pixel=[${Math.round(pixelX)}, ${Math.round(pixelY)}] -> final=[${Math.round(finalX)}, ${Math.round(finalY)}]`);
 
             // Desenhar bbox
             const cor = nome === 'day_region' ? '#ff6b6b' : '#51cf66';
@@ -855,7 +848,7 @@
       const tempCtx = tempCanvas.getContext('2d');
       tempCtx.drawImage(cameraVideo, 0, 0);
 
-      console.log(`[CAPTURE] Frame size: ${tempCanvas.width}x${tempCanvas.height}`);
+      console.log(`[CAPTURE] Frame size: ${tempCanvas.width}x${tempCanvas.height} `);
 
       return new Promise((resolve) => {
         tempCanvas.toBlob(resolve, 'image/jpeg', 0.95);
@@ -911,8 +904,8 @@
       const debugEl = document.getElementById('debugDimensions');
       if (debugEl) {
         debugEl.innerHTML = `
-          📹 Video: ${videoW}x${videoH} | 📱 Container: ${containerWidth}x${containerHeight}<br>
-          🎯 Rendered: ${Math.round(renderedWidth)}x${Math.round(renderedHeight)} | Offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})
+          📹 Video: ${videoW}x${videoH} | 📱 Container: ${containerWidth}x${containerHeight} <br>
+        🎯 Rendered: ${Math.round(renderedWidth)}x${Math.round(renderedHeight)} | Offset: (${Math.round(offsetX)}, ${Math.round(offsetY)})
         `;
       }
 
