@@ -144,9 +144,3 @@ dist
 
 # Replit debugger
 .breakpoints
-
-# Agent workflows (local only)
-.agent/
-
-# HuggingFace Space has its own git repo
-huggingface-space/.git/
