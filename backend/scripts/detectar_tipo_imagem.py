@@ -269,7 +269,7 @@ if __name__ == "__main__":
         script_dir = Path(__file__).resolve().parent
         
         if tipo in ["enem_completo", "enem_recorte"]:
-            script_alvo = script_dir / "Enem" / "processar_respostas_enem_mobile.py"
+            script_alvo = script_dir / "Enem" / "05_processar_respostas.py"
         elif tipo == "processada":
             script_alvo = script_dir / "Scripts UEA" / "processar_respostas_imagem_processadas.py"
         else:
