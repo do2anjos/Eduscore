@@ -18,13 +18,13 @@ def verificar_enem_com_yolo(caminho_imagem):
     """
     try:
         script_dir = Path(__file__).parent
-        detector_path = script_dir / "detector_yolo_enem.py"
+        detector_path = script_dir / "Enem" / "02_detectar_rois.py"
         
         if not detector_path.exists():
             return False, None
         
         import importlib.util
-        spec = importlib.util.spec_from_file_location("detector_yolo_enem", detector_path)
+        spec = importlib.util.spec_from_file_location("detectar_rois", detector_path)
         detector_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(detector_module)
         
@@ -39,8 +39,16 @@ def verificar_enem_com_yolo(caminho_imagem):
         
         if tem_day_region and tem_answer_area:
             return True, "enem_completo"
-        elif tem_answer_area:
-            return True, "enem_recorte"
+        elif tem_answer_area and not tem_day_region:
+            # Sem day_region, pode ser falso positivo em gabarito UEA.
+            # Só classificar como enem_recorte se a confiança for alta (>0.5)
+            answer_confs = [d.get('confidence', 0) for d in rois['answer_area_enem']]
+            max_conf = max(answer_confs) if answer_confs else 0
+            if max_conf > 0.5:
+                return True, "enem_recorte"
+            else:
+                print(f"[DETECTAR-TIPO] answer_area_enem detectada mas conf baixa ({max_conf:.2f}), ignorando (possível UEA)", file=sys.stderr)
+                return False, None
         else:
             return False, None
             
@@ -135,20 +143,25 @@ def detectar_tipo_imagem(caminho_imagem):
     # Encontrar contornos
     contornos, _ = cv2.findContours(bordas, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
-    # Filtrar contornos pequenos
+    # Filtrar contornos grandes (potenciais folhas)
     area_minima = (largura_proc * altura_proc) * 0.15
-    contornos = [c for c in contornos if cv2.contourArea(c) > area_minima]
-    contornos = sorted(contornos, key=cv2.contourArea, reverse=True)
+    contornos_grandes = [c for c in contornos if cv2.contourArea(c) > area_minima]
+    contornos_grandes = sorted(contornos_grandes, key=cv2.contourArea, reverse=True)
     
-    # Se não encontrou contornos, assumir que precisa de processamento (mais seguro)
-    if len(contornos) == 0:
+    # Verificar proporção da imagem (documentos retificados tendem a ter proporções mais regulares)
+    proporcao = max(largura_proc, altura_proc) / min(largura_proc, altura_proc)
+    
+    # Se não encontrou contornos grandes, mas a imagem é quase quadrada, pode ser um grid já recortado
+    if len(contornos_grandes) == 0:
+        if proporcao <= 1.2:
+            return "processada"
         return "original"
     
     # Analisar os maiores contornos
     indicadores_processada = 0
     indicadores_original = 0
     
-    for contorno in contornos[:5]:  # Analisar os 5 maiores contornos
+    for contorno in contornos_grandes[:5]:  # Analisar os 5 maiores contornos
         perimetro = cv2.arcLength(contorno, True)
         if perimetro == 0:
             continue
@@ -204,20 +217,27 @@ def detectar_tipo_imagem(caminho_imagem):
     # Documentos retificados geralmente têm proporção entre 1.3 e 2.0 (A4, por exemplo)
     if 1.3 <= proporcao <= 2.0:
         indicadores_processada += 1
-    elif proporcao > 2.5 or proporcao < 1.1:
+    # Grids recortados manualmente (apenas a tabela de respostas) costumam ser quase quadrados
+    elif proporcao <= 1.2:
+        indicadores_processada += 2  # Forte indício de que é um grid recortado
+    elif proporcao > 2.5:
         indicadores_original += 1
     
     # Decisão baseada nos indicadores
     # Ser conservador: só classificar como "processada" se houver evidências CLARAS
     # Preferir errar para o lado de "original" (usar script completo) que é mais seguro
     # Precisa de pelo menos 3 indicadores de processada E mais que os indicadores originais
-    if indicadores_processada >= 3 and indicadores_processada > (indicadores_original * 1.5):
+    if proporcao <= 1.2 and indicadores_processada >= 2:
+        return "processada"
+    elif indicadores_processada >= 3 and indicadores_processada > (indicadores_original * 1.5):
         return "processada"
     else:
         # Por padrão, assume que precisa de processamento (mais seguro)
         return "original"
 
 if __name__ == "__main__":
+    import subprocess
+    import re
     try:
         if len(sys.argv) < 2:
             print(json.dumps({
@@ -237,13 +257,55 @@ if __name__ == "__main__":
         
         tipo = detectar_tipo_imagem(caminho_imagem)
         
-        resultado = {
-            "sucesso": True,
-            "tipo": tipo,
-            "requer_processamento": tipo == "original"
-        }
+        # Se a flag --only-detect for passada, retorna apenas o tipo detectado
+        if "--only-detect" in sys.argv:
+            print(json.dumps({
+                "sucesso": True,
+                "tipo": tipo,
+                "requer_processamento": tipo == "original"
+            }, ensure_ascii=False))
+            sys.exit(0)
+            
+        script_dir = Path(__file__).resolve().parent
         
-        print(json.dumps(resultado, ensure_ascii=False))
+        if tipo in ["enem_completo", "enem_recorte"]:
+            script_alvo = script_dir / "Enem" / "processar_respostas_enem_mobile.py"
+        elif tipo == "processada":
+            script_alvo = script_dir / "Scripts UEA" / "processar_respostas_imagem_processadas.py"
+        else:
+            script_alvo = script_dir / "Scripts UEA" / "processar_respostas_Imagem_original.py"
+            
+        if not script_alvo.exists():
+            print(json.dumps({
+                "sucesso": False,
+                "erro": f"Script alvo não encontrado: {script_alvo}"
+            }))
+            sys.exit(1)
+            
+        python_cmd = sys.executable
+        resultado = subprocess.run([python_cmd, str(script_alvo), caminho_imagem], capture_output=True, text=True)
+        
+        # Injetar o tipo da imagem no JSON retornado
+        saida = resultado.stdout
+        json_match = re.search(r'\{[\s\S]*\}', saida)
+        if json_match:
+            try:
+                dados = json.loads(json_match.group(0))
+                dados['tipo_imagem_detectado'] = tipo
+                dados['script_utilizado'] = script_alvo.name
+                
+                # Substituir o JSON original pelo modificado na saída
+                saida_modificada = saida[:json_match.start()] + json.dumps(dados, ensure_ascii=False) + saida[json_match.end():]
+                print(saida_modificada)
+            except json.JSONDecodeError:
+                print(saida)
+        else:
+            print(saida)
+            
+        if resultado.stderr:
+            print(resultado.stderr, file=sys.stderr)
+            
+        sys.exit(resultado.returncode)
         
     except Exception as e:
         print(json.dumps({

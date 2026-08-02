@@ -92,24 +92,50 @@ def processar_imagem(caminho_imagem):
             cy = int(M["m01"] / M["m00"])
             centroides.append((cx, cy, contorno, i+1))  # i+1 é o número da marcação
 
-    # 9. Definir sistema de classificação para cada bloco
+    # 9. Definir sistema de classificação para cada bloco dinamicamente usando KMeans
     num_questoes_por_bloco = 20
     num_blocos = 3
     letras_colunas = ['A', 'B', 'C', 'D', 'E']
 
-    # Posições X das colunas para cada bloco
-    posicoes_colunas_por_bloco = {
-        0: {'A': 75, 'B': 104, 'C': 134, 'D': 163, 'E': 192},    # Bloco 1-20
-        1: {'A': 301, 'B': 330, 'C': 357, 'D': 387, 'E': 415},   # Bloco 21-40
-        2: {'A': 525, 'B': 553, 'C': 584, 'D': 612, 'E': 641}    # Bloco 41-60
-    }
-
-    # Limites horizontais aproximados para cada bloco
-    limites_x_blocos = {
-        0: (0, 250),    # Bloco 1
-        1: (250, 450),  # Bloco 2
-        2: (450, 700)   # Bloco 3
-    }
+    # Posições X das colunas e limites (dinâmico)
+    todos_x = [c[0] for c in centroides]
+    if len(todos_x) >= 15:
+        try:
+            from sklearn.cluster import KMeans
+            # Agrupar em 15 colunas exatas
+            kmeans = KMeans(n_clusters=15, random_state=0, n_init=10).fit(np.array(todos_x).reshape(-1, 1))
+            centros_x = sorted([int(c[0]) for c in kmeans.cluster_centers_])
+            
+            posicoes_colunas_por_bloco = {
+                0: {'A': centros_x[0], 'B': centros_x[1], 'C': centros_x[2], 'D': centros_x[3], 'E': centros_x[4]},
+                1: {'A': centros_x[5], 'B': centros_x[6], 'C': centros_x[7], 'D': centros_x[8], 'E': centros_x[9]},
+                2: {'A': centros_x[10], 'B': centros_x[11], 'C': centros_x[12], 'D': centros_x[13], 'E': centros_x[14]}
+            }
+            
+            limite_0_1 = (centros_x[4] + centros_x[5]) // 2
+            limite_1_2 = (centros_x[9] + centros_x[10]) // 2
+            
+            limites_x_blocos = {
+                0: (0, limite_0_1),
+                1: (limite_0_1, limite_1_2),
+                2: (limite_1_2, largura_desejada)
+            }
+        except ImportError:
+            # Fallback
+            posicoes_colunas_por_bloco = {
+                0: {'A': 75, 'B': 104, 'C': 134, 'D': 163, 'E': 192},
+                1: {'A': 301, 'B': 330, 'C': 357, 'D': 387, 'E': 415},
+                2: {'A': 525, 'B': 553, 'C': 584, 'D': 612, 'E': 641}
+            }
+            limites_x_blocos = {0: (0, 250), 1: (250, 450), 2: (450, 700)}
+    else:
+        # Fallback (Hardcoded)
+        posicoes_colunas_por_bloco = {
+            0: {'A': 75, 'B': 104, 'C': 134, 'D': 163, 'E': 192},
+            1: {'A': 301, 'B': 330, 'C': 357, 'D': 387, 'E': 415},
+            2: {'A': 525, 'B': 553, 'C': 584, 'D': 612, 'E': 641}
+        }
+        limites_x_blocos = {0: (0, 250), 1: (250, 450), 2: (450, 700)}
 
     margem_coluna = 15
 

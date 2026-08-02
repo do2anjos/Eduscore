@@ -13,26 +13,22 @@ import json
 import os
 from pathlib import Path
 
-# Importar módulos locais
-try:
-    from detector_yolo_enem import detect_rois
-    from ocr_day_detector import detect_day_from_image
-except ImportError:
-    # Fallback para importação absoluta
-    import importlib.util
-    script_dir = Path(__file__).parent
-    
-    # Carregar detector_yolo_enem
-    spec = importlib.util.spec_from_file_location("detector_yolo_enem", script_dir / "detector_yolo_enem.py")
-    detector_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(detector_module)
-    detect_rois = detector_module.detect_rois
-    
-    # Carregar ocr_day_detector
-    spec = importlib.util.spec_from_file_location("ocr_day_detector", script_dir / "ocr_day_detector.py")
-    ocr_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(ocr_module)
-    detect_day_from_image = ocr_module.detect_day_from_image
+# Importar módulos locais (via importlib devido aos nomes dos arquivos começarem com números)
+
+import importlib.util
+script_dir = Path(__file__).resolve().parent
+
+# Carregar 02_detectar_rois
+spec = importlib.util.spec_from_file_location("detectar_rois", script_dir / "02_detectar_rois.py")
+detector_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(detector_module)
+detect_rois = detector_module.detect_rois
+
+# Carregar 03_ocr_dia
+spec = importlib.util.spec_from_file_location("ocr_dia", script_dir / "03_ocr_dia.py")
+ocr_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(ocr_module)
+detect_day_from_image = ocr_module.detect_day_from_image
 
 
 def processar_bolhas_answer_area(answer_area_image):
