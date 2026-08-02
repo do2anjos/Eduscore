@@ -1,0 +1,274 @@
+@startuml Diagrama_Fluxo_EduScore
+
+title **Diagrama de Fluxo Completo - EduScore**\nPlataforma de Gestao Pedagogica
+
+skinparam backgroundColor #FEFEFE
+skinparam ActivityBackgroundColor #E8F0FE
+skinparam ActivityBorderColor #1A73E8
+skinparam ArrowColor #555555
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+' Cores: Frontend=E3F2FD  Backend=E8F5E9  DB=FFF3E0  Python=FCE4EC
+
+start
+
+:Acessa URL da aplicacao **(index.html)**
+Redirecionado para **Landing Page** (landing.html); <<#E3F2FD>>
+
+note right
+  Pagina publica com
+  apresentacao do EduScore
+end note
+
+if (Possui conta?) then (Sim)
+  :Navega para **login.html**; <<#E3F2FD>>
+else (Nao)
+  :Navega para **Cadastrar.html**; <<#E3F2FD>>
+
+  :Preenche: Nome, E-mail (.edu.br),
+  Matricula, Telefone, Senha,
+  Perfil (professor/coordenador/admin); <<#E3F2FD>>
+
+  :**POST /api/usuarios/registro**
+  Valida campos, e-mail, senha
+  Verifica duplicidade; <<#E8F5E9>>
+
+  :Hash da senha (bcrypt, salt 10); <<#E8F5E9>>
+
+  :INSERT INTO **usuarios**; <<#FFF3E0>>
+
+  :Redireciona para Login; <<#E3F2FD>>
+endif
+
+:Preenche E-mail e Senha; <<#E3F2FD>>
+
+:**POST /api/usuarios/login**
+(Rate limit: 5 a cada 15min); <<#E8F5E9>>
+
+:SELECT FROM **usuarios** WHERE email; <<#FFF3E0>>
+
+:Compara senha (bcrypt)
+Gera **JWT Token** (1h); <<#E8F5E9>>
+
+:Armazena token no **localStorage**; <<#E3F2FD>>
+
+:**GET /api/usuarios/me** (JWT)
+**GET /api/relatorios/estatisticas-gerais**; <<#E8F5E9>>
+
+:Carrega dados do usuario e estatisticas; <<#FFF3E0>>
+
+:Renderiza **Dashboard** (home.html)
+Cards, Graficos (Chart.js), Filtros; <<#E3F2FD>>
+
+:Seleciona opcao no **Menu Lateral**; <<#E3F2FD>>
+
+split
+
+  :**Cadastrar Aluno** (Cadastrar.html)
+  Preenche: Nome, E-mail, Telefone,
+  Data nasc., Etapa, Matricula; <<#E3F2FD>>
+
+  :**POST /api/alunos**; <<#E8F5E9>>
+
+  :INSERT INTO **alunos**; <<#FFF3E0>>
+
+  :Exibe confirmacao; <<#E3F2FD>>
+
+split again
+
+  :**Cadastrar Gabarito** (CadastrarGabarito.html)
+  Nome do simulado + Etapa; <<#E3F2FD>>
+
+  :**POST /api/gabaritos**; <<#E8F5E9>>
+
+  :INSERT INTO **gabaritos**
+  Retorna gabarito_id; <<#FFF3E0>>
+
+  :Upload de **arquivo CSV**; <<#E3F2FD>>
+
+  :**POST /api/gabaritos/upload**
+  (Rate limit: 10/min - Max: 5MB)
+  Detecta separador, normaliza cabecalhos
+  Valida: numero (1-60), resposta (A-E)
+  Classifica disciplina automaticamente; <<#E8F5E9>>
+
+  :INSERT INTO **questoes** (transacao); <<#FFF3E0>>
+
+  :Exibe total importado; <<#E3F2FD>>
+
+split again
+
+  :**Corrigir Simulado** (CorrigirSimulado.html); <<#E3F2FD>>
+
+  :**Step 1 - Identificar Aluno**
+  Digita/escaneia codigo de barras
+  ou matricula; <<#E3F2FD>>
+
+  :Busca aluno **GET /api/alunos**; <<#E8F5E9>>
+
+  :SELECT FROM **alunos**
+  WHERE matricula; <<#FFF3E0>>
+
+  :**Step 2 - Anexar Foto**
+  Upload de arquivo ou camera (mobile); <<#E3F2FD>>
+
+  :**POST /api/respostas/identificar-tipo**
+  Descobre se é ENEM ou UEA; <<#E8F5E9>>
+
+  :**POST /api/respostas/etapa-perspectiva**; <<#E8F5E9>>
+  :**Script 01: YOLO A4 + SAM2**
+  Retifica e recorta o documento; <<#FCE4EC>>
+
+  :**Step 2.1 - Verificar Perspectiva**
+  Compara original vs. corrigida; <<#E3F2FD>>
+
+  :Confirma **Perspectiva OK**
+  (ou Tentar Novamente, volta Step 2); <<#E3F2FD>>
+
+  :**POST /api/respostas/etapa-detectar**; <<#E8F5E9>>
+  :**Script 02: Detecção de ROIs**
+  YOLOv8 encontra Gabarito e Dia; <<#FCE4EC>>
+
+  :**Step 2.2 - Verificar Recortes**
+  Visualiza crops: Dia/Prova e Gabarito; <<#E3F2FD>>
+
+  :Confirma **Crops OK - Corrigir**
+  (ou Tentar Novamente, volta Step 2); <<#E3F2FD>>
+
+  :**POST /api/respostas/etapa-ocr**; <<#E8F5E9>>
+  :**Script 03: Leitura OCR**
+  Lê o Dia da prova (1 ou 2); <<#FCE4EC>>
+
+  :**POST /api/respostas/etapa-bolhas**; <<#E8F5E9>>
+  :**Script 04 e 05: OMR e Orquestração**
+  Extrai bolhas preenchidas
+  Retorna JSON com respostas; <<#FCE4EC>>
+
+
+
+  :**Step 3 - Confirmar Aluno**
+  Exibe dados do aluno selecionado; <<#E3F2FD>>
+
+  :**Step 3.5 - Respostas Capturadas**
+  Exibe alternativas marcadas
+  para conferencia visual; <<#E3F2FD>>
+
+  :**Step 4 - Selecionar Gabarito**; <<#E3F2FD>>
+
+  :**GET /api/gabaritos**; <<#E8F5E9>>
+
+  :Seleciona gabarito e clica **Corrigir**; <<#E3F2FD>>
+
+  :**POST /api/respostas** (por questao)
+  Normaliza resposta
+  Detecta dupla marcacao
+  Classifica disciplina auto; <<#E8F5E9>>
+
+  :INSERT/UPDATE **respostas**
+  (aluno_id, questao_id, gabarito_id,
+  resposta_aluno, acertou); <<#FFF3E0>>
+
+  :**POST /api/respostas/confirmar-imagem**
+  Move imagem temp para permanente; <<#E8F5E9>>
+
+  :INSERT INTO **imagens_cartoes**; <<#FFF3E0>>
+
+  :**Step 5 - Sucesso!**
+  Simulado corrigido
+  Botao Voltar ao Inicio; <<#E3F2FD>>
+
+split again
+
+  :**Relatorio Individual** (GerarRelatorio.html)
+  Seleciona Aluno e Gabarito/Etapa; <<#E3F2FD>>
+
+  :**GET /api/relatorios/aluno/:id**; <<#E8F5E9>>
+
+  :JOIN respostas + questoes + disciplinas
+  Acertos por disciplina, media geral; <<#FFF3E0>>
+
+  :Renderiza relatorio:
+  Resumo, grafico, tabela detalhada; <<#E3F2FD>>
+
+  :**GET /api/respostas/imagem/:aluno/:gab**
+  (imagens confirmadas); <<#E8F5E9>>
+
+  :Opcao de exportar; <<#E3F2FD>>
+
+split again
+
+  :**Relatorio Geral** (RelatorioGeral.html)
+  Filtros: Etapa e Disciplina; <<#E3F2FD>>
+
+  :**GET /api/relatorios/estatisticas-gerais**
+  **GET /api/relatorios/ranking**; <<#E8F5E9>>
+
+  :Estatisticas agregadas:
+  Media geral, ranking,
+  desempenho por disciplina; <<#FFF3E0>>
+
+  :Cards, graficos comparativos
+  Ranking de alunos; <<#E3F2FD>>
+
+split again
+
+  :**Agendar Sessao** (AgendarSessao.html)
+  Aluno, Disciplina, Etapa,
+  Data, Hora, Observacoes; <<#E3F2FD>>
+
+  :**POST /api/sessoes**; <<#E8F5E9>>
+
+  :INSERT INTO **sessoes**; <<#FFF3E0>>
+
+  :Exibe confirmacao; <<#E3F2FD>>
+
+split again
+
+  :**Meu Perfil** (meuperfil.html); <<#E3F2FD>>
+
+  :**GET /api/usuarios/me**; <<#E8F5E9>>
+
+  :Exibe: Foto, Nome, Email,
+  Matricula, Telefone, Perfil; <<#E3F2FD>>
+
+  :Pode editar: Nome, Telefone,
+  Foto (base64, max 250KB); <<#E3F2FD>>
+
+  :**PUT /api/usuarios/:id**; <<#E8F5E9>>
+
+  :UPDATE **usuarios**; <<#FFF3E0>>
+
+  :Pode alterar senha; <<#E3F2FD>>
+
+  :**PUT /api/usuarios/:id/senha**; <<#E8F5E9>>
+
+  :UPDATE senha_hash; <<#FFF3E0>>
+
+split again
+
+  :**Configuracoes** (configuracoes.html)
+  Gerencia preferencias; <<#E3F2FD>>
+
+end split
+
+:**Sair** - Remove token do localStorage
+Redireciona para **login.html**; <<#E3F2FD>>
+
+stop
+
+legend right
+  |= Camada |= Cor |= Tecnologia |
+  | Frontend | <#E3F2FD> | HTML + JS + CSS |
+  | Backend | <#E8F5E9> | Express.js (Node.js) |
+  | Banco de Dados | <#FFF3E0> | SQLite |
+  | Processamento | <#FCE4EC> | Python (SAM2, OCR, OMR) |
+
+  **Tabelas:** usuarios, alunos, disciplinas,
+  gabaritos, questoes, respostas,
+  sessoes, relatorios, imagens_cartoes
+
+  **Seguranca:** JWT - bcrypt - Rate Limiting - CORS
+endlegend
+
+@enduml

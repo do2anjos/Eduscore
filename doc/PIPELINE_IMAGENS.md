@@ -20,23 +20,28 @@ De acordo com o tipo detectado, o sistema executa o script alvo correspondente.
 ---
 
 ## 2. Pipeline ENEM (`@Enem`)
-**Script Principal:** `backend/scripts/Enem/processar_respostas_enem_mobile.py`
+**Scripts Centralizados na pasta:** `backend/scripts/Enem/`
+**Orquestrador Final:** `05_processar_respostas.py`
 
-O pipeline do Enem possui as seguintes etapas:
+O pipeline do Enem possui as seguintes etapas (executadas em cascata):
 
-1. **Detecção de ROIs (Regiões de Interesse):**
-   Utiliza a rede neural YOLOv8 para localizar a região que contém a indicação do dia da prova (`day_region`) e a tabela de gabaritos (`answer_area_enem`).
-2. **Extração OCR do Dia (`03_ocr_dia.py`):**
-   A `day_region` recortada é repassada para um processo de Reconhecimento Ótico de Caracteres (OCR). Isso identifica se é o **Dia 1** ou **Dia 2** da prova do Enem.
+1. **Correção de Perspectiva (A4 + YOLO + SAM2) (`01_corrigir_perspectiva.py`):**
+   - Utiliza um modelo YOLO treinado para detectar as quinas de uma folha A4 em qualquer cenário.
+   - Um modelo segmentador (SAM2) refina as bordas da folha e garante máxima precisão.
+   - Aplica transformação de perspectiva (`cv2.warpPerspective`) forçando a proporção exata do papel A4 (1:1.414), garantindo que a imagem não fique distorcida e sempre em formato retrato (em pé).
+2. **Detecção de ROIs (Regiões de Interesse) (`02_detectar_rois.py`):**
+   - Na folha já "plana" e corrigida, utiliza a rede neural YOLOv8 para localizar a região que contém a indicação do dia da prova (`day_region`) e a tabela principal de gabaritos (`answer_area_enem`).
+3. **Extração OCR do Dia (`03_ocr_dia.py`):**
+   - A `day_region` recortada é repassada para o `pytesseract` (Reconhecimento Ótico de Caracteres). 
+   - Identifica se é o **Dia 1** ou **Dia 2** da prova do Enem, além da cor do caderno.
    - O dia define o início da contagem das questões (Ex: 1-90 para o Dia 1 e 91-180 para o Dia 2).
-3. **Corte da Tabela de Respostas (`answer_area_enem`):**
-   Apenas o retângulo do gabarito é extraído com base nas "bounding boxes" do YOLO.
-4. **Detecção de Bolhas (Gabarito):**
-   - A imagem recortada é transformada em escala de cinza, limiarizada (thresholding adaptativo via Otsu) e tratada com operações morfológicas para isolar os pixels escuros das marcações.
-   - Bolhas marcadas são detectadas usando verificação de **área, circularidade** e **proporção de preenchimento (>70% de pixels pretos)**.
-5. **Classificação e Geração de Respostas:**
-   - O ENEM é processado assumindo um layout de **3 colunas verticais** contendo **30 questões cada** (A-E).
-   - O centroide de cada bolha (X, Y) é mapeado para identificar em qual questão e alternativa ele está. O script reporta marcações duplas (anuladas) e questões deixadas em branco antes de retornar um JSON formatado.
+4. **Detecção de Bolhas (Gabarito) (`04_processar_bolhas.py`):**
+   - A `answer_area_enem` sofre thresholding adaptativo e operações morfológicas.
+   - Bolhas marcadas são detectadas usando verificação de **área, circularidade** e proporção de preenchimento.
+5. **Classificação e Orquestração Final (`05_processar_respostas.py`):**
+   - O script agrupa os dados de OCR e marcações de bolhas.
+   - O ENEM é processado assumindo um layout de **3 colunas verticais** contendo **30 questões cada**.
+   - Identifica em qual questão e alternativa a bolha preta se encontra e formata um JSON reportando marcações múltiplas, vazias ou anuladas.
 
 ---
 
