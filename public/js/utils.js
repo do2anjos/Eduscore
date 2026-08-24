@@ -1,5 +1,5 @@
 /**
- * Utilitários para implementação das 10 Heurísticas de Nielsen
+ * Utilitários para implementação das 10 Heurísticasísticas de Nielsen
  * e melhorias de acessibilidade
  */
 
@@ -8,18 +8,18 @@
 // =============================================
 
 // Detectar ambiente e definir URL base da API
-const API_CONFIG = (function() {
+const API_CONFIG = (function () {
   const hostname = window.location.hostname;
   const protocol = window.location.protocol;
   const port = window.location.port;
   const origin = window.location.origin;
-  
+
   // Verificar se estamos em produção (Render ou qualquer domínio que não seja localhost)
-  const isProduction = hostname !== 'localhost' && 
-                       hostname !== '127.0.0.1' && 
-                       !hostname.startsWith('192.168.') &&
-                       !hostname.startsWith('10.');
-  
+  const isProduction = hostname !== 'localhost' &&
+    hostname !== '127.0.0.1' &&
+    !hostname.startsWith('192.168.') &&
+    !hostname.startsWith('10.');
+
   if (isProduction) {
     // PRODUÇÃO: Usar URL absoluta do mesmo domínio (Render)
     return {
@@ -41,12 +41,12 @@ function getApiUrl(path = '') {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  
+
   // Garantir que o path começa com /
   if (!path.startsWith('/')) {
     path = '/' + path;
   }
-  
+
   // Retornar URL completa baseada no ambiente
   return `${API_CONFIG.baseUrl}${path}`;
 }
@@ -58,41 +58,40 @@ async function apiFetch(endpoint, options = {}) {
   if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
     return fetch(endpoint, options);
   }
-  
+
   // Garantir que o endpoint começa com /
   if (!endpoint.startsWith('/')) {
     endpoint = '/' + endpoint;
   }
-  
+
   // Obter URL completa usando getApiUrl
   const url = getApiUrl(endpoint);
-  
+
   // Log apenas em desenvolvimento para debug
   if (!API_CONFIG.isProduction) {
     console.log('[API] Requisição:', { endpoint, url, environment: API_CONFIG.isProduction ? 'PRODUÇÃO' : 'LOCAL' });
   }
-  
+
   return fetch(url, options);
 }
 
-// Melhorar navegação por teclado
-document.addEventListener('DOMContentLoaded', function() {
+function setupAccessibility() {
   // Adicionar suporte para navegação por teclado em elementos customizados
   const interactiveElements = document.querySelectorAll('[role="button"], [role="tab"], [role="menuitem"]');
   interactiveElements.forEach(element => {
     if (!element.hasAttribute('tabindex')) {
       element.setAttribute('tabindex', '0');
     }
-    
+
     // Adicionar suporte para Enter e Space
-    element.addEventListener('keydown', function(e) {
+    element.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         element.click();
       }
     });
   });
-  
+
   // Melhorar navegação em dropdowns
   const dropdowns = document.querySelectorAll('.dropdown');
   dropdowns.forEach(dropdown => {
@@ -100,8 +99,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (trigger) {
       trigger.setAttribute('aria-haspopup', 'true');
       trigger.setAttribute('aria-expanded', 'false');
-      
-      trigger.addEventListener('click', function() {
+
+      trigger.addEventListener('click', function () {
         const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
         trigger.setAttribute('aria-expanded', !isExpanded);
       });
@@ -110,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Inicializar menu hamburger
   initMobileMenu();
-});
+}
 
 // Menu Hamburger para Mobile
 function initMobileMenu() {
@@ -150,8 +149,8 @@ function initMobileMenu() {
     overlay.classList.toggle('active');
     menuToggle.setAttribute('aria-expanded', !isOpen);
     menuToggle.setAttribute('aria-label', isOpen ? 'Abrir menu de navegação' : 'Fechar menu de navegação');
-    
-    // Atualizar ícone
+
+    // Atualizar íícone
     if (isOpen) {
       menuToggle.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -168,7 +167,7 @@ function initMobileMenu() {
         </svg>
       `;
     }
-    
+
     // Prevenir scroll do body quando menu está aberto
     document.body.style.overflow = !isOpen ? 'hidden' : '';
   }
@@ -181,15 +180,15 @@ function initMobileMenu() {
   // Mas NÃO fechar quando clicar em dropdowns ou links que não navegam
   const navLinks = sidebar.querySelectorAll('.nav-links a');
   navLinks.forEach(link => {
-    link.addEventListener('click', function(e) {
+    link.addEventListener('click', function (e) {
       // Verificar se é um link de dropdown principal (dentro de .dropdown > a)
       const isDropdownMainLink = link.parentElement && link.parentElement.classList.contains('dropdown');
-      
+
       // Não fechar se for link de dropdown principal
       if (isDropdownMainLink) {
         return; // Deixar o toggleDropdown lidar com isso
       }
-      
+
       // Apenas fechar se for um link normal e realmente navegar
       if (window.innerWidth <= 768) {
         const href = link.getAttribute('href');
@@ -199,11 +198,11 @@ function initMobileMenu() {
       }
     });
   });
-  
+
   // Fechar menu ao clicar em sublinks de dropdown que realmente navegam
   const dropdownSubLinks = sidebar.querySelectorAll('.dropdown-options a.sub');
   dropdownSubLinks.forEach(sublink => {
-    sublink.addEventListener('click', function(e) {
+    sublink.addEventListener('click', function (e) {
       if (window.innerWidth <= 768) {
         const href = sublink.getAttribute('href');
         if (href && href !== '#' && !href.startsWith('javascript:')) {
@@ -217,51 +216,116 @@ function initMobileMenu() {
   });
 
   // Fechar menu com ESC
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && sidebar.classList.contains('menu-open')) {
       toggleMenu();
     }
   });
 }
 
-// 1. VISIBILIDADE DO STATUS DO SISTEMA
-function showToast(message, type = 'info', duration = 3000) {
-  const container = document.getElementById('toast-container') || createToastContainer();
-  
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  
-  const icon = getToastIcon(type);
-  toast.innerHTML = `
-    <span>${icon}</span>
-    <span style="flex: 1;">${message}</span>
-    <button class="toast-close" onclick="this.parentElement.remove()" aria-label="Fechar">×</button>
-  `;
-  
-  container.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.animation = 'slideOut 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, duration);
+// Avisos globais: o nome showToast é mantido para compatibilidade, mas o
+// comportamento passa a ser um modal central com fila e foco gerenciado.
+const noticeQueue = [];
+let activeNotice = null;
+
+const NOTICE_CONFIG = {
+  success: { title: 'Sucesso', icon: '\u2713', autoClose: true },
+  error: { title: 'Erro', icon: '\u2715', autoClose: false },
+  warning: { title: 'Atenção', icon: '\u26A0', autoClose: false },
+  info: { title: 'Informação', icon: '\u2139', autoClose: true }
+};
+
+function showNotice(message, type = 'info', duration = 1800) {
+  const normalizedType = NOTICE_CONFIG[type] ? type : 'info';
+  noticeQueue.push({
+    message: String(message ?? ''),
+    type: normalizedType,
+    duration: Number.isFinite(duration) ? duration : 1800,
+    returnFocus: document.activeElement instanceof HTMLElement ? document.activeElement : null
+  });
+  processNoticeQueue();
 }
 
-function getToastIcon(type) {
-  const icons = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ'
-  };
-  return icons[type] || icons.info;
+function showToast(message, type = 'info', duration = 1800) {
+  showNotice(message, type, duration);
 }
 
-function createToastContainer() {
-  const container = document.createElement('div');
-  container.id = 'toast-container';
-  container.className = 'toast-container';
-  document.body.appendChild(container);
-  return container;
+function processNoticeQueue() {
+  if (activeNotice || noticeQueue.length === 0) return;
+
+  activeNotice = noticeQueue.shift();
+  const dialog = getNoticeDialog();
+  const config = NOTICE_CONFIG[activeNotice.type];
+
+  dialog.className = `notice-dialog notice-${activeNotice.type}`;
+  dialog.setAttribute('aria-labelledby', 'notice-dialog-title');
+  dialog.setAttribute('aria-describedby', 'notice-dialog-message');
+  dialog.querySelector('.notice-icon').textContent = config.icon;
+  dialog.querySelector('.notice-title').textContent = config.title;
+  dialog.querySelector('.notice-message').textContent = activeNotice.message;
+
+  dialog.showModal();
+  dialog.querySelector('.notice-close').focus();
+
+  if (config.autoClose && activeNotice.duration > 0) {
+    activeNotice.timer = setTimeout(() => closeNoticeDialog(), activeNotice.duration);
+  }
+}
+
+function getNoticeDialog() {
+  let dialog = document.getElementById('notice-dialog');
+  if (dialog) return dialog;
+
+  dialog = document.createElement('dialog');
+  dialog.id = 'notice-dialog';
+  dialog.className = 'notice-dialog';
+  dialog.setAttribute('role', 'alertdialog');
+
+  const icon = document.createElement('div');
+  icon.className = 'notice-icon';
+  icon.setAttribute('aria-hidden', 'true');
+
+  const title = document.createElement('h2');
+  title.id = 'notice-dialog-title';
+  title.className = 'notice-title';
+
+  const message = document.createElement('p');
+  message.id = 'notice-dialog-message';
+  message.className = 'notice-message';
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'notice-close btn-primary';
+  closeButton.textContent = 'Entendi';
+  closeButton.addEventListener('click', closeNoticeDialog);
+
+  dialog.append(icon, title, message, closeButton);
+  dialog.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeNoticeDialog();
+  });
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) closeNoticeDialog();
+  });
+  document.body.appendChild(dialog);
+  return dialog;
+}
+
+function closeNoticeDialog() {
+  if (!activeNotice) return;
+
+  if (activeNotice.timer) clearTimeout(activeNotice.timer);
+  const noticeToClose = activeNotice;
+  activeNotice = null;
+
+  const dialog = document.getElementById('notice-dialog');
+  if (dialog?.open) dialog.close();
+
+  if (noticeToClose.returnFocus?.isConnected) {
+    noticeToClose.returnFocus.focus();
+  }
+
+  processNoticeQueue();
 }
 
 function showLoading(message = 'Carregando...') {
@@ -314,55 +378,45 @@ function createLoadingOverlay() {
   return overlay;
 }
 
-// 3. CONTROLE E LIBERDADE DO USUÁRIO
-function showConfirmDialog(message, onConfirm, onCancel = null) {
-  const overlay = document.getElementById('confirm-overlay') || createConfirmOverlay();
+// 3. CONTROLE E LIBERDADE DO USUÃRIO
+function showConfirmDialog(message, onConfirm, onCancel = null, isDestructive = true) {
   const dialog = document.getElementById('confirm-dialog') || createConfirmDialog();
-  
+
   dialog.querySelector('.confirm-message').textContent = message;
-  
+
   const confirmBtn = dialog.querySelector('.confirm-btn');
   const cancelBtn = dialog.querySelector('.cancel-btn');
-  
-  // Remove listeners anteriores
+
+  // Ajusta visualização do botão de confirmação baseada na destruição da ação
+  confirmBtn.className = isDestructive ? 'btn-danger confirm-btn' : 'email-btn confirm-btn';
+
+  // Remove listeners anteriores via clone
   const newConfirmBtn = confirmBtn.cloneNode(true);
   const newCancelBtn = cancelBtn.cloneNode(true);
   confirmBtn.replaceWith(newConfirmBtn);
   cancelBtn.replaceWith(newCancelBtn);
-  
+
   newConfirmBtn.onclick = () => {
-    overlay.classList.remove('active');
-    dialog.classList.remove('active');
+    dialog.close();
     if (onConfirm) onConfirm();
   };
-  
+
   newCancelBtn.onclick = () => {
-    overlay.classList.remove('active');
-    dialog.classList.remove('active');
+    dialog.close();
     if (onCancel) onCancel();
   };
-  
-  overlay.classList.add('active');
-  dialog.classList.add('active');
-}
 
-function createConfirmOverlay() {
-  const overlay = document.createElement('div');
-  overlay.id = 'confirm-overlay';
-  overlay.className = 'confirm-dialog-overlay';
-  document.body.appendChild(overlay);
-  return overlay;
+  dialog.showModal();
 }
 
 function createConfirmDialog() {
-  const dialog = document.createElement('div');
+  const dialog = document.createElement('dialog');
   dialog.id = 'confirm-dialog';
-  dialog.className = 'confirm-dialog';
   dialog.innerHTML = `
     <div class="confirm-message" style="margin-bottom: var(--spacing-lg);"></div>
     <div class="confirm-dialog-actions">
       <button class="btn-secondary cancel-btn">Cancelar</button>
-      <button class="email-btn confirm-btn">Confirmar</button>
+      <button class="confirm-btn">Confirmar</button>
     </div>
   `;
   document.body.appendChild(dialog);
@@ -374,7 +428,7 @@ function validateForm(formElement) {
   const inputs = formElement.querySelectorAll('input[required], select[required]');
   let isValid = true;
   const errors = [];
-  
+
   inputs.forEach(input => {
     if (!input.value.trim()) {
       isValid = false;
@@ -382,7 +436,7 @@ function validateForm(formElement) {
       errors.push(`O campo "${input.previousElementSibling?.textContent || input.name}" é obrigatório`);
     } else {
       input.classList.remove('error');
-      
+
       // Validação específica por tipo
       if (input.type === 'email' && !isValidEmail(input.value)) {
         isValid = false;
@@ -391,15 +445,15 @@ function validateForm(formElement) {
       }
     }
   });
-  
+
   if (!isValid && errors.length > 0) {
     // Mensagem de erro mais específica e acionável
-    const errorMessage = errors.length === 1 
+    const errorMessage = errors.length === 1
       ? errors[0]
       : `Por favor, corrija os seguintes erros: ${errors.join(', ')}`;
     showToast(errorMessage, 'error', 5000);
   }
-  
+
   return isValid;
 }
 
@@ -407,7 +461,7 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// 6. RECONHECIMENTO AO INVÉS DE RECORDAÇÃO
+// 6. RECONHECIMENTO AO INVÉS DE RECORDAÇÃOÇÃO
 function addInputHints() {
   document.querySelectorAll('input[type="email"]').forEach(input => {
     if (!input.nextElementSibling?.classList.contains('input-hint')) {
@@ -430,17 +484,15 @@ function setupKeyboardShortcuts() {
         saveBtn.click();
       }
     }
-    
-    // Esc para fechar modais
+
+    // Esc para fechar modais não-nativos
     if (e.key === 'Escape') {
-      const activeModal = document.querySelector('.confirm-dialog.active, .help-panel.active');
+      const activeModal = document.querySelector('.help-panel.active');
       if (activeModal) {
         activeModal.classList.remove('active');
-        const overlay = document.querySelector('.confirm-dialog-overlay.active');
-        if (overlay) overlay.classList.remove('active');
       }
     }
-    
+
     // Enter em formulários
     if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
       const form = e.target.closest('form');
@@ -456,21 +508,22 @@ function setupKeyboardShortcuts() {
 }
 
 // 10. AJUDA E DOCUMENTAÇÃO
-function setupHelpButton() {
+function setupHelpButton() { return; // Exterminado permanentemente a pedido do usuario
+  if (window.location.pathname.endsWith("login.html") || window.location.pathname.endsWith("landing.html") || window.location.pathname.endsWith("redefinir.html") || window.location.pathname.endsWith("perfil.html")) return;
   if (document.getElementById('help-button')) return;
-  
+
   const helpBtn = document.createElement('button');
   helpBtn.id = 'help-button';
   helpBtn.className = 'help-button';
   helpBtn.innerHTML = '?';
   helpBtn.setAttribute('aria-label', 'Ajuda');
   helpBtn.onclick = toggleHelpPanel;
-  
+
   const helpPanel = document.createElement('div');
   helpPanel.id = 'help-panel';
   helpPanel.className = 'help-panel';
   helpPanel.innerHTML = getHelpContent();
-  
+
   document.body.appendChild(helpBtn);
   document.body.appendChild(helpPanel);
 }
@@ -502,37 +555,9 @@ function getHelpContent() {
   `;
 }
 
-// Inicialização
-document.addEventListener('DOMContentLoaded', () => {
-  setupKeyboardShortcuts();
-  setupHelpButton();
-  addInputHints();
-  setupUserProfileMenu();
-  
-  // Carregar dados do usuário se houver sidebar ou user-profile-menu
-  if (document.querySelector('.sidebar') || document.querySelector('.user-profile-menu')) {
-    loadUserData();
-  }
-  
-  // Adicionar animação slideOut para toasts
-  if (!document.getElementById('toast-styles')) {
-    const style = document.createElement('style');
-    style.id = 'toast-styles';
-    style.textContent = `
-      @keyframes slideOut {
-        from {
-          transform: translateX(0);
-          opacity: 1;
-        }
-        to {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-});
+// Inicialização movida para o final do arquivo
+
+
 
 // User Profile Menu
 function setupUserProfileMenu() {
@@ -574,7 +599,7 @@ function logout() {
 // Função para buscar e atualizar dados do usuário
 async function loadUserData() {
   const token = localStorage.getItem('token');
-  
+
   if (!token) {
     // Se não houver token, redireciona para login
     if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html')) {
@@ -602,7 +627,7 @@ async function loadUserData() {
     }
 
     const data = await response.json();
-    
+
     if (data.sucesso && data.usuario) {
       updateUserProfile(data.usuario);
     }
@@ -638,10 +663,12 @@ function updateUserProfile(usuario) {
   if (sidebarProfile) {
     const profileSpan = sidebarProfile.querySelector('span');
     if (profileSpan) {
-      profileSpan.innerHTML = `
-        ${perfilCapitalized}<br>
-        <small>${usuario.email}</small>
-      `;
+      profileSpan.innerHTML = '';
+      profileSpan.appendChild(document.createTextNode(perfilCapitalized));
+      profileSpan.appendChild(document.createElement('br'));
+      const small = document.createElement('small');
+      small.textContent = usuario.email;
+      profileSpan.appendChild(small);
       // Marcar como carregado e mostrar com animação suave
       profileSpan.style.opacity = '0';
       profileSpan.style.transition = 'opacity 0.3s ease';
@@ -650,7 +677,7 @@ function updateUserProfile(usuario) {
       }, 10);
       sidebarProfile.setAttribute('data-loaded', 'true');
     }
-    
+
     // Atualizar foto de perfil
     const profileImg = sidebarProfile.querySelector('img');
     if (profileImg && usuario.id) {
@@ -658,67 +685,64 @@ function updateUserProfile(usuario) {
       profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
       profileImg.alt = 'Perfil';
       profileImg.onerror = null;
-      
+
       // SEMPRE tentar carregar foto via endpoint da API quando houver ID do usuário
       // Isso garante que a foto seja carregada corretamente, independentemente de como está armazenada
       const userId = usuario.id;
       const token = localStorage.getItem('token');
-      
+
       if (token) {
         // Limpar blob URL anterior se existir
         if (profileImg.src && profileImg.src.startsWith('blob:')) {
           URL.revokeObjectURL(profileImg.src);
         }
-        
+
         // Usar timestamp para evitar cache
         apiFetch(`/api/usuarios/${userId}/foto?t=${Date.now()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         })
-        .then(response => {
-          if (response.ok) {
-            return response.blob();
-          }
-          // Se retornar 404, a foto não está disponível (não foi salva ainda ou foi deletada)
-          if (response.status === 404) {
-            console.log('[DEBUG] Foto não encontrada no servidor (404) - usando imagem padrão');
-            return null;
-          }
-          throw new Error(`Erro ao carregar foto: ${response.status}`);
-        })
-        .then(blob => {
-          if (blob) {
-            // Criar blob URL para exibir a imagem
-            const blobUrl = URL.createObjectURL(blob);
-            profileImg.src = blobUrl;
-            profileImg.alt = usuario.nome || 'Perfil';
-            
-            // Limpar blob URL quando a imagem for removida
-            profileImg.onload = function() {
-              // Manter o blob URL enquanto a imagem estiver visível
-            };
-            
-            profileImg.onerror = function() {
-              URL.revokeObjectURL(blobUrl);
-              this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-              this.alt = 'Perfil';
-              this.onerror = null;
-            };
-          } else {
-            // Se blob for null (404), manter imagem padrão
+          .then(response => {
+            if (response.ok) {
+              return response.blob();
+            }
+            // Se retornar 404, a foto não está disponível (não foi salva ainda ou foi deletada)
+            if (response.status === 404) {
+              return null;
+            }
+            throw new Error(`Erro ao carregar foto: ${response.status}`);
+          })
+          .then(blob => {
+            if (blob) {
+              // Criar blob URL para exibir a imagem
+              const blobUrl = URL.createObjectURL(blob);
+              profileImg.src = blobUrl;
+              profileImg.alt = usuario.nome || 'Perfil';
+
+              // Limpar blob URL quando a imagem for removida
+              profileImg.onload = function () {
+                // Manter o blob URL enquanto a imagem estiver visível
+              };
+
+              profileImg.onerror = function () {
+                URL.revokeObjectURL(blobUrl);
+                this.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+                this.alt = 'Perfil';
+                this.onerror = null;
+              };
+            } else {
+              // Se blob for null (404), manter imagem padrão
+              profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
+              profileImg.alt = 'Perfil';
+            }
+          })
+          .catch(error => {
             profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
             profileImg.alt = 'Perfil';
-          }
-        })
-        .catch(error => {
-          console.warn('[DEBUG] Erro ao carregar foto via API:', error);
-          profileImg.src = 'https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png';
-          profileImg.alt = 'Perfil';
-          profileImg.onerror = null;
-        });
+            profileImg.onerror = null;
+          });
       } else {
-        console.warn('[DEBUG] Token não disponível, usando imagem padrão');
       }
     } else if (profileImg) {
       // Se não houver ID do usuário, manter a imagem padrão
@@ -757,19 +781,19 @@ function updateUserProfile(usuario) {
     setTimeout(() => {
       welcomeTitle.style.opacity = '1';
     }, 10);
-    
+
     // Marcar dashboard-header como carregado
     const dashboardHeader = document.getElementById('dashboard-header') || document.querySelector('.dashboard-header');
     if (dashboardHeader) {
       dashboardHeader.setAttribute('data-loaded', 'true');
     }
-    
+
     // Atualizar subtítulo se existir e estiver no dashboard-header
     const subtitle = document.querySelector('.dashboard-header .dashboard-subtitle');
     if (subtitle) {
       // Se o subtítulo contém placeholder, atualizar com texto padrão
       if (subtitle.textContent.includes('Carregando') || subtitle.textContent.trim() === '') {
-        subtitle.textContent = 'Aqui está um resumo do seu desempenho';
+        subtitle.textContent = 'Resumo do desempenho de todas as turmas';
       }
       subtitle.style.opacity = '0';
       subtitle.style.transition = 'opacity 0.3s ease';
@@ -791,26 +815,26 @@ function updateUserProfile(usuario) {
  */
 function toggleDropdown(event, dropdownElement) {
   if (!dropdownElement) return;
-  
+
   // Detectar se é mobile
-  const isMobile = window.innerWidth <= 768;
-  
+  const isMobile = window.innerWidth <= 1024;
+
   // Se clicou em um sublink, permitir navegação normal
   const clickedSubLink = event.target.closest('.dropdown-options a.sub');
   if (clickedSubLink) {
     return; // Permitir navegação normal
   }
-  
+
   // Se clicou na seta ou no link principal
   const clickedArrow = event.target.closest('.dropdown-arrow');
   const clickedMainLink = event.target.closest('.dropdown > a');
-  
+
   if (isMobile) {
     // Mobile: comportamento de accordion
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation(); // Prevenir que outros listeners sejam executados
-    
+
     // Fechar outros dropdowns abertos
     const allDropdowns = document.querySelectorAll('.dropdown');
     allDropdowns.forEach(dropdown => {
@@ -818,21 +842,21 @@ function toggleDropdown(event, dropdownElement) {
         dropdown.classList.remove('expanded');
       }
     });
-    
+
     // Alternar estado do dropdown atual
     const isExpanded = dropdownElement.classList.toggle('expanded');
-    const mainLink = dropdownElement.querySelector('> a');
+    const mainLink = dropdownElement.querySelector(':scope > a');
     if (mainLink) {
       mainLink.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
     }
-    
+
     // NÃO fechar a sidebar - deixar aberta para ver as opções
     return false;
   } else {
     // Desktop: expandir/colapsar manualmente
     event.preventDefault();
     event.stopPropagation();
-    
+
     // Fechar outros dropdowns abertos
     const allDropdowns = document.querySelectorAll('.dropdown');
     allDropdowns.forEach(dropdown => {
@@ -840,14 +864,14 @@ function toggleDropdown(event, dropdownElement) {
         dropdown.classList.remove('expanded');
       }
     });
-    
+
     // Alternar estado do dropdown atual
     const isExpanded = dropdownElement.classList.toggle('expanded');
-    const mainLink = dropdownElement.querySelector('> a');
+    const mainLink = dropdownElement.querySelector(':scope > a');
     if (mainLink) {
       mainLink.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
     }
-    
+
     // Fechar ao clicar fora
     setTimeout(() => {
       const closeOnClickOutside = (e) => {
@@ -867,43 +891,56 @@ function toggleDropdown(event, dropdownElement) {
   }
 }
 
-// Inicializar dropdowns ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
+// Inicialização Unificada
+document.addEventListener('DOMContentLoaded', async () => {
+  if (typeof loadSidebar === 'function') {
+    await loadSidebar();
+  }
+  
+  setupAccessibility();
+  setupKeyboardShortcuts();
+  addInputHints();
+  setupUserProfileMenu();
+
+  if (document.querySelector('.sidebar') || document.querySelector('.user-profile-menu')) {
+    loadUserData();
+  }
+
   // Atualizar aria-expanded dos dropdowns
   const updateAriaExpanded = () => {
     document.querySelectorAll('.dropdown').forEach(dropdown => {
-      const link = dropdown.querySelector('> a');
+      const link = dropdown.querySelector(':scope > a');
       if (link) {
         link.setAttribute('aria-expanded', dropdown.classList.contains('expanded') ? 'true' : 'false');
       }
     });
   };
-  
+
   // Em mobile, expandir dropdowns que contêm links ativos
-  const isMobile = window.innerWidth <= 768;
+  const isMobile = window.innerWidth <= 1024;
   if (isMobile) {
     const activeSubLinks = document.querySelectorAll('.dropdown-options a.sub.active');
     activeSubLinks.forEach(link => {
       const dropdown = link.closest('.dropdown');
       if (dropdown) {
         dropdown.classList.add('expanded');
-        const mainLink = dropdown.querySelector('> a');
+        const mainLink = dropdown.querySelector(':scope > a');
         if (mainLink) {
           mainLink.setAttribute('aria-expanded', 'true');
         }
       }
     });
   }
-  
+
   // Observar mudanças nos dropdowns para atualizar aria-expanded
   const observer = new MutationObserver(() => {
     updateAriaExpanded();
   });
-  
+
   document.querySelectorAll('.dropdown').forEach(dropdown => {
     observer.observe(dropdown, { attributes: true, attributeFilter: ['class'] });
   });
-  
+
   updateAriaExpanded();
 });
 
@@ -911,6 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // IMPORTANTE: apiFetch deve estar disponível ANTES de qualquer script inline
 window.apiFetch = apiFetch;
 window.getApiUrl = getApiUrl;
+window.showNotice = showNotice;
 window.showToast = showToast;
 window.showLoading = showLoading;
 window.hideLoading = hideLoading;
@@ -923,4 +961,54 @@ window.setupUserProfileMenu = setupUserProfileMenu;
 window.logout = logout;
 window.loadUserData = loadUserData;
 window.toggleDropdown = toggleDropdown;
+
+// Carregar sidebar via fetch
+window.loadSidebar = async function() {
+  const container = document.getElementById('sidebar-container');
+  if (!container) return; // Se não houver container, ignora
+
+  try {
+    const response = await fetch('/sidebar.html');
+    if (!response.ok) throw new Error('Falha ao carregar sidebar');
+    const html = await response.text();
+    container.innerHTML = html;
+
+    // Marcar a rota ativa
+    const currentPath = window.location.pathname.replace(/^\//, '') || 'home.html';
+    let route = 'home';
+    if (currentPath.includes('RelatorioGeral')) route = 'relatorio-geral';
+    else if (currentPath.includes('GerarRelatorio')) route = 'gerar-relatorio';
+    else if (currentPath.includes('Cadastrar.html')) route = 'cadastrar';
+    else if (currentPath.includes('CadastrarGabarito')) route = 'cadastrar-gabarito';
+    else if (currentPath.includes('CorrigirSimulado') || currentPath.includes('Simula')) route = 'corrigir-simulado';
+    else if (currentPath.includes('AgendarSessao') || currentPath.includes('Agendar')) route = 'agendar';
+    
+    const activeLink = document.querySelector(`[data-route="${route}"]`);
+    if (activeLink) {
+      activeLink.classList.add('active');
+      activeLink.setAttribute('aria-current', 'page');
+      const dropdown = activeLink.closest('.dropdown');
+      if (dropdown) {
+        dropdown.classList.add('expanded');
+        const mainLink = dropdown.querySelector(':scope > a');
+        if (mainLink) mainLink.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    // Carregar dados de usuário na nova sidebar
+    if (typeof loadUserData === 'function') {
+      await loadUserData();
+    }
+  } catch (err) {
+    console.error('Erro ao carregar sidebar:', err);
+    container.innerHTML = '<aside class="sidebar"><p style="padding:20px;color:white;">Erro ao carregar menu.</p></aside>';
+  }
+};
+
+
+
+
+
+
+
 

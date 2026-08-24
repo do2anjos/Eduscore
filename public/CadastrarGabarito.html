@@ -6,38 +6,11 @@
   <title>Cadastrar Gabarito - EduScore</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  <script src="utils.js" defer></script>
+  <script src="js/utils.js" defer></script>
 </head>
 <body>
-  <!-- Skip Links para navegação por teclado -->
-  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
-  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-  
   <div class="home-container">
-    <aside class="sidebar">
-      <div class="profile" id="sidebar-profile">
-        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil">
-        <span style="opacity: 0;"><!-- Carregando... --></span>
-      </div>
-      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
-        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home</a>
-        <a href="RelatorioGeral.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório</a>
-        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar</a>
-        
-        <div class="dropdown">
-          <a href="#" class="active" aria-current="page" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
-            <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
-            <span class="dropdown-arrow">▶</span>
-          </a>
-          <div class="dropdown-options" role="menu">
-            <a href="CadastrarGabarito.html" class="sub active" role="menuitem">Cadastrar Gabarito</a>
-            <a href="CorrigirSimulado.html" class="sub" role="menuitem">Corrigir Gabarito</a>
-          </div>
-        </div>
-
-        <a href="AgendarSessao.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão</a>
-      </nav>
-    </aside>
+    <div id="sidebar-container"></div>
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
@@ -94,7 +67,7 @@
             aria-label="Selecionar arquivo Excel ou CSV para upload"
           />
           
-          <!-- Área de feedback do arquivo selecionado -->
+          <!-- ÁÁrea de feedback do arquivo selecionado -->
           <div id="file-feedback" style="display: none; margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--color-success-light, #e8f5e9); border-radius: var(--radius-sm); border: 1px solid var(--color-success, #4caf50);">
             <div style="display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm);">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-success, #4caf50)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
@@ -130,7 +103,6 @@
               placeholder="Ex: GABARITO_01_SIS"
               aria-label="Nome do gabarito"
               aria-describedby="gabaritoNome-hint"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
             />
             <span class="input-hint" id="gabaritoNome-hint">Nome identificador do gabarito</span>
           </div>
@@ -146,7 +118,6 @@
               aria-label="Selecione a etapa educacional"
               aria-required="true"
               aria-describedby="etapa-hint"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
             >
               <option value="">Selecione a etapa</option>
               <option value="1º Ano">1º Ano</option>
@@ -183,383 +154,12 @@
     </main>
   </div>
 
-  <script>
-    let arquivoSelecionado = null;
-
-    // Carregar gabaritos ao inicializar
-    document.addEventListener('DOMContentLoaded', async () => {
-      await loadUserData();
-      await carregarGabaritos();
-    });
-
-    async function loadUserData() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
-    }
-
-    async function carregarGabaritos() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.warn('Token não encontrado ao carregar gabaritos');
-        return;
-      }
-
-      try {
-        showLoading('Carregando gabaritos...');
-        const response = await apiFetch('/api/gabaritos', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ 
-            erro: `Erro HTTP ${response.status}: ${response.statusText}` 
-          }));
-          throw new Error(errorData.erro || errorData.detalhes || `Erro ao carregar gabaritos (status ${response.status})`);
-        }
-
-        const data = await response.json();
-
-        // A API retorna: {sucesso: true, total: number, gabaritos: []}
-        if (data && data.sucesso === true && Array.isArray(data.gabaritos)) {
-          renderizarGabaritos(data.gabaritos);
-        } else if (Array.isArray(data)) {
-          // Fallback: se retornar array direto
-          renderizarGabaritos(data);
-        } else if (data && Array.isArray(data.gabaritos)) {
-          // Fallback: se gabaritos existir mas sucesso não
-          renderizarGabaritos(data.gabaritos);
-        } else {
-          console.warn('Formato de resposta inesperado da API:', data);
-          renderizarGabaritos([]);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar gabaritos:', error);
-        showToast('Erro ao carregar gabaritos. Tente recarregar a página.', 'error', 5000);
-        const container = document.getElementById('listaGabaritos');
-        if (container) {
-          container.innerHTML = '<p style="text-align: center; color: var(--color-error); padding: var(--spacing-xl);">Erro ao carregar gabaritos. Tente recarregar a página.</p>';
-        }
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function renderizarGabaritos(gabaritos) {
-      const container = document.getElementById('listaGabaritos');
-      if (!container) return;
-      
-      container.innerHTML = '';
-      if (!gabaritos || gabaritos.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p style="color: var(--color-text-light);">Nenhum gabarito cadastrado</p></div>';
-        return;
-      }
-
-      // Agrupar gabaritos por etapa
-      const gabaritosPorEtapa = {};
-      gabaritos.forEach(gabarito => {
-        const etapa = gabarito.etapa || 'Sem etapa';
-        if (!gabaritosPorEtapa[etapa]) {
-          gabaritosPorEtapa[etapa] = [];
-        }
-        gabaritosPorEtapa[etapa].push(gabarito);
-      });
-
-      // Ordenar etapas
-      const etapasOrdenadas = Object.keys(gabaritosPorEtapa).sort((a, b) => {
-        const ordemEtapas = ['1º Ano', '2º Ano', '3º Ano'];
-        const indexA = ordemEtapas.findIndex(e => a.includes(e) || a === e);
-        const indexB = ordemEtapas.findIndex(e => b.includes(e) || b === e);
-        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-        if (indexA !== -1) return -1;
-        if (indexB !== -1) return 1;
-        return a.localeCompare(b);
-      });
-
-      // Renderizar por etapa
-      etapasOrdenadas.forEach(etapa => {
-        // Criar seção da etapa
-        const etapaSection = document.createElement('div');
-        etapaSection.className = 'gabarito-etapa-section';
-        etapaSection.style.marginBottom = 'var(--spacing-xl)';
-        
-        const etapaHeader = document.createElement('h4');
-        etapaHeader.className = 'gabarito-etapa-header';
-        etapaHeader.textContent = `${etapa} (${gabaritosPorEtapa[etapa].length} ${gabaritosPorEtapa[etapa].length === 1 ? 'simulado' : 'simulados'})`;
-        etapaSection.appendChild(etapaHeader);
-        
-        const etapaList = document.createElement('div');
-        etapaList.className = 'gabarito-etapa-list';
-        
-        // Ordenar gabaritos por data de criação (mais antigo primeiro)
-        const gabaritosEtapa = gabaritosPorEtapa[etapa].sort((a, b) => {
-          const dataA = new Date(a.criado_em || 0);
-          const dataB = new Date(b.criado_em || 0);
-          return dataA - dataB;
-        });
-        
-        gabaritosEtapa.forEach(gabarito => {
-          const div = document.createElement('div');
-          div.className = 'gabarito-item';
-          div.dataset.gabaritoId = gabarito.id;
-          
-          // Exibir apenas o nome do gabarito (sem adicionar data, pois o usuário já coloca no nome)
-          div.innerHTML = `
-            <span class="gabarito-nome">${gabarito.nome}</span>
-            <img src="https://img.icons8.com/ios-glyphs/20/ff0000/filled-trash.png" alt="Excluir" onclick="excluir('${gabarito.id}')" class="gabarito-delete-icon">
-          `;
-          etapaList.appendChild(div);
-        });
-        
-        etapaSection.appendChild(etapaList);
-        container.appendChild(etapaSection);
-      });
-    }
-
-    function handleFile(input) {
-      if (!input.files.length) return;
-      const file = input.files[0];
-      
-      // Validar tipo de arquivo
-      if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
-        showToast('Apenas arquivos CSV são permitidos', 'error');
-        input.value = '';
-        arquivoSelecionado = null;
-        ocultarFeedbackArquivo();
-        return;
-      }
-
-      arquivoSelecionado = file;
-      document.getElementById('gabaritoNome').value = file.name.replace(/\.\w+$/, '').toUpperCase();
-      
-      // Mostrar feedback visual
-      mostrarFeedbackArquivo(file.name);
-      
-      // Mostrar toast de confirmação
-      showToast(`Arquivo "${file.name}" adicionado com sucesso!`, 'success');
-    }
-
-    function mostrarFeedbackArquivo(nomeArquivo) {
-      const feedbackDiv = document.getElementById('file-feedback');
-      const fileNameDisplay = document.getElementById('file-name-display');
-      const uploadArea = document.getElementById('upload-area');
-      
-      if (feedbackDiv && fileNameDisplay) {
-        fileNameDisplay.textContent = nomeArquivo;
-        feedbackDiv.style.display = 'block';
-        
-        // Mudar visual da área de upload para indicar sucesso
-        if (uploadArea) {
-          uploadArea.style.borderColor = 'var(--color-success, #4caf50)';
-          uploadArea.style.borderStyle = 'solid';
-          uploadArea.style.background = 'var(--color-success-light, #e8f5e9)';
-        }
-      }
-    }
-
-    function ocultarFeedbackArquivo() {
-      const feedbackDiv = document.getElementById('file-feedback');
-      const uploadArea = document.getElementById('upload-area');
-      
-      if (feedbackDiv) {
-        feedbackDiv.style.display = 'none';
-      }
-      
-      // Restaurar visual da área de upload
-      if (uploadArea) {
-        uploadArea.style.borderColor = 'var(--color-border)';
-        uploadArea.style.borderStyle = 'dashed';
-        uploadArea.style.background = 'var(--color-background)';
-      }
-    }
-
-    function removerArquivo() {
-      arquivoSelecionado = null;
-      const fileInput = document.getElementById('file-upload');
-      if (fileInput) {
-        fileInput.value = '';
-      }
-      ocultarFeedbackArquivo();
-      showToast('Arquivo removido', 'info');
-    }
-
-    async function cadastrar() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
-
-      const nome = document.getElementById('gabaritoNome').value.trim();
-      const etapa = document.getElementById('etapa')?.value || '1º Ano';
-      
-      if (!nome) {
-        showToast('Informe um nome válido para o gabarito', 'warning');
-        document.getElementById('gabaritoNome').focus();
-        return;
-      }
-
-      try {
-        showLoading('Cadastrando gabarito...');
-
-        // Primeiro criar o gabarito
-        const response = await apiFetch('/api/gabaritos', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ nome, etapa })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ 
-            erro: `Erro HTTP ${response.status}: ${response.statusText}` 
-          }));
-          throw new Error(errorData.erro || errorData.detalhes || `Erro ao cadastrar gabarito (status ${response.status})`);
-        }
-
-        const data = await response.json();
-
-        // Validar resposta da API
-        if (!data || data.sucesso === false || !data.sucesso) {
-          throw new Error(data?.erro || data?.detalhes || 'Erro ao cadastrar gabarito');
-        }
-
-        // Extrair ID do gabarito - a API retorna {sucesso: true, gabarito: {id, nome, etapa, criado_em}}
-        const gabaritoId = data.gabarito?.id || data.id || null;
-
-        if (!gabaritoId) {
-          console.error('Resposta da API:', data);
-          throw new Error('Não foi possível obter o ID do gabarito criado. Verifique a resposta do servidor.');
-        }
-
-        // Se houver arquivo CSV, fazer upload (não bloqueia o cadastro se falhar)
-        let uploadErro = null;
-        if (arquivoSelecionado && gabaritoId) {
-          try {
-            const formData = new FormData();
-            formData.append('file', arquivoSelecionado);
-            formData.append('gabarito_id', gabaritoId);
-
-            const uploadResponse = await apiFetch('/api/gabaritos/upload', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`
-              },
-              body: formData
-            });
-
-            let uploadData = null;
-            const contentType = uploadResponse.headers.get('content-type');
-            
-            if (contentType && contentType.includes('application/json')) {
-              try {
-                uploadData = await uploadResponse.json();
-              } catch (jsonError) {
-                console.error('Erro ao parsear JSON da resposta:', jsonError);
-                uploadErro = `Erro ao processar resposta do servidor (status ${uploadResponse.status})`;
-              }
-            } else {
-              const text = await uploadResponse.text();
-              console.error('Resposta não é JSON:', text);
-              uploadErro = `Erro ao processar resposta do servidor: ${uploadResponse.status} ${uploadResponse.statusText}`;
-            }
-
-            if (uploadData && !uploadResponse.ok) {
-              uploadErro = uploadData.detalhes || uploadData.erro || 'Erro ao processar arquivo CSV';
-              console.error('Erro no upload do CSV:', uploadErro);
-              console.error('Resposta completa:', uploadData);
-            } else if (uploadData && uploadData.sucesso === false) {
-              uploadErro = uploadData.detalhes || uploadData.erro || 'Erro ao processar arquivo CSV';
-              console.error('Erro no upload do CSV:', uploadErro);
-            }
-          } catch (csvError) {
-            uploadErro = csvError.message || 'Erro ao fazer upload do arquivo CSV';
-            console.error('Erro ao fazer upload do CSV:', csvError);
-            console.error('Stack:', csvError.stack);
-            // Não interrompe o fluxo, apenas registra o erro
-          }
-        }
-
-        // Limpar campos antes de recarregar
-        document.getElementById('gabaritoNome').value = '';
-        document.getElementById('file-upload').value = '';
-        document.getElementById('etapa').value = '';
-        arquivoSelecionado = null;
-        ocultarFeedbackArquivo();
-
-        // Pequeno delay para garantir que o banco foi atualizado
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Recarregar lista de gabaritos
-        try {
-          await carregarGabaritos();
-        } catch (carregarError) {
-          console.error('Erro ao recarregar lista:', carregarError);
-          // Não interrompe o fluxo, apenas loga o erro
-        }
-
-        // Mostrar mensagem apropriada
-        if (uploadErro) {
-          showToast(`Gabarito "${nome}" cadastrado com sucesso! Mas houve erro ao processar CSV: ${uploadErro}`, 'warning');
-        } else {
-          showToast(`Gabarito "${nome}" cadastrado com sucesso!`, 'success');
-        }
-
-      } catch (error) {
-        console.error('Erro ao cadastrar gabarito:', error);
-        console.error('Stack:', error.stack);
-        
-        // Mensagem de erro mais detalhada
-        const mensagemErro = error.message || 'Erro desconhecido ao cadastrar gabarito';
-        showToast(`Erro ao cadastrar gabarito: ${mensagemErro}`, 'error');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    async function excluir(gabaritoId) {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      showConfirmDialog(
-        'Deseja realmente excluir este gabarito? Esta ação não pode ser desfeita.',
-        async () => {
-          try {
-            showLoading('Excluindo gabarito...');
-            const response = await apiFetch(`/api/gabaritos/${gabaritoId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json().catch(() => ({ 
-                erro: `Erro HTTP ${response.status}: ${response.statusText}` 
-              }));
-              throw new Error(errorData.erro || errorData.detalhes || `Erro ao excluir gabarito (status ${response.status})`);
-            }
-
-            const data = await response.json();
-
-            if (data && data.sucesso === false) {
-              throw new Error(data.erro || data.detalhes || 'Erro ao excluir gabarito');
-            }
-
-            showToast(data?.mensagem || 'Gabarito excluído com sucesso', 'success');
-            await carregarGabaritos();
-
-          } catch (error) {
-            console.error('Erro ao excluir gabarito:', error);
-            showToast(`Erro ao excluir gabarito: ${error.message}`, 'error');
-          } finally {
-            hideLoading();
-          }
-        }
-      );
-    }
-  </script>
+  <script src="js/cadastrar-gabarito.js"></script>
 </body>
 </html>
+
+
+
+
+
+

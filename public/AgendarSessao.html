@@ -6,45 +6,11 @@
   <title>Agendar Sessão - EduScore</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <script src="utils.js" defer></script>
+  <script src="js/utils.js" defer></script>
 </head>
 <body>
-  <!-- Skip Links para navegação por teclado -->
-  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
-  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-  
   <div class="home-container">
-    <aside class="sidebar">
-      <div class="profile" id="sidebar-profile">
-        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil" />
-        <span style="opacity: 0;"><!-- Carregando... --></span>
-      </div>
-      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
-        <a href="home.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home</a>
-        <div class="dropdown">
-          <a href="#" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
-            <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
-            <span class="dropdown-arrow">▶</span>
-          </a>
-          <div class="dropdown-options" role="menu">
-            <a href="RelatorioGeral.html" class="sub" role="menuitem">Relatório Geral</a>
-            <a href="GerarRelatorio.html" class="sub" role="menuitem">Relatório Individual</a>
-          </div>
-        </div>
-        <a href="Cadastrar.html"><img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar</a>
-        <div class="dropdown">
-          <a href="#" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
-            <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
-            <span class="dropdown-arrow">▶</span>
-          </a>
-          <div class="dropdown-options">
-            <a href="CadastrarGabarito.html" class="sub">Cadastrar Gabarito</a>
-            <a href="CorrigirSimulado.html" class="sub">Corrigir Gabarito</a>
-          </div>
-        </div>
-        <a href="AgendarSessao.html" class="active" aria-current="page"><img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão</a>
-      </nav>
-    </aside>
+    <div id="sidebar-container"></div>
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
@@ -108,7 +74,6 @@
                 required
                 aria-label="Selecione o aluno"
                 aria-required="true"
-                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
               >
                 <option value="">Selecione o aluno</option>
               </select>
@@ -125,7 +90,6 @@
                   required
                   aria-label="Selecione a etapa"
                   aria-required="true"
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
                 >
                   <option value="">Selecione</option>
                   <option value="1º Ano">1º Ano</option>
@@ -144,7 +108,6 @@
                   required
                   aria-label="Selecione a disciplina"
                   aria-required="true"
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
                 >
                   <option value="">Selecione a disciplina</option>
                 </select>
@@ -163,7 +126,6 @@
                   required
                   aria-label="Data da sessão"
                   aria-required="true"
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
                 />
               </div>
 
@@ -178,7 +140,6 @@
                   required
                   aria-label="Horário da sessão"
                   aria-required="true"
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
                 />
               </div>
             </div>
@@ -221,305 +182,10 @@
     </main>
   </div>
 
-<script>
-    let sessaoEditandoId = null;
-    let alunos = [];
-    let disciplinas = [];
-    let usuarioAtual = null;
-
-    // Carregar dados ao inicializar
-    document.addEventListener('DOMContentLoaded', async () => {
-      await loadUserData();
-      await carregarAlunos();
-      await carregarDisciplinas();
-      await carregarSessoes();
-    });
-
-    async function loadUserData() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
-
-      try {
-        const response = await apiFetch('/api/usuarios/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.sucesso) {
-          usuarioAtual = data.usuario;
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-      }
-    }
-
-    async function carregarAlunos() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      try {
-        showLoading('Carregando alunos...');
-        const response = await apiFetch('/api/alunos', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.sucesso || Array.isArray(data)) {
-          alunos = data.alunos || data;
-          atualizarSelectAlunos();
-        }
-      } catch (error) {
-        console.error('Erro ao carregar alunos:', error);
-        showToast('Erro ao carregar lista de alunos', 'error');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    async function carregarDisciplinas() {
-      try {
-        showLoading('Carregando disciplinas...');
-        const response = await apiFetch('/api/disciplinas');
-        const data = await response.json();
-        if (data.sucesso || Array.isArray(data)) {
-          disciplinas = data.disciplinas || data;
-          atualizarSelectDisciplinas();
-        }
-      } catch (error) {
-        console.error('Erro ao carregar disciplinas:', error);
-        showToast('Erro ao carregar lista de disciplinas', 'error');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function atualizarSelectAlunos() {
-      const select = document.getElementById('alunoNome');
-      if (!select) return;
-      
-      select.innerHTML = '<option value="">Selecione o aluno</option>';
-      alunos.forEach(aluno => {
-        const option = document.createElement('option');
-        option.value = aluno.id;
-        option.textContent = aluno.nome_completo;
-        select.appendChild(option);
-      });
-    }
-
-    function atualizarSelectDisciplinas() {
-      const select = document.getElementById('materia');
-      if (!select) return;
-      
-      select.innerHTML = '<option value="">Selecione a disciplina</option>';
-      disciplinas.forEach(disciplina => {
-        const option = document.createElement('option');
-        option.value = disciplina.id;
-        option.textContent = disciplina.nome;
-        select.appendChild(option);
-      });
-    }
-
-    async function carregarSessoes() {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      try {
-        showLoading('Carregando sessões...');
-        const response = await apiFetch('/api/sessoes', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.sucesso || Array.isArray(data)) {
-          renderizarSessoes(data.sessoes || data);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar sessões:', error);
-        showToast('Erro ao carregar sessões agendadas', 'error');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function renderizarSessoes(sessoes) {
-      const container = document.getElementById('sessionList');
-      if (!container) return;
-      
-      container.innerHTML = '';
-      if (!sessoes || sessoes.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p style="color: var(--color-text-light);">Nenhuma sessão agendada</p></div>';
-        return;
-      }
-
-      sessoes.forEach(sessao => {
-        const div = document.createElement('div');
-        div.className = 'session-item';
-        div.dataset.sessaoId = sessao.id;
-        const dataFormatada = sessao.data ? sessao.data.split('-').reverse().slice(0, 2).join('/') : '';
-        div.innerHTML = `
-          <span style="flex: 1;"><strong>${sessao.aluno_nome || 'Aluno'}</strong> | ${sessao.etapa} | ${dataFormatada} | ${sessao.hora} | ${sessao.disciplina_nome || 'Disciplina'}</span>
-          <div class="actions" style="display: flex; gap: var(--spacing-sm);">
-            <button 
-              class="btn-secondary" 
-              onclick="editarSessao('${sessao.id}')" 
-              aria-label="Editar sessão de ${sessao.aluno_nome || 'aluno'}"
-              style="padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm);"
-            >
-              Editar
-            </button>
-            <button 
-              class="btn-secondary" 
-              onclick="excluirSessao('${sessao.id}')" 
-              aria-label="Excluir sessão de ${sessao.aluno_nome || 'aluno'}"
-              style="padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-size-sm); background: var(--color-error); color: white;"
-            >
-              Excluir
-            </button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function abrirFormulario() {
-      document.getElementById('alunoNome').value = '';
-      document.getElementById('etapa').value = '';
-      document.getElementById('materia').value = '';
-      document.getElementById('dataSessao').value = '';
-      document.getElementById('horaSessao').value = '';
-      document.getElementById('modalAgendar').style.display = 'block';
-      document.getElementById('modalTitle').textContent = 'Nova Sessão';
-      sessaoEditandoId = null;
-    }
-
-    async function editarSessao(sessaoId) {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      try {
-        const response = await apiFetch(`/api/sessoes/${sessaoId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.sucesso && data.sessao) {
-          const s = data.sessao;
-          document.getElementById('alunoNome').value = s.aluno_id || '';
-          document.getElementById('etapa').value = s.etapa || '';
-          document.getElementById('materia').value = s.disciplina_id || '';
-          document.getElementById('dataSessao').value = s.data || '';
-          document.getElementById('horaSessao').value = s.hora || '';
-          document.getElementById('modalAgendar').style.display = 'block';
-          document.getElementById('modalTitle').textContent = 'Editar Sessão';
-          sessaoEditandoId = sessaoId;
-        }
-      } catch (error) {
-        console.error('Erro ao carregar sessão:', error);
-        showToast('Erro ao carregar sessão', 'error');
-      }
-  }
-
-  function fecharFormulario() {
-    document.getElementById('modalAgendar').style.display = 'none';
-      document.getElementById('alunoNome').value = '';
-      document.getElementById('etapa').value = '';
-      document.getElementById('materia').value = '';
-      document.getElementById('dataSessao').value = '';
-      document.getElementById('horaSessao').value = '';
-      sessaoEditandoId = null;
-    }
-
-    async function confirmarAgendamento() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
-
-      const alunoId = document.getElementById('alunoNome').value;
-    const etapa = document.getElementById('etapa').value;
-      const disciplinaId = document.getElementById('materia').value;
-    const data = document.getElementById('dataSessao').value;
-    const hora = document.getElementById('horaSessao').value;
-
-      if (!alunoId || !etapa || !disciplinaId || !data || !hora) {
-        showToast('Preencha todos os campos obrigatórios', 'warning');
-      return;
-    }
-
-      try {
-        showLoading('Salvando sessão...');
-        
-        const usuarioId = usuarioAtual?.id || JSON.parse(atob(token.split('.')[1])).userId;
-        
-        const url = sessaoEditandoId ? `/api/sessoes/${sessaoEditandoId}` : '/api/sessoes';
-        const method = sessaoEditandoId ? 'PUT' : 'POST';
-        
-        const response = await apiFetch(url, {
-          method,
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            aluno_id: alunoId,
-            etapa,
-            disciplina_id: disciplinaId,
-            data,
-            hora,
-            usuario_id: usuarioId
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.erro || 'Erro ao salvar sessão');
-        }
-
-        showToast('Sessão agendada com sucesso!', 'success');
-    fecharFormulario();
-        await carregarSessoes();
-
-      } catch (error) {
-        console.error('Erro ao salvar sessão:', error);
-        showToast(`Erro ao salvar sessão: ${error.message}`, 'error');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    async function excluirSessao(sessaoId) {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      showConfirmDialog(
-        'Deseja realmente excluir esta sessão?',
-        async () => {
-          try {
-            showLoading('Excluindo sessão...');
-            const response = await apiFetch(`/api/sessoes/${sessaoId}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-              throw new Error(data.erro || 'Erro ao excluir sessão');
-            }
-
-            showToast('Sessão excluída com sucesso', 'success');
-            await carregarSessoes();
-
-          } catch (error) {
-            console.error('Erro ao excluir sessão:', error);
-            showToast(`Erro ao excluir sessão: ${error.message}`, 'error');
-          } finally {
-            hideLoading();
-          }
-        }
-      );
-  }
-</script>
+<script src="js/agendar-sessao.js"></script>
 </body>
 </html>
+
+
+
+

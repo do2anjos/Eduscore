@@ -10,17 +10,74 @@
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Correções específicas para os botões da landing page para garantir que funcionem independente do CSS global */
+    .hero-cta a, .cta-buttons a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-size: 16px;
+      min-width: 180px;
+    }
+    .hero-cta .btn-primary, .cta-buttons .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      border: 1px solid var(--color-primary);
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    }
+    .hero-cta .btn-primary:hover, .cta-buttons .btn-primary:hover {
+      background: var(--color-primary-dark);
+      transform: translateY(-2px);
+    }
+    .hero-cta .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(5px);
+    }
+    .hero-cta .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: white;
+      transform: translateY(-2px);
+    }
+    .cta-buttons .btn-secondary {
+      background: transparent;
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .cta-buttons .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: white;
+      transform: translateY(-2px);
+    }
+    .feature-icon img {
+      width: 48px;
+      height: 48px;
+      filter: brightness(0) saturate(100%) invert(32%) sepia(97%) saturate(1637%) hue-rotate(203deg) brightness(96%) contrast(93%); /* Transforma pra Royal Blue */
+    }
+  </style>
 </head>
 
 <body>
-  <!-- Skip Links para navegação por teclado -->
-  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
-
   <!-- Header/Navigation -->
   <header class="landing-header" role="banner">
     <div class="landing-header-container">
-      <div class="landing-logo">
-        <span class="landing-logo-text">EduScore</span>
+      <div class="landing-logo-container">
+        <div class="landing-logo">
+          <span class="landing-logo-text">EduScore</span>
+        </div>
+        <button class="hamburger-menu" aria-label="Abrir menu" aria-expanded="false" onclick="this.setAttribute('aria-expanded', this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'); document.querySelector('.landing-nav').classList.toggle('active');">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <nav class="landing-nav" role="navigation" aria-label="Navegação principal">
         <a href="login.html" class="landing-nav-link">Entrar</a>
@@ -32,14 +89,6 @@
   <!-- Hero Section -->
   <section id="main-content" class="hero-section" role="main">
     <div class="hero-container">
-      <div class="hero-visual">
-        <div class="hero-card-preview">
-          <div
-            style="background: white; padding: 2rem; border-radius: 12px; display: inline-block; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            <img src="eduscore.png" alt="EduScore Logo" style="max-width: 100%; height: auto; display: block;" />
-          </div>
-        </div>
-      </div>
       <div class="hero-content">
         <h1 class="hero-title">Transforme a gestão pedagógica da sua instituição</h1>
         <p class="hero-subtitle">
@@ -49,6 +98,14 @@
         <div class="hero-cta">
           <a href="login.html" class="btn-primary">Acessar Plataforma</a>
           <a href="perfil.html" class="btn-secondary">Criar Conta</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-card-preview">
+          <div
+            style="background: white; padding: 2rem; border-radius: 12px; display: inline-block; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <img src="img/eduscore.png" alt="EduScore Logo" style="max-width: 100%; height: auto; display: block;" />
+          </div>
         </div>
       </div>
     </div>
@@ -62,7 +119,7 @@
 
       <div class="features-grid">
         <article class="feature-card">
-          <div class="feature-icon">📊</div>
+          <div class="feature-icon"><img src="https://img.icons8.com/ios-filled/100/combo-chart.png" alt="Dashboard"></div>
           <h3 class="feature-title">Dashboard Inteligente</h3>
           <p class="feature-description">
             Visualize métricas importantes, acompanhe o progresso dos alunos e tenha uma visão geral
@@ -71,7 +128,7 @@
         </article>
 
         <article class="feature-card">
-          <div class="feature-icon">📝</div>
+          <div class="feature-icon"><img src="https://img.icons8.com/ios-filled/100/task.png" alt="Simulados"></div>
           <h3 class="feature-title">Gestão de Simulados</h3>
           <p class="feature-description">
             Crie e gerencie simulados de forma simples. Cadastre gabaritos, organize questões
@@ -80,7 +137,7 @@
         </article>
 
         <article class="feature-card">
-          <div class="feature-icon">👥</div>
+          <div class="feature-icon"><img src="https://img.icons8.com/ios-filled/100/add-user-group-man-man.png" alt="Alunos"></div>
           <h3 class="feature-title">Cadastro de Alunos</h3>
           <p class="feature-description">
             Mantenha um cadastro completo e organizado de todos os alunos, com informações
@@ -89,7 +146,7 @@
         </article>
 
         <article class="feature-card">
-          <div class="feature-icon">📈</div>
+          <div class="feature-icon"><img src="https://img.icons8.com/ios-filled/100/business-report.png" alt="Relatórios"></div>
           <h3 class="feature-title">Relatórios Detalhados</h3>
           <p class="feature-description">
             Gere relatórios completos de desempenho, análise por disciplina, progresso mensal
@@ -98,7 +155,7 @@
         </article>
 
         <article class="feature-card">
-          <div class="feature-icon">📅</div>
+          <div class="feature-icon"><img src="https://img.icons8.com/ios-filled/100/calendar.png" alt="Agendamento"></div>
           <h3 class="feature-title">Agendamento de Sessões</h3>
           <p class="feature-description">
             Organize e gerencie sessões de avaliação, defina horários e acompanhe a aplicação
@@ -107,7 +164,7 @@
         </article>
 
         <article class="feature-card">
-          <div class="feature-icon">✅</div>
+          <div class="feature-icon"><img src="https://img.icons8.com/ios-filled/100/checked--v1.png" alt="Correção"></div>
           <h3 class="feature-title">Correção Automatizada</h3>
           <p class="feature-description">
             Sistema inteligente para correção de simulados com upload de imagens,
@@ -181,8 +238,8 @@
           o acompanhamento educacional.
         </p>
         <div class="cta-buttons">
-          <a href="login.html" class="btn-primary btn-large">Acessar Plataforma</a>
-          <a href="perfil.html" class="btn-secondary btn-large">Criar Conta Gratuita</a>
+          <a href="login.html" class="btn-primary">Acessar Plataforma</a>
+          <a href="perfil.html" class="btn-secondary">Criar Conta Gratuita</a>
         </div>
       </div>
     </div>
@@ -200,10 +257,11 @@
         </p>
       </div>
       <div class="footer-bottom">
-        <p class="footer-copyright">&copy; 2025 EduScore. Todos os direitos reservados.</p>
+        <p class="footer-copyright">&copy; 2026 EduScore. Todos os direitos reservados.</p>
       </div>
     </div>
   </footer>
 </body>
-
 </html>
+
+

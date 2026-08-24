@@ -7,184 +7,65 @@
   <title>Redefinir Senha - EduScore</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  <script src="utils.js" defer></script>
+  <script src="js/utils.js" defer></script>
 </head>
 <body>
-  <!-- Header -->
-  <header class="landing-header" role="banner">
-    <div class="landing-header-container">
-      <div class="landing-logo">
-        <img src="/eduscore.png" alt="EduScore Logo" />
-        <span class="landing-logo-text">EduScore</span>
+  <div class="container">
+    <!-- Lado Esquerdo (Formulário) -->
+    <div class="left">
+      <h2 style="font-size: var(--font-size-3xl); margin-bottom: var(--spacing-sm);">Redefina sua senha</h2>
+      <p style="font-size: var(--font-size-base); margin-bottom: var(--spacing-2xl);">É necessário seu <strong>email institucional</strong></p>
+
+      <form id="redefinirForm" style="width: 100%; max-width: 380px;">
+        <div class="alert-warning" style="background: var(--color-warning-bg); border-left: 4px solid var(--color-warning); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 24px;">
+          <h4 style="color: #b45309; margin-bottom: 8px;">Aviso de Segurança</h4>
+          <p style="color: #92400e; font-size: 14px;">A redefinição de senha está temporariamente indisponível por motivos de segurança (atualização de contrato com o backend). Por favor, entre em contato com a administração escolar para resetar sua senha.</p>
+        </div>
+        
+        <div class="input-group">
+          <label for="email">Email institucional</label>
+          <input type="email" id="email" placeholder="exemplo@instituicao.edu.br" disabled />
+        </div>
+
+        <div class="input-group">
+          <label for="senha">Nova senha</label>
+          <input type="password" id="senha" placeholder="Digite a nova senha" disabled />
+          <span style="font-size: 11px; color: var(--color-text-lighter); margin-top: 2px;">Mín. 8 caracteres (1 maiúscula, 1 minúscula, 1 número, 1 símbolo)</span>
+        </div>
+
+        <div class="input-group" style="margin-top: 12px;">
+          <label for="confirmarSenha">Confirmar nova senha</label>
+          <input type="password" id="confirmarSenha" placeholder="Repita a nova senha" disabled />
+        </div>
+
+        <button type="submit" class="submit-btn" style="margin-top: var(--spacing-md); opacity: 0.5; cursor: not-allowed;" disabled>
+          Redefinir Senha (Indisponível)
+        </button>
+      </form>
+
+      <div style="margin-top: var(--spacing-2xl); text-align: center;">
+        <a href="login.html" style="color: var(--color-primary); font-weight: 500; text-decoration: none;">Lembrou a senha? Voltar ao Login</a>
       </div>
-      <nav class="landing-nav" role="navigation" aria-label="Navegação principal">
-        <a href="login.html" class="landing-nav-link">Voltar ao Login</a>
-        <a href="perfil.html" class="landing-nav-link landing-nav-link-primary">Cadastrar-se</a>
-      </nav>
     </div>
-  </header>
 
-  <!-- Redefinir Senha Section -->
-  <section class="features-section" style="min-height: calc(100vh - 200px); display: flex; align-items: center; padding: var(--spacing-4xl) 0;">
-    <div class="section-container">
-      <div style="max-width: 500px; margin: 0 auto;">
-        <!-- Logo e Título -->
-        <div style="text-align: center; margin-bottom: var(--spacing-3xl);">
-          <img src="/eduscore.png" alt="EduScore Logo" style="width: 80px; height: 80px; margin-bottom: var(--spacing-lg);" />
-          <h1 class="section-title" style="font-size: var(--font-size-3xl); margin-bottom: var(--spacing-sm);">Redefina sua senha</h1>
-          <p class="section-subtitle" style="font-size: var(--font-size-base); margin-bottom: 0;">
-            É necessário seu <strong>email institucional</strong>
-          </p>
-        </div>
-
-        <!-- Formulário -->
-        <div class="card" style="padding: var(--spacing-3xl);">
-          <form id="redefinirForm" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
-            <div class="input-group">
-              <label for="email">Email institucional</label>
-              <input 
-                type="email" 
-                id="email" 
-                placeholder="Email institucional" 
-                required
-                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-              />
-            </div>
-
-            <div class="input-group">
-              <label for="senha">Nova senha</label>
-              <input 
-                type="password" 
-                id="senha" 
-                placeholder="Nova senha" 
-                required
-                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-              />
-              <span class="input-hint">Mínimo 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo</span>
-            </div>
-
-            <div class="input-group">
-              <label for="confirmarSenha">Confirmar nova senha</label>
-              <input 
-                type="password" 
-                id="confirmarSenha" 
-                placeholder="Confirmar nova senha" 
-                required
-                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-              />
-            </div>
-
-            <button type="submit" class="btn-primary" style="width: 100%; margin-top: var(--spacing-md);">
-              Redefinir Senha
-            </button>
-          </form>
-
-          <!-- Links -->
-          <div style="margin-top: var(--spacing-xl); text-align: center; padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
-            <a href="login.html" style="color: var(--color-primary); text-decoration: none; font-size: var(--font-size-sm);">Voltar ao Login</a>
-          </div>
-        </div>
-
-        <!-- Quote Card -->
-        <div class="card" style="margin-top: var(--spacing-xl); padding: var(--spacing-xl); background: linear-gradient(135deg, var(--color-primary-darker) 0%, var(--color-primary) 100%); color: var(--color-surface); text-align: center;">
-          <div style="font-size: var(--font-size-xl); line-height: var(--line-height-relaxed); margin-bottom: var(--spacing-md);">
-            "Educar não é ensinar respostas, é ensinar a pensar."
-          </div>
-          <div style="font-size: var(--font-size-sm); opacity: 0.9;">
-            Jean Piaget
-          </div>
+    <!-- Lado Direito (Destaque) -->
+    <div class="right">
+      <div class="quote">
+        <div class="quote-icon">"</div>
+        <div class="quote-text">O aprendizado é a única coisa que a mente nunca esgota, nunca teme e nunca se arrepende.</div>
+        <div class="quote-author">
+          Leonardo da Vinci
+          <span>Polímata Italiano</span>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- Footer -->
-  <footer class="landing-footer" role="contentinfo">
-    <div class="section-container">
-      <div class="footer-content">
-        <div class="footer-brand">
-          <img src="/eduscore.png" alt="EduScore Logo" class="footer-logo" />
-          <span class="footer-brand-text">EduScore</span>
-        </div>
-        <p class="footer-text">
-          Plataforma de gestão pedagógica desenvolvida para equipes educacionais.
-        </p>
-      </div>
-      <div class="footer-bottom">
-        <p class="footer-copyright">&copy; 2024 EduScore. Todos os direitos reservados.</p>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    document.getElementById('redefinirForm').addEventListener('submit', async function(event) {
-      event.preventDefault();
-
-      const email = document.querySelector('#email').value.trim();
-      const senha = document.querySelector('#senha').value;
-      const confirmarSenha = document.querySelector('#confirmarSenha').value;
-
-      // Heurística 5: Prevenção de erros
-      if (!email || !senha || !confirmarSenha) {
-        showToast('Por favor, preencha todos os campos', 'warning');
-        return;
-      }
-
-      if (!isValidEmail(email)) {
-        showToast('Email inválido', 'error');
-        return;
-      }
-
-      if (senha !== confirmarSenha) {
-        showToast('As senhas não coincidem', 'error');
-        return;
-      }
-
-      if (senha.length < 8) {
-        showToast('A senha deve ter no mínimo 8 caracteres', 'warning');
-        return;
-      }
-
-      // Validar força da senha
-      const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d#@$!%*?&]{8,}$/;
-      if (!PASSWORD_REGEX.test(senha)) {
-        showToast('A senha deve conter: 8+ caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 símbolo (#@$!%*?&)', 'error');
-        return;
-      }
-
-      // Heurística 1: Feedback visual
-      showLoading('Redefinindo senha...');
-      
-      try {
-        const response = await apiFetch('/api/usuarios/redefinir-senha', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email,
-            nova_senha: senha
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.erro || 'Erro ao redefinir senha');
-        }
-
-        showToast('Senha redefinida com sucesso! Redirecionando para login...', 'success');
-        setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 2000);
-
-      } catch (error) {
-        console.error('Erro ao redefinir senha:', error);
-        showToast(`Erro ao redefinir senha: ${error.message}`, 'error');
-      } finally {
-        hideLoading();
-      }
-    });
-  </script>
+  <script src="js/redefinir.js"></script>
 </body>
 </html>
+
+
+
+
+

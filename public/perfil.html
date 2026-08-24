@@ -7,530 +7,119 @@
   <title>Cadastro de Usuário - EduScore</title>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  <script src="utils.js" defer></script>
-</head>
-<body>
-  <!-- Skip Links para navegação por teclado -->
-  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
-  
-  <!-- Header -->
-  <header class="landing-header" role="banner">
-    <div class="landing-header-container">
-      <div class="landing-logo">
-        <span class="landing-logo-text">EduScore</span>
-      </div>
-      <nav class="landing-nav" role="navigation" aria-label="Navegação principal">
-        <a href="login.html" class="landing-nav-link">Entrar</a>
-        <a href="landing.html" class="landing-nav-link">Voltar</a>
-      </nav>
-    </div>
-  </header>
+  <script src="js/utils.js" defer></script>
+</head><body>
+  <div class="container">
+    <!-- Lado Esquerdo (Formulário) -->
+    <div class="left" style="overflow-y: auto; padding-top: var(--spacing-4xl); padding-bottom: var(--spacing-4xl);">
+      <h2 style="font-size: var(--font-size-3xl); margin-bottom: var(--spacing-sm); text-align: center;">Crie sua conta</h2>
+      <p style="font-size: var(--font-size-base); margin-bottom: var(--spacing-2xl); text-align: center; color: var(--color-text-light);">
+        Faça parte da nossa plataforma educacional
+      </p>
 
-  <!-- Cadastro Section -->
-  <section id="main-content" class="features-section" role="main" style="padding: var(--spacing-4xl) 0;">
-    <div class="section-container">
-      <div style="max-width: 900px; margin: 0 auto;">
-        <!-- Título -->
-        <div style="text-align: center; margin-bottom: var(--spacing-3xl);">
-          <h1 class="section-title" style="font-size: var(--font-size-3xl); margin-bottom: var(--spacing-sm);">Cadastro de Usuário</h1>
-          <p class="section-subtitle" style="font-size: var(--font-size-base); margin-bottom: 0;">
-            Crie sua conta para começar a usar a plataforma
-          </p>
+      <form id="formCadastro" onsubmit="cadastrarUsuario(event)" style="width: 100%; max-width: 440px;">
+        
+        <!-- Upload de Foto de Perfil Centralizado -->
+        <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: var(--spacing-xl);">
+          <label for="uploadFoto" style="cursor: pointer; position: relative; display: inline-block;">
+            <img 
+              id="previewImagem" 
+              src="https://img.icons8.com/ios/150/000000/user-male-circle.png" 
+              alt="Foto de Perfil" 
+              style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 3px solid var(--color-primary); background: #F1F5F9;"
+            />
+            <div style="position: absolute; bottom: 0; right: 0; background: var(--color-primary-darker); color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm);">
+              <span style="font-size: 16px; font-weight: bold; line-height: 1;">+</span>
+            </div>
+          </label>
+          <input type="file" id="uploadFoto" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;" onchange="previewImagemPerfil(event)" />
+          <input type="hidden" id="fotoBase64" name="fotoBase64" />
+          <p style="color: var(--color-text-lighter); font-size: 12px; margin-top: var(--spacing-xs);">Adicione sua foto</p>
+          <div id="successMessage" class="success-message" style="margin-top: 4px; font-size: 12px;"></div>
+          <div id="errorMessage" class="error-message" style="margin-top: 4px; font-size: 12px;"></div>
         </div>
 
-        <!-- Grid com Foto e Formulário -->
-        <div style="display: grid; grid-template-columns: 300px 1fr; gap: var(--spacing-3xl); align-items: start;">
-          <!-- Foto de Perfil -->
-          <div class="card" style="padding: var(--spacing-xl); text-align: center;">
-            <label for="uploadFoto" style="cursor: pointer; position: relative; display: inline-block;">
-              <img 
-                id="previewImagem" 
-                src="https://img.icons8.com/ios/150/000000/user-male-circle.png" 
-                alt="Foto de Perfil" 
-                style="width: 150px; height: 150px; margin-bottom: var(--spacing-md); object-fit: cover; border-radius: 50%; border: 3px solid var(--color-primary);"
-              />
-              <div style="position: absolute; bottom: var(--spacing-md); right: 0; background: var(--color-secondary); color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
-                <span style="font-size: var(--font-size-lg);">+</span>
-              </div>
-            </label>
-            
-            <input type="file" id="uploadFoto" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;" onchange="previewImagemPerfil(event)" />
-            <input type="hidden" id="fotoBase64" name="fotoBase64" />
-            
-            <p style="color: var(--color-text-light); font-size: var(--font-size-sm); margin-top: var(--spacing-md);">Clique na imagem para adicionar foto</p>
-            
-            <div id="successMessage" class="success-message" style="margin-top: var(--spacing-md);"></div>
-            <div id="errorMessage" class="error-message" style="margin-top: var(--spacing-md);"></div>
+        <div class="input-group" style="max-width: 100%;">
+          <label for="nome" class="required-field">Nome completo</label>
+          <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required />
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm);">
+          <div class="input-group" style="max-width: 100%;">
+            <label for="email" class="required-field">Email institucional</label>
+            <input type="email" id="email" name="email" placeholder="exemplo@edu.br" required />
           </div>
-
-          <!-- Formulário -->
-          <div class="card" style="padding: var(--spacing-3xl);">
-            <form id="formCadastro" onsubmit="cadastrarUsuario(event)" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
-              <div class="input-group">
-                <label class="required-field">Nome completo</label>
-                <input 
-                  type="text" 
-                  id="nome" 
-                  name="nome" 
-                  placeholder="Digite seu nome completo" 
-                  required
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-                />
-              </div>
-              
-              <div class="input-group">
-                <label class="required-field">Email institucional</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  name="email" 
-                  placeholder="exemplo@instituicao.edu.br" 
-                  required
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-                />
-              </div>
-              
-              <div class="input-group">
-                <label class="required-field">Matrícula</label>
-                <input 
-                  type="text" 
-                  id="matricula" 
-                  name="matricula" 
-                  placeholder="Digite sua matrícula" 
-                  required
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-                />
-              </div>
-              
-              <div class="input-group">
-                <label>Telefone</label>
-                <input 
-                  type="text" 
-                  id="telefone" 
-                  name="telefone" 
-                  placeholder="(00) 00000-0000" 
-                  oninput="formatarTelefone(this)"
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-                />
-              </div>
-
-              <div class="input-group">
-                <label class="required-field">Perfil</label>
-                <select 
-                  id="perfil" 
-                  name="perfil" 
-                  required
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);"
-                >
-                  <option value="">Selecione seu perfil</option>
-                  <option value="professor">Professor</option>
-                  <option value="coordenador">Coordenador</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              
-              <div class="input-group">
-                <label class="required-field">Senha</label>
-                <input 
-                  type="password" 
-                  id="senha" 
-                  name="senha" 
-                  placeholder="Crie uma senha segura" 
-                  required 
-                  onkeyup="validarSenha()" 
-                  onfocus="showPasswordRequirements()" 
-                  onblur="hidePasswordRequirements()"
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-                />
-                
-                <div id="passwordRequirements" class="password-requirements" style="display: none; margin-top: var(--spacing-sm);">
-                  <div class="requirement invalid" id="reqLength">
-                    <span class="icon">✘</span> Mínimo 8 caracteres
-                  </div>
-                  <div class="requirement invalid" id="reqUpper">
-                    <span class="icon">✘</span> Pelo menos 1 letra maiúscula (A-Z)
-                  </div>
-                  <div class="requirement invalid" id="reqLower">
-                    <span class="icon">✘</span> Pelo menos 1 letra minúscula (a-z)
-                  </div>
-                  <div class="requirement invalid" id="reqNumber">
-                    <span class="icon">✘</span> Pelo menos 1 número (0-9)
-                  </div>
-                  <div class="requirement invalid" id="reqSpecial">
-                    <span class="icon">✘</span> Pelo menos 1 símbolo (@$!%*?&)
-                  </div>
-                </div>
-                
-                <div class="password-strength" style="margin-top: var(--spacing-sm);">
-                  <div id="passwordStrengthBar" class="password-strength-bar"></div>
-                </div>
-                <div id="senhaError" class="error-message"></div>
-              </div>
-              
-              <div class="input-group">
-                <label class="required-field">Confirmar Senha</label>
-                <input 
-                  type="password" 
-                  id="confirmarSenha" 
-                  name="confirmarSenha" 
-                  placeholder="Repita a senha" 
-                  required 
-                  onkeyup="validarConfirmacaoSenha()"
-                  style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);"
-                />
-                <div id="confirmarSenhaError" class="error-message" style="display: none;">As senhas não coincidem</div>
-              </div>
-              
-              <button type="submit" class="btn-primary" id="submitBtn" style="width: 100%; margin-top: var(--spacing-md);">
-                <span id="btnText">Cadastrar Usuário</span>
-                <span id="btnSpinner" class="loading-spinner" style="display: none;"></span>
-              </button>
-            </form>
+          
+          <div class="input-group" style="max-width: 100%;">
+            <label for="matricula" class="required-field">Matrícula</label>
+            <input type="text" id="matricula" name="matricula" placeholder="Nº de matrícula" required />
           </div>
         </div>
-      </div>
-    </div>
-  </section>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm);">
+          <div class="input-group" style="max-width: 100%;">
+            <label for="telefone">Telefone</label>
+            <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" oninput="formatarTelefone(this)" />
+          </div>
 
-  <!-- Footer -->
-  <footer class="landing-footer" role="contentinfo">
-    <div class="section-container">
-      <div class="footer-content">
-        <div class="footer-brand">
-          <span class="footer-brand-text">EduScore</span>
+          <div class="input-group" style="max-width: 100%;">
+            <label for="perfil" class="required-field">Perfil</label>
+            <select id="perfil" name="perfil" required>
+              <option value="">Selecione...</option>
+              <option value="professor">Professor</option>
+              <option value="coordenador">Coordenador</option>
+            </select>
+          </div>
         </div>
-        <p class="footer-text">
-          Plataforma de gestão pedagógica desenvolvida para equipes educacionais.
-        </p>
-      </div>
-      <div class="footer-bottom">
-        <p class="footer-copyright">&copy; 2025 EduScore. Todos os direitos reservados.</p>
+        
+        <div class="input-group" style="max-width: 100%;">
+          <label for="senha" class="required-field">Senha</label>
+          <input 
+            type="password" id="senha" name="senha" placeholder="Crie uma senha segura" required 
+            onkeyup="validarSenha()" onfocus="showPasswordRequirements()" onblur="hidePasswordRequirements()"
+          />
+          <div id="passwordRequirements" class="password-requirements" style="display: none;">
+            <div class="requirement invalid" id="reqLength"><span class="icon">✘</span> Mín. 8 caracteres</div>
+            <div class="requirement invalid" id="reqUpper"><span class="icon">✘</span> 1 Letra maiúscula</div>
+            <div class="requirement invalid" id="reqLower"><span class="icon">✘</span> 1 Letra minúscula</div>
+            <div class="requirement invalid" id="reqNumber"><span class="icon">✘</span> 1 Número</div>
+            <div class="requirement invalid" id="reqSymbol"><span class="icon">✘</span> 1 símbolo (!@#$%^&*)</div>
+          </div>
+        </div>
+        
+        <div class="input-group" style="max-width: 100%;">
+          <label for="confirmarSenha" class="required-field">Confirmar Senha</label>
+          <input type="password" id="confirmarSenha" name="confirmarSenha" placeholder="Repita a senha" required />
+        </div>
+
+        <button type="submit" class="submit-btn" style="width: 100%; max-width: 100%; margin-top: var(--spacing-md);">
+          Finalizar Cadastro
+        </button>
+
+        <div style="margin-top: var(--spacing-xl); text-align: center;">
+          <a href="login.html" style="color: var(--color-primary); font-weight: 500; text-decoration: none;">Já tem uma conta? Entrar</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Lado Direito (Destaque) -->
+    <div class="right">
+      <div class="quote">
+        <div class="quote-icon">"</div>
+        <div class="quote-text">O principal objetivo da educação é criar pessoas capazes de fazer coisas novas, e não simplesmente repetir o que outras gerações fizeram.</div>
+        <div class="quote-author">
+          Jean Piaget
+          <span>Biólogo e Psicólogo</span>
+        </div>
       </div>
     </div>
-  </footer>
+  </div>
 
-  <script>
-    function previewImagemPerfil(event) {
-      const input = event.target;
-      const imagemPreview = document.getElementById('previewImagem');
-      const fotoBase64Input = document.getElementById('fotoBase64');
-
-      if (input.files && input.files[0]) {
-        const file = input.files[0];
-        
-        // Validar tipo de arquivo
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-          showErrorMessage('Formato de imagem inválido. Use apenas JPG, PNG ou WEBP.');
-          input.value = '';
-          return;
-        }
-
-        // Validar tamanho (máximo 5MB antes de compressão)
-        if (file.size > 5 * 1024 * 1024) {
-          showErrorMessage('A imagem é muito grande. Por favor, selecione uma imagem menor que 5MB.');
-          input.value = '';
-          return;
-        }
-
-        // Comprimir e redimensionar a imagem
-        comprimirImagem(file, imagemPreview, fotoBase64Input);
-      }
-    }
-
-    function comprimirImagem(file, previewElement, base64Input) {
-      const reader = new FileReader();
-      
-      reader.onload = function(e) {
-        const img = new Image();
-        
-        img.onload = function() {
-          // Criar canvas para redimensionar e comprimir
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 400;
-          const MAX_HEIGHT = 400;
-          let width = img.width;
-          let height = img.height;
-
-          // Redimensionar mantendo proporção
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          // Desenhar imagem redimensionada no canvas
-          const ctx = canvas.getContext('2d');
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Comprimir com qualidade ajustável
-          let quality = 0.7; // Começar com 70% de qualidade
-          let base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
-          const MAX_SIZE = 500 * 1024; // 500KB máximo em base64
-          
-          // Se ainda for muito grande, reduzir qualidade progressivamente
-          while (base64.length > MAX_SIZE && quality > 0.3) {
-            quality -= 0.1;
-            base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
-          }
-          
-          // Se ainda for muito grande após reduzir qualidade, redimensionar mais
-          if (base64.length > MAX_SIZE) {
-            // Redimensionar para 300x300
-            canvas.width = 300;
-            canvas.height = 300;
-            ctx.clearRect(0, 0, 300, 300);
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, 300, 300);
-            quality = 0.6;
-            base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
-            
-            // Se ainda for muito grande, reduzir mais
-            if (base64.length > MAX_SIZE) {
-              while (base64.length > MAX_SIZE && quality > 0.4) {
-                quality -= 0.1;
-                base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
-              }
-            }
-          }
-          
-          // Verificação final
-          if (base64.length > MAX_SIZE) {
-            showErrorMessage('A imagem ainda é muito grande após compressão. Por favor, selecione uma imagem menor.');
-            return;
-          }
-
-          // Atualizar preview e base64
-          previewElement.src = canvas.toDataURL('image/jpeg', quality);
-          base64Input.value = base64;
-          
-          // Limpar mensagem de erro se houver
-          showErrorMessage('');
-        };
-        
-        img.onerror = function() {
-          showErrorMessage('Erro ao processar a imagem. Tente novamente.');
-        };
-        
-        img.src = e.target.result;
-      };
-      
-      reader.onerror = function() {
-        showErrorMessage('Erro ao ler o arquivo. Tente novamente.');
-      };
-      
-      reader.readAsDataURL(file);
-    }
-
-    function showPasswordRequirements() {
-      document.getElementById('passwordRequirements').style.display = 'block';
-      validarSenha();
-    }
-
-    function hidePasswordRequirements() {
-      document.getElementById('passwordRequirements').style.display = 'none';
-    }
-
-    function updateRequirement(elementId, isValid) {
-      const element = document.getElementById(elementId);
-      element.classList.toggle('valid', isValid);
-      element.classList.toggle('invalid', !isValid);
-      element.querySelector('.icon').textContent = isValid ? '✓' : '✘';
-    }
-
-    function validarSenha() {
-      const senha = document.getElementById('senha').value;
-      const strengthBar = document.getElementById('passwordStrengthBar');
-      const errorElement = document.getElementById('senhaError');
-      
-      const hasLength = senha.length >= 8;
-      const hasUpper = /[A-Z]/.test(senha);
-      const hasLower = /[a-z]/.test(senha);
-      const hasNumber = /\d/.test(senha);
-      const hasSpecial = /[#@$!%*?&]/.test(senha);
-      
-      updateRequirement('reqLength', hasLength);
-      updateRequirement('reqUpper', hasUpper);
-      updateRequirement('reqLower', hasLower);
-      updateRequirement('reqNumber', hasNumber);
-      updateRequirement('reqSpecial', hasSpecial);
-      
-      const senhaValida = hasLength && hasUpper && hasLower && hasNumber && hasSpecial;
-      
-      // Obter cores das variáveis CSS
-      const root = getComputedStyle(document.documentElement);
-      const colorSuccess = root.getPropertyValue('--color-success').trim();
-      const colorError = root.getPropertyValue('--color-error').trim();
-      
-      if (senhaValida) {
-        strengthBar.style.width = '100%';
-        strengthBar.style.backgroundColor = colorSuccess;
-        errorElement.style.display = 'none';
-        return true;
-      } else {
-        strengthBar.style.width = '30%';
-        strengthBar.style.backgroundColor = colorError;
-        errorElement.textContent = 'A senha não atende a todos os requisitos';
-        errorElement.style.display = 'block';
-        return false;
-      }
-    }
-
-    function validarConfirmacaoSenha() {
-      const senha = document.getElementById('senha').value;
-      const confirmarSenha = document.getElementById('confirmarSenha').value;
-      const errorElement = document.getElementById('confirmarSenhaError');
-      
-      if (confirmarSenha.length === 0) {
-        errorElement.style.display = 'none';
-        return true;
-      }
-      
-      if (senha !== confirmarSenha) {
-        errorElement.style.display = 'block';
-        return false;
-      } else {
-        errorElement.style.display = 'none';
-        return true;
-      }
-    }
-
-    function formatarTelefone(input) {
-      let value = input.value.replace(/\D/g, '');
-      
-      if (value.length > 11) {
-        value = value.substring(0, 11);
-      }
-      
-      if (value.length > 2) {
-        value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
-      }
-      
-      if (value.length > 10) {
-        value = `${value.substring(0, 10)}-${value.substring(10)}`;
-      }
-      
-      input.value = value;
-    }
-
-    function showLoading() {
-      document.getElementById('btnText').style.display = 'none';
-      document.getElementById('btnSpinner').style.display = 'inline-block';
-      document.getElementById('submitBtn').disabled = true;
-    }
-
-    function hideLoading() {
-      document.getElementById('btnText').style.display = 'inline';
-      document.getElementById('btnSpinner').style.display = 'none';
-      document.getElementById('submitBtn').disabled = false;
-    }
-
-    function showSuccessMessage(message) {
-      const element = document.getElementById('successMessage');
-      if (message) {
-        element.textContent = message;
-        element.style.display = 'block';
-        document.getElementById('errorMessage').style.display = 'none';
-      } else {
-        element.style.display = 'none';
-      }
-    }
-
-    function showErrorMessage(message) {
-      const element = document.getElementById('errorMessage');
-      if (message) {
-        element.textContent = message;
-        element.style.display = 'block';
-        document.getElementById('successMessage').style.display = 'none';
-      } else {
-        element.style.display = 'none';
-      }
-    }
-
-    async function cadastrarUsuario(event) {
-      event.preventDefault();
-      
-      const senhaValida = validarSenha();
-      const confirmacaoValida = validarConfirmacaoSenha();
-      
-      if (!senhaValida || !confirmacaoValida) {
-        showErrorMessage('Por favor, corrija os erros no formulário antes de enviar.');
-        return;
-      }
-      
-      // Validar email institucional
-      const email = document.getElementById('email').value;
-      if (!email.endsWith('.edu.br')) {
-        showErrorMessage('Por favor, use um e-mail institucional (.edu.br)');
-        return;
-      }
-      
-      // Verificar tamanho da foto antes de enviar
-      const fotoBase64 = document.getElementById('fotoBase64').value;
-      if (fotoBase64 && fotoBase64.length > 1000 * 1024) { // 1MB em base64 (aproximadamente)
-        showErrorMessage('A foto ainda é muito grande. Por favor, selecione uma imagem menor.');
-        return;
-      }
-      
-      const formData = {
-        nome: document.getElementById('nome').value,
-        email: email,
-        matricula: document.getElementById('matricula').value,
-        telefone: document.getElementById('telefone').value.replace(/\D/g, ''),
-        foto_perfil: fotoBase64 || null, // Enviar null se não houver foto
-        senha: document.getElementById('senha').value,
-        perfil: document.getElementById('perfil').value
-      };
-      
-      try {
-        showLoading();
-        showErrorMessage('');
-        
-        const response = await apiFetch('/api/usuarios/registro', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.erro?.message || data.erro || 'Erro desconhecido');
-        }
-        
-        // Heurística 1: Feedback visual
-        showToast('Usuário cadastrado com sucesso! Redirecionando...', 'success');
-        
-        document.getElementById('formCadastro').reset();
-        document.getElementById('previewImagem').src = 'https://img.icons8.com/ios/150/000000/user-male-circle.png';
-        document.getElementById('fotoBase64').value = '';
-        document.getElementById('passwordStrengthBar').style.width = '0%';
-        
-        setTimeout(() => {
-          window.location.href = '/login.html';
-        }, 2000);
-      } catch (error) {
-        console.error('Erro ao cadastrar usuário:', error);
-        // Heurística 9: Mensagens de erro claras
-        showToast(`Erro no cadastro: ${error.message}`, 'error', 5000);
-      } finally {
-        hideLoading();
-      }
-    }
-  </script>
+  <script src="js/perfil.js"></script>
 </body>
 </html>
+
+
+
+
+

@@ -8,52 +8,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <script src="utils.js" defer></script>
+  <script src="js/utils.js" defer></script>
 </head>
 
 <body>
-  <!-- Skip Links para navegação por teclado -->
-  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
-  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-
   <div class="home-container">
-    <aside class="sidebar">
-      <div class="profile" id="sidebar-profile">
-        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil" />
-        <span style="opacity: 0;"><!-- Carregando... --></span>
-      </div>
-      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
-        <a href="home.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
-        </a>
-        <div class="dropdown">
-          <a href="#" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
-            <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
-            <span class="dropdown-arrow">▶</span>
-          </a>
-          <div class="dropdown-options" role="menu">
-            <a href="RelatorioGeral.html" class="sub" role="menuitem">Relatório Geral</a>
-            <a href="GerarRelatorio.html" class="sub" role="menuitem">Relatório Individual</a>
-          </div>
-        </div>
-        <a href="Cadastrar.html" class="active" aria-current="page">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar
-        </a>
-        <div class="dropdown">
-          <a href="#" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
-            <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
-            <span class="dropdown-arrow">▶</span>
-          </a>
-          <div class="dropdown-options">
-            <a href="CadastrarGabarito.html" class="sub">Cadastrar Gabarito</a>
-            <a href="CorrigirSimulado.html" class="sub">Corrigir Gabarito</a>
-          </div>
-        </div>
-        <a href="AgendarSessao.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão
-        </a>
-      </nav>
-    </aside>
+    <div id="sidebar-container"></div>
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
@@ -119,8 +79,7 @@
               <span class="required-field"></span>
             </label>
             <input type="text" id="nome" name="nome" placeholder="Digite o nome completo do aluno" required
-              autocomplete="name" aria-label="Nome completo do aluno" aria-describedby="nome-hint" aria-required="true"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
+              autocomplete="name" aria-label="Nome completo do aluno" aria-describedby="nome-hint" aria-required="true" />
             <span id="nome-hint" class="input-hint">Nome completo conforme documento de identidade</span>
           </div>
 
@@ -130,9 +89,8 @@
               <span class="required-field"></span>
             </label>
             <input type="text" id="matricula" name="matricula" placeholder="Digite a matrícula do aluno" required
-              autocomplete="off" aria-label="Matrícula do aluno" aria-describedby="matricula-hint" aria-required="true"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
-            <span id="matricula-hint" class="input-hint">Matrícula única do aluno na instituição</span>
+              autocomplete="off" aria-label="Matrícula do aluno" aria-describedby="matricula-hint" aria-required="true" />
+            <span id="matricula-hint" class="input-hint">Matrícula Única do aluno na instituição</span>
           </div>
 
           <div class="input-group">
@@ -141,8 +99,7 @@
               <span class="required-field"></span>
             </label>
             <input type="email" id="email" name="email" placeholder="exemplo@email.com" required autocomplete="email"
-              aria-label="Email do aluno" aria-describedby="email-hint" aria-required="true"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
+              aria-label="Email do aluno" aria-describedby="email-hint" aria-required="true" />
             <span id="email-hint" class="input-hint">Email para contato e comunicação</span>
           </div>
 
@@ -152,27 +109,19 @@
               <span class="required-field"></span>
             </label>
             <input type="tel" id="telefone" name="telefone" placeholder="(99) 99999-9999" required autocomplete="tel"
-              aria-label="Telefone do responsável" aria-describedby="telefone-hint" aria-required="true"
-              style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
+              aria-label="Telefone do responsável" aria-describedby="telefone-hint" aria-required="true" />
             <span id="telefone-hint" class="input-hint">Formato: (XX) XXXXX-XXXX</span>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
-            <style>
-              @media (max-width: 768px) {
-                #cadastroAlunoForm>div[style*="grid-template-columns"] {
-                  grid-template-columns: 1fr !important;
-                }
-              }
-            </style>
+
             <div class="input-group">
               <label for="nascimento">
                 Data de Nascimento
                 <span class="required-field"></span>
               </label>
               <input type="date" id="nascimento" name="nascimento" required max="2010-12-31"
-                aria-label="Data de nascimento do aluno" aria-describedby="nascimento-hint" aria-required="true"
-                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base);" />
+                aria-label="Data de nascimento do aluno" aria-describedby="nascimento-hint" aria-required="true" />
               <span id="nascimento-hint" class="input-hint">Data de nascimento do aluno</span>
             </div>
 
@@ -182,8 +131,7 @@
                 <span class="required-field"></span>
               </label>
               <select id="etapa" name="etapa" required aria-label="Etapa educacional do aluno"
-                aria-describedby="etapa-hint" aria-required="true"
-                style="width: 100%; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--font-size-base); outline: none; transition: border-color var(--transition-base); background: var(--color-surface);">
+                aria-describedby="etapa-hint" aria-required="true">
                 <option value="">Selecione a etapa</option>
                 <option value="1º Ano">1º Ano</option>
                 <option value="2º Ano">2º Ano</option>
@@ -212,85 +160,11 @@
     </main>
   </div>
 
-  <script>
-    async function handleCadastroAluno(event) {
-      event.preventDefault();
-
-      // Validação (Heurística 5: Prevenção de erros)
-      if (!validateForm(event.target)) {
-        return;
-      }
-
-      const formData = {
-        nome_completo: document.getElementById('nome').value.trim(),
-        matricula: document.getElementById('matricula').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        telefone_responsavel: document.getElementById('telefone').value,
-        data_nascimento: document.getElementById('nascimento').value,
-        etapa: document.getElementById('etapa').value
-      };
-
-      // Feedback visual padronizado (Heurística 1)
-      showLoading('Cadastrando aluno...');
-      const btnText = document.getElementById('submitBtnText');
-      const spinner = document.getElementById('submitSpinner');
-      const submitBtn = event.target.querySelector('button[type="submit"]');
-
-      btnText.style.display = 'none';
-      spinner.style.display = 'inline-block';
-      submitBtn.disabled = true;
-
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('Token não encontrado. Faça login novamente.');
-        }
-
-        const response = await apiFetch('/api/alunos', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(formData)
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.sucesso) {
-          showToast('Aluno cadastrado com sucesso!', 'success');
-          event.target.reset();
-          setTimeout(() => {
-            window.location.href = 'home.html';
-          }, 1500);
-        } else {
-          const errorMessage = data.erro || data.detalhes || 'Erro ao cadastrar aluno. Verifique os dados e tente novamente.';
-          showToast(errorMessage, 'error', 5000);
-          btnText.style.display = 'inline';
-          spinner.style.display = 'none';
-          submitBtn.disabled = false;
-        }
-      } catch (error) {
-        console.error('Erro ao cadastrar aluno:', error);
-        const errorMessage = error.message || 'Erro de conexão. Verifique sua internet e tente novamente.';
-        showToast(errorMessage, 'error', 5000);
-        btnText.style.display = 'inline';
-        spinner.style.display = 'none';
-        submitBtn.disabled = false;
-      } finally {
-        hideLoading();
-      }
-    }
-
-    // Formatação de telefone (Heurística 5: Prevenção de erros)
-    document.getElementById('telefone')?.addEventListener('input', function (e) {
-      let value = e.target.value.replace(/\D/g, '');
-      if (value.length > 11) value = value.substring(0, 11);
-      if (value.length > 2) value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
-      if (value.length > 10) value = `${value.substring(0, 10)}-${value.substring(10)}`;
-      e.target.value = value;
-    });
-  </script>
+  <script src="js/cadastrar.js"></script>
 </body>
 
 </html>
+
+
+
+
