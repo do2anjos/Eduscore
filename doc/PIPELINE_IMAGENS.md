@@ -46,22 +46,23 @@ O pipeline do Enem possui as seguintes etapas (executadas em cascata):
 ---
 
 ## 3. Pipeline UEA (`@Scripts UEA`)
-**Script Principal:** `backend/scripts/Scripts UEA/processar_respostas_Imagem_original.py` (caso a imagem não tenha sido processada previamente).
+**Scripts Centralizados na pasta:** `backend/scripts/Scripts UEA/`
 
-O pipeline da UEA não depende de YOLO para achar a prova, baseando-se intensamente em processamento geométrico tradicional (OpenCV).
+Recentemente modularizado para acompanhar o padrão de correção passo a passo em etapas, o pipeline da UEA baseia-se intensamente em processamento geométrico tradicional (OpenCV) ao invés de redes neurais YOLO para achar a folha.
 
-1. **Correção de Perspectiva Avançada (Tipo "CamScanner"):**
+1. **Correção de Perspectiva Avançada (`01_corrigir_perspectiva_uea.py`):**
    - A imagem sofre redimensionamento, aplicação de *CLAHE* (Melhora de Contraste) e *Bilateral Filter* (remoção de ruído preservando bordas).
    - É aplicado o detector de bordas *Canny*.
    - O algoritmo tenta encontrar o **maior contorno de 4 pontas** que pareça uma folha de papel válida (ângulos próximos a 90°).
    - Ao encontrar os 4 vértices do papel, uma **transformação de perspectiva** (`cv2.getPerspectiveTransform` e `cv2.warpPerspective`) é aplicada, "esticando" a imagem e a deixando completamente frontal e plana.
-2. **Tratamento e Recorte da Área:**
-   A imagem resultante é transformada em binária e achatada para dimensões padronizadas de análise (ex: `678px` de largura) para encontrar as "bolhas".
-3. **Detecção das Marcações:**
-   Da mesma forma que no Enem, busca-se contornos baseados na **circularidade > 0.4** e alta incidência de marcações (proporção de pixels).
-4. **Mapeamento de Gabarito (Grid UEA):**
+2. **Tratamento, Recorte e Detecção (`processar_respostas_imagem_processadas.py`):**
+   - Após a validação da perspectiva, a imagem corrigida é transformada em binária e redimensionada para dimensões padronizadas de análise (ex: `678px` de largura) para encontrar as "bolhas".
+   - Busca-se contornos baseados na **circularidade > 0.4** e alta incidência de pixels pretos (marcações).
+3. **Mapeamento de Gabarito (Grid UEA):**
    - O layout base para a UEA contempla **60 questões** distribuídas em **3 blocos de 20 questões**.
    - As colunas de marcação (A, B, C, D, E) têm posições X exatas mapeadas para o bloco 1, bloco 2 e bloco 3.
-   - O sistema checa se a marcação se enquadra dentro das margens (ex: `margem_coluna = 15`) do "grid virtual" de questões da UEA.
-5. **JSON Final e Validação:**
-   Respostas múltiplas (dupla marcação) para uma mesma questão são acusadas, e a folha final é retornada num objeto JSON com estatísticas de questões válidas, anuladas e ausentes.
+   - O sistema checa se a marcação detectada se enquadra dentro das margens (ex: `margem_coluna = 15`) do "grid virtual" de coordenadas da prova.
+4. **JSON Final e Validação:**
+   Respostas múltiplas (dupla marcação) para uma mesma questão são identificadas, e a extração final é retornada num objeto JSON com estatísticas de questões válidas, anuladas e ausentes.
+
+> **Nota Legado:** O script monolítico original `processar_respostas_Imagem_original.py` permanece na pasta servindo como fallback caso alguma imagem seja submetida fora do novo fluxo iterativo em etapas.
