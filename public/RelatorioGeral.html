@@ -4,54 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Relatório Geral - Turmas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="utils.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="js/utils.js" defer></script>
 </head>
 <body>
-  <!-- Skip Links para navegação por teclado -->
-  <a href="#main-content" class="skip-link">Pular para conteúdo principal</a>
-  <a href="#main-navigation" class="skip-link">Pular para navegação principal</a>
-  
   <div class="home-container">
-    <aside class="sidebar">
-      <div class="profile" id="sidebar-profile">
-        <img src="https://img.icons8.com/ios-filled/100/ffffff/user-male-circle.png" alt="Perfil"/>
-        <span style="opacity: 0;"><!-- Carregando... --></span>
-      </div>
-      <nav class="nav-links" role="navigation" aria-label="Menu principal" id="main-navigation">
-        <a href="home.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/home-page.png" alt="" /> Home
-        </a>
-        <div class="dropdown">
-          <a href="#" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
-            <img src="https://img.icons8.com/ios-filled/24/ffffff/report-card.png" alt="" /> Gerar Relatório
-            <span class="dropdown-arrow">▶</span>
-          </a>
-          <div class="dropdown-options" role="menu">
-            <a href="RelatorioGeral.html" class="sub active" role="menuitem">Relatório Geral</a>
-            <a href="GerarRelatorio.html" class="sub" role="menuitem">Relatório Individual</a>
-          </div>
-        </div>
-        <a href="Cadastrar.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/add-user-male.png" alt="" /> Cadastrar
-        </a>
-        <div class="dropdown">
-          <a href="#" onclick="toggleDropdown(event, this.parentElement); return false;" role="button" aria-expanded="false" aria-haspopup="true">
-            <img src="https://img.icons8.com/ios-filled/24/ffffff/test-passed.png" alt="" /> Simulado
-            <span class="dropdown-arrow">▶</span>
-          </a>
-          <div class="dropdown-options" role="menu">
-            <a href="CadastrarGabarito.html" class="sub" role="menuitem">Cadastrar Gabarito</a>
-            <a href="CorrigirSimulado.html" class="sub" role="menuitem">Corrigir Gabarito</a>
-          </div>
-        </div>
-        <a href="AgendarSessao.html">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/calendar.png" alt="" /> Agendar Sessão
-        </a>
-      </nav>
-    </aside>
+    <div id="sidebar-container"></div>
 
     <main class="content" id="main-content" role="main">
       <!-- Breadcrumb e User Profile -->
@@ -97,349 +59,140 @@
         </div>
       </div>
 
-      <!-- Cards de Métricas Principais -->
-      <div class="metrics-grid">
-        <div class="metric-card-modern">
-          <div class="metric-card-header">
-            <h3>Questões Aplicadas</h3>
-            <span class="metric-icon">📊</span>
+      <article class="metric-card-modern analysis-card report-analysis-card" aria-labelledby="report-analysis-title">
+        <div class="analysis-card-header">
+          <div>
+            <h3 id="report-analysis-title">Análises do relatório</h3>
+            <p class="analysis-subtitle" id="reportAnalysisSubtitle">Resumo dos indicadores gerais das turmas</p>
           </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
-            <div class="metric-value">
-              <span class="value-number" id="qtdQuestoes">0</span>
-              <span class="value-label">questões respondidas<br><small>(total da soma de cada simulado)</small></span>
-            </div>
+
+          <div class="analysis-tabs" role="tablist" aria-label="Análises do relatório geral">
+            <button
+              type="button"
+              class="analysis-tab is-active"
+              id="reportIndicatorsTab"
+              role="tab"
+              aria-selected="true"
+              aria-controls="reportIndicatorsPanel"
+              tabindex="0"
+              data-report-analysis-tab="indicators"
+            >Indicadores</button>
+            <button
+              type="button"
+              class="analysis-tab"
+              id="reportDisciplineAveragesTab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="reportDisciplineAveragesPanel"
+              tabindex="-1"
+              data-report-analysis-tab="discipline-averages"
+            >Médias por disciplinas</button>
+            <button
+              type="button"
+              class="analysis-tab"
+              id="reportRetentionTab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="reportRetentionPanel"
+              tabindex="-1"
+              data-report-analysis-tab="retention"
+            >Retenção por disciplina</button>
           </div>
         </div>
 
-        <div class="metric-card-modern">
-          <div class="metric-card-header">
-            <h3>Acertos Totais</h3>
-            <span class="metric-icon">✅</span>
-          </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
-            <div class="metric-value">
-              <span class="value-number" id="acertosTotais">0</span>
-              <span class="value-label">acertos registrados<br><small>(soma de todos os acertos dos simulados feitos pelos alunos)</small></span>
-            </div>
-          </div>
-        </div>
+        <div class="analysis-panels">
+          <section class="analysis-panel is-active" id="reportIndicatorsPanel" role="tabpanel" aria-labelledby="reportIndicatorsTab">
+            <section class="metrics-grid report-metrics-grid" aria-label="Resumo geral das turmas">
+              <h3 class="report-grid-heading">Indicadores principais</h3>
 
-        <div class="metric-card-modern">
-          <div class="metric-card-header">
-            <h3>Média Geral</h3>
-            <span class="metric-icon">📈</span>
-          </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
-            <div class="metric-value">
-              <span class="value-number" id="mediaAluno">0%</span>
-              <span class="value-label">média de acertos<br><small>(percentual médio de acertos)</small></span>
-            </div>
-          </div>
-        </div>
+              <article class="metric-card-modern kpi-card report-kpi-card">
+                <div class="metric-card-header">
+                  <h3>Questões aplicadas</h3>
+                </div>
+                <div class="metric-card-content">
+                  <div class="metric-value">
+                    <span class="value-number" id="qtdQuestoes">0</span>
+                    <span class="report-metric-context">questões respondidas</span>
+                  </div>
+                </div>
+              </article>
 
-        <div class="metric-card-modern">
-          <div class="metric-card-header">
-            <h3>Maior Média</h3>
-            <span class="metric-icon">🏆</span>
-          </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
-            <div class="metric-value">
-              <span class="value-number" id="maiorMediaDisciplina">-</span>
-              <span class="value-label">disciplina com melhor desempenho</span>
-            </div>
-          </div>
-        </div>
+              <article class="metric-card-modern kpi-card report-kpi-card">
+                <div class="metric-card-header">
+                  <h3>Acertos totais</h3>
+                </div>
+                <div class="metric-card-content">
+                  <div class="metric-value">
+                    <span class="value-number" id="acertosTotais">0</span>
+                    <span class="report-metric-context">acertos registrados</span>
+                  </div>
+                </div>
+              </article>
 
-        <div class="metric-card-modern">
-          <div class="metric-card-header">
-            <h3>Menor Média</h3>
-            <span class="metric-icon">📉</span>
-          </div>
-          <div class="metric-card-content" style="justify-content: center; align-items: center; min-height: 120px; padding: var(--spacing-lg);">
-            <div class="metric-value">
-              <span class="value-number" id="menorMediaDisciplina">-</span>
-              <span class="value-label">disciplina que precisa de atenção</span>
-            </div>
-          </div>
-        </div>
-      </div>
+              <article class="metric-card-modern kpi-card report-kpi-card">
+                <div class="metric-card-header">
+                  <h3>Média geral</h3>
+                </div>
+                <div class="metric-card-content">
+                  <div class="metric-value">
+                    <span class="value-number" id="mediaAluno">0%</span>
+                    <span class="report-metric-context">média de acertos</span>
+                  </div>
+                </div>
+              </article>
 
-      <!-- Gráfico de Média por Disciplina -->
-      <div class="metric-card-modern full-width" style="margin-top: var(--spacing-xl);">
-        <div class="metric-card-header">
-          <h3>Média de Acertos por Disciplina</h3>
+              <h3 class="report-grid-heading">Insights de desempenho</h3>
+
+              <article class="metric-card-modern report-insight-card">
+                <div class="metric-card-header">
+                  <h3>Maior média</h3>
+                </div>
+                <div class="metric-card-content">
+                  <div class="report-insight-content">
+                    <span class="report-insight-value" id="maiorMediaDisciplina">-</span>
+                    <span class="report-metric-context">disciplina com melhor desempenho</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="metric-card-modern report-insight-card">
+                <div class="metric-card-header">
+                  <h3>Menor média</h3>
+                </div>
+                <div class="metric-card-content">
+                  <div class="report-insight-content">
+                    <span class="report-insight-value" id="menorMediaDisciplina">-</span>
+                    <span class="report-metric-context">disciplina que precisa de atenção</span>
+                  </div>
+                </div>
+              </article>
+            </section>
+          </section>
+
+          <section class="analysis-panel" id="reportDisciplineAveragesPanel" role="tabpanel" aria-labelledby="reportDisciplineAveragesTab" hidden>
+            <div class="metric-card-content analysis-content report-analysis-content">
+              <canvas
+                id="graficoGeralTurmas"
+                role="img"
+                aria-label="Gráfico de média de acertos por disciplina"
+              ></canvas>
+            </div>
+          </section>
+
+          <section class="analysis-panel" id="reportRetentionPanel" role="tabpanel" aria-labelledby="reportRetentionTab" hidden>
+            <div class="metric-card-content analysis-content report-analysis-content">
+              <canvas
+                id="graficoRetencaoDisciplinas"
+                role="img"
+                aria-label="Gráfico de retenção por disciplina mostrando a taxa de erro"
+              ></canvas>
+            </div>
+          </section>
         </div>
-        <div class="metric-card-content" style="min-height: 350px;">
-          <canvas 
-            id="graficoGeralTurmas" 
-            role="img"
-            aria-label="Gráfico de média de acertos por disciplina"
-            style="max-width: 100%; height: 320px !important;"
-          ></canvas>
-        </div>
-      </div>
+      </article>
     </main>
   </div>
 
-  <script>
-    let grafico = null;
-    let dadosEstatisticas = null;
-    let etapasDisponiveis = [];
-
-    // Carregar dados ao inicializar
-    document.addEventListener('DOMContentLoaded', async () => {
-      await carregarEstatisticas();
-      await loadUserData();
-    });
-
-    async function carregarEstatisticas(etapaFiltro = null) {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '/login.html';
-        return;
-      }
-
-      try {
-        showLoading();
-        
-        // Adicionar filtro de etapa na URL se especificado
-        let url = '/api/relatorios/estatisticas-gerais';
-        if (etapaFiltro && etapaFiltro !== 'Geral') {
-          url += `?etapa=${encodeURIComponent(etapaFiltro)}`;
-        }
-        
-        const response = await apiFetch(url, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem('token');
-            window.location.href = '/login.html';
-            return;
-          }
-          throw new Error('Erro ao carregar estatísticas');
-        }
-
-        const data = await response.json();
-        
-        if (data.sucesso && data.estatisticas) {
-          dadosEstatisticas = data.estatisticas;
-          atualizarMetricas();
-          atualizarSelectEtapas();
-
-          // Ajustar seleção do filtro para refletir o filtro atual
-          const select = document.getElementById('filtroTurma');
-          const valorDesejado = etapaFiltro && etapaFiltro !== 'Geral' ? etapaFiltro : 'Geral';
-          if ([...select.options].some(opt => opt.value === valorDesejado)) {
-            select.value = valorDesejado;
-          } else {
-            select.value = 'Geral';
-          }
-
-          inicializarGrafico();
-        } else {
-          showToast('Erro ao carregar dados do relatório', 'error');
-        }
-      } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
-        showToast('Erro ao carregar estatísticas. Tente novamente.', 'error');
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function atualizarMetricas() {
-      if (!dadosEstatisticas) return;
-
-      const stats = dadosEstatisticas;
-      
-      // Formatar números com separador de milhar
-      document.getElementById('qtdQuestoes').textContent = 
-        stats.total_questoes.toLocaleString('pt-BR');
-      document.getElementById('acertosTotais').textContent = 
-        stats.total_acertos.toLocaleString('pt-BR');
-      document.getElementById('mediaAluno').textContent = 
-        stats.media_geral.toFixed(1) + '%';
-      document.getElementById('maiorMediaDisciplina').textContent = 
-        stats.maior_media_disciplina || '-';
-      document.getElementById('menorMediaDisciplina').textContent = 
-        stats.menor_media_disciplina || '-';
-    }
-
-    function atualizarSelectEtapas() {
-      if (!dadosEstatisticas || !dadosEstatisticas.por_etapa) return;
-
-      const select = document.getElementById('filtroTurma');
-      const etapas = dadosEstatisticas.por_etapa;
-      
-      // Limpar opções existentes (exceto "Geral")
-      while (select.options.length > 1) {
-        select.remove(1);
-      }
-
-      // Adicionar etapas disponíveis
-      etapas.forEach(etapa => {
-        if (etapa.etapa) {
-          const option = document.createElement('option');
-          option.value = etapa.etapa;
-          option.textContent = etapa.etapa;
-          select.appendChild(option);
-        }
-      });
-
-      etapasDisponiveis = etapas;
-    }
-
-    function inicializarGrafico() {
-      if (!dadosEstatisticas) return;
-
-      // Destruir gráfico existente se houver
-      if (grafico) {
-        grafico.destroy();
-        grafico = null;
-      }
-
-      const ctx = document.getElementById('graficoGeralTurmas').getContext('2d');
-      
-      const dadosGeral = dadosEstatisticas.media_por_disciplina || [];
-      
-      // Ordenar por média (maior para menor) e encurtar nomes longos
-      const dadosOrdenados = [...dadosGeral].sort((a, b) => b.media - a.media);
-      
-      const labels = dadosOrdenados.map(d => {
-        // Encurtar nomes longos para melhor visualização
-        const nome = d.nome;
-        if (nome.length > 30) {
-          return nome.substring(0, 27) + '...';
-        }
-        return nome;
-      });
-      const medias = dadosOrdenados.map(d => d.media);
-
-      // Detectar se é mobile
-      const isMobile = window.innerWidth <= 768;
-      const fontSizeBase = isMobile ? 11 : 12;
-      const fontSizeY = isMobile ? 11 : 13;
-      const tooltipPadding = isMobile ? 8 : 12;
-      const tooltipFontSize = isMobile ? 12 : 13;
-      const tooltipTitleSize = isMobile ? 12 : 14;
-      const barThickness = isMobile ? 20 : 28;
-
-      // Obter cores das variáveis CSS para Chart.js
-      const root = getComputedStyle(document.documentElement);
-      const colorPrimary = root.getPropertyValue('--color-primary').trim() || '#008cc4';
-      const colorPrimaryDarker = root.getPropertyValue('--color-primary-darker').trim() || '#003b54';
-      const colorTextLight = root.getPropertyValue('--color-text-light').trim() || '#666666';
-      const colorText = root.getPropertyValue('--color-text').trim() || '#333333';
-      const colorBorderLight = root.getPropertyValue('--color-border-light').trim() || '#e0e0e0';
-
-      grafico = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels.length > 0 ? labels : ['Sem dados'],
-          datasets: [{
-            label: 'Média de Acertos (%)',
-            data: medias.length > 0 ? medias : [0],
-            backgroundColor: colorPrimary,
-            borderRadius: 8,
-            barThickness: barThickness,
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              backgroundColor: colorPrimaryDarker,
-              padding: tooltipPadding,
-              titleFont: {
-                size: tooltipTitleSize,
-                weight: '600'
-              },
-              bodyFont: {
-                size: tooltipFontSize
-              },
-              cornerRadius: 8,
-              callbacks: {
-                label: context => `Média: ${context.raw.toFixed(1)}%`
-              }
-            }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              max: 100,
-              ticks: {
-                callback: value => `${value}%`,
-                font: {
-                  size: fontSizeBase
-                },
-                color: colorTextLight,
-                maxTicksLimit: isMobile ? 5 : 10
-              },
-              grid: {
-                color: colorBorderLight
-              }
-            },
-            y: {
-              ticks: {
-                font: {
-                  size: fontSizeY,
-                  weight: '500'
-                },
-                color: colorText,
-                maxTicksLimit: isMobile ? 8 : undefined
-              },
-              grid: {
-                display: false
-              }
-            }
-          }
-        }
-      });
-    }
-
-    async function atualizarGrafico() {
-      const turma = document.getElementById('filtroTurma').value;
-      
-      try {
-        showLoading('Atualizando gráfico...');
-        
-        // Recarregar dados com filtro de etapa
-        await carregarEstatisticas(turma);
-        
-        // O gráfico será atualizado automaticamente pelo carregarEstatisticas
-        // que chama inicializarGrafico, que já destrói o gráfico anterior
-      } catch (error) {
-        console.error('Erro ao atualizar gráfico:', error);
-        showToast('Erro ao atualizar gráfico. Tente novamente.', 'error', 5000);
-      } finally {
-        hideLoading();
-      }
-    }
-
-    function showLoading() {
-      // Mostrar indicador de carregamento se necessário
-      const cards = document.querySelectorAll('.metric-card-modern .value-number');
-      cards.forEach(card => {
-        if (card.textContent === '0' || card.textContent === '-') {
-          card.textContent = '...';
-        }
-      });
-    }
-
-    function hideLoading() {
-      // Ocultar indicador de carregamento
-    }
-  </script>
+  <script src="js/relatorio-geral.js"></script>
 </body>
 </html>

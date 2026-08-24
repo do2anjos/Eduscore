@@ -147,22 +147,30 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
           d.id,
           d.nome,
           COUNT(DISTINCT q.id) as total_questoes,
-          COUNT(DISTINCT CASE 
+          COUNT(CASE 
             WHEN r.resposta_aluno IS NOT NULL 
             AND r.resposta_aluno != '' 
             AND r.resposta_aluno NOT LIKE '%,%'
-            THEN r.id
+            THEN 1
             ELSE NULL
           END) as total_respostas,
-          SUM(CASE 
-            WHEN r.resposta_aluno IS NOT NULL 
-            AND r.resposta_aluno != '' 
-            AND r.resposta_aluno NOT LIKE '%,%'
-            AND r.acertou = 1 
-            THEN 1 
-            ELSE 0 
-          END) as acertos,
-          ROUND(
+           SUM(CASE 
+             WHEN r.resposta_aluno IS NOT NULL 
+             AND r.resposta_aluno != '' 
+             AND r.resposta_aluno NOT LIKE '%,%'
+             AND r.acertou = 1 
+             THEN 1 
+             ELSE 0 
+           END) as acertos,
+           SUM(CASE 
+             WHEN r.resposta_aluno IS NOT NULL 
+             AND r.resposta_aluno != '' 
+             AND r.resposta_aluno NOT LIKE '%,%'
+             AND r.acertou = 0 
+             THEN 1 
+             ELSE 0 
+           END) as erros,
+           ROUND(
             (SUM(CASE 
               WHEN r.resposta_aluno IS NOT NULL 
               AND r.resposta_aluno != '' 
@@ -170,9 +178,32 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
               AND r.acertou = 1 
               THEN 1 
               ELSE 0 
-            END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
-            2
-          ) as media
+            END) * 100.0) / NULLIF(COUNT(CASE 
+              WHEN r.resposta_aluno IS NOT NULL 
+              AND r.resposta_aluno != '' 
+              AND r.resposta_aluno NOT LIKE '%,%'
+              THEN 1
+              ELSE NULL
+            END), 0),
+             2
+           ) as media,
+           ROUND(
+             (SUM(CASE 
+               WHEN r.resposta_aluno IS NOT NULL 
+               AND r.resposta_aluno != '' 
+               AND r.resposta_aluno NOT LIKE '%,%'
+               AND r.acertou = 0 
+               THEN 1 
+               ELSE 0 
+             END) * 100.0) / NULLIF(COUNT(CASE 
+               WHEN r.resposta_aluno IS NOT NULL 
+               AND r.resposta_aluno != '' 
+               AND r.resposta_aluno NOT LIKE '%,%'
+               THEN 1
+               ELSE NULL
+             END), 0),
+             2
+           ) as taxa_erro
         FROM disciplinas d
         INNER JOIN questoes q ON d.id = q.disciplina_id
         INNER JOIN gabaritos g ON q.gabarito_id = g.id
@@ -186,11 +217,11 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
               AND r2.resposta_aluno NOT LIKE '%,%'
           )
         GROUP BY d.id, d.nome
-        HAVING COUNT(DISTINCT CASE 
+        HAVING COUNT(CASE 
           WHEN r.resposta_aluno IS NOT NULL 
           AND r.resposta_aluno != '' 
           AND r.resposta_aluno NOT LIKE '%,%'
-          THEN r.id
+          THEN 1
           ELSE NULL
         END) > 0
         ORDER BY media DESC
@@ -230,8 +261,8 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
             ELSE 0 
           END) as erros,
           -- Média de Acertos (para RelatorioGeral.html)
-          -- IMPORTANTE: Dividir pelo total de questões, não apenas respostas válidas
-          -- Questões não respondidas contam como erro (0%) na média
+          -- IMPORTANTE: Dividir pelo total de respostas válidas (não questões únicas)
+          -- pois múltiplos alunos respondem as mesmas questões
           ROUND(
             (SUM(CASE 
               WHEN r.resposta_aluno IS NOT NULL 
@@ -240,7 +271,13 @@ router.get('/estatisticas-gerais', authenticateToken, async (req, res) => {
               AND r.acertou = 1 
               THEN 1 
               ELSE 0 
-            END) * 100.0) / NULLIF(COUNT(DISTINCT q.id), 0),
+            END) * 100.0) / NULLIF(COUNT(CASE 
+              WHEN r.resposta_aluno IS NOT NULL 
+              AND r.resposta_aluno != '' 
+              AND r.resposta_aluno NOT LIKE '%,%'
+              THEN 1
+              ELSE NULL
+            End), 0),
             2
           ) as media,
           -- Taxa de Erro (para home.html)
